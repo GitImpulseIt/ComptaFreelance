@@ -3,12 +3,16 @@
 {% block title %}Banque - ComptaV2{% endblock %}
 {% block page_title %}Comptes bancaires{% endblock %}
 
+{% set active_page = 'banque' %}
+
 {% block content %}
-<div class="flex gap-4 mb-8">
-    <a href="/app/banque/import" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+<div class="flex gap-3 mb-8">
+    <a href="/app/banque/import" class="inline-flex items-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-lg hover:bg-indigo-700 active:bg-indigo-800 transition font-medium shadow-sm">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
         Importer un fichier
     </a>
-    <a href="/app/banque/connect" class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition">
+    <a href="/app/banque/connect" class="inline-flex items-center gap-2 border border-slate-300 text-slate-600 px-4 py-2.5 rounded-lg hover:bg-slate-50 transition font-medium">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
         Connecter un compte
     </a>
 </div>

@@ -3,40 +3,56 @@
 {% block title %}Inscription - ComptaV2{% endblock %}
 
 {% block body %}
-<div class="flex items-center justify-center min-h-screen">
-    <div class="w-full max-w-md bg-white rounded-xl shadow-lg p-8">
-        <h1 class="text-2xl font-bold text-center mb-8">Inscription</h1>
-        <form method="POST" action="/auth/register" class="space-y-4">
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label for="prenom" class="block text-sm font-medium text-gray-700">Prénom</label>
-                    <input type="text" id="prenom" name="prenom" required
-                           class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm">
+<div class="flex items-center justify-center min-h-screen bg-gradient-to-br from-indigo-500 via-blue-600 to-indigo-700">
+    <div class="w-full max-w-sm">
+        <div class="bg-white rounded-2xl shadow-2xl p-8">
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-14 h-14 bg-indigo-100 rounded-xl mb-4">
+                    <svg class="w-7 h-7 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                    </svg>
+                </div>
+                <h1 class="text-2xl font-bold text-slate-800">Créer un compte</h1>
+                <p class="text-sm text-slate-500 mt-1">Rejoignez ComptaV2</p>
+            </div>
+            {% if error is defined and error %}
+            <div class="mb-4 px-4 py-3 bg-red-50 border-l-4 border-red-500 rounded-r-lg text-sm text-red-700">
+                {{ error }}
+            </div>
+            {% endif %}
+            <form method="POST" action="/auth/register" class="space-y-5">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="prenom" class="block text-sm font-medium text-slate-700 mb-1">Prénom</label>
+                        <input type="text" id="prenom" name="prenom" required
+                               placeholder="Jean" class="block w-full">
+                    </div>
+                    <div>
+                        <label for="nom" class="block text-sm font-medium text-slate-700 mb-1">Nom</label>
+                        <input type="text" id="nom" name="nom" required
+                               placeholder="Dupont" class="block w-full">
+                    </div>
                 </div>
                 <div>
-                    <label for="nom" class="block text-sm font-medium text-gray-700">Nom</label>
-                    <input type="text" id="nom" name="nom" required
-                           class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm">
+                    <label for="email" class="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                    <input type="email" id="email" name="email" required
+                           placeholder="vous@exemple.fr" class="block w-full">
                 </div>
-            </div>
-            <div>
-                <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
-                <input type="email" id="email" name="email" required
-                       class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm">
-            </div>
-            <div>
-                <label for="password" class="block text-sm font-medium text-gray-700">Mot de passe</label>
-                <input type="password" id="password" name="password" required minlength="8"
-                       class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm">
-            </div>
-            <button type="submit"
-                    class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition">
-                S'inscrire
-            </button>
-        </form>
-        <p class="mt-4 text-center text-sm text-gray-500">
-            Déjà un compte ? <a href="/auth/login" class="text-blue-600 hover:underline">Se connecter</a>
-        </p>
+                <div>
+                    <label for="password" class="block text-sm font-medium text-slate-700 mb-1">Mot de passe</label>
+                    <input type="password" id="password" name="password" required minlength="8"
+                           placeholder="Minimum 8 caractères" class="block w-full">
+                </div>
+                <button type="submit"
+                        class="w-full bg-indigo-600 text-white py-2.5 px-4 rounded-lg hover:bg-indigo-700 active:bg-indigo-800 transition font-medium shadow-sm">
+                    S'inscrire
+                </button>
+            </form>
+            <p class="mt-6 text-center text-sm text-slate-500">
+                Déjà un compte ? <a href="/auth/login" class="text-indigo-600 font-medium hover:underline">Se connecter</a>
+            </p>
+        </div>
+        <p class="text-center text-indigo-200 text-xs mt-6">ComptaV2 — Comptabilité freelance</p>
     </div>
 </div>
 {% endblock %}
