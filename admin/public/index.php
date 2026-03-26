@@ -10,7 +10,6 @@ session_start();
 $appConfig = require dirname(__DIR__) . '/config/app.php';
 $dbConfig = require dirname(__DIR__) . '/config/database.php';
 $twigConfig = require dirname(__DIR__) . '/config/twig.php';
-$authConfig = require dirname(__DIR__) . '/config/auth.php';
 $routes = require dirname(__DIR__) . '/config/routes.php';
 
 // Twig
@@ -28,8 +27,8 @@ $pdo = new PDO($dsn, $dbConfig['username'], $dbConfig['password'], $dbConfig['op
 $pdo->exec("SET client_encoding TO '" . $dbConfig['charset'] . "'");
 
 // Services
-$authMiddleware = new \Admin\Middleware\AuthMiddleware();
-$passwordService = new \Admin\Service\PasswordService(dirname(__DIR__) . '/config/auth.php');
+$authMiddleware = new \Admin\Middleware\AuthMiddleware($pdo);
+$passwordService = new \Admin\Service\PasswordService($pdo);
 $entrepriseService = new \Admin\Service\EntrepriseService($pdo);
 $userService = new \Admin\Service\UserService($pdo, $passwordService);
 $banqueService = new \Admin\Service\BanqueService($pdo);
@@ -63,12 +62,12 @@ foreach ($routes as $pattern => $handler) {
         [$controllerName, $action] = $handler;
 
         $controller = match ($controllerName) {
-            'AuthController' => new \Admin\Controller\AuthController($twig, $authMiddleware, $authConfig),
+            'AuthController' => new \Admin\Controller\AuthController($twig, $authMiddleware),
             'DashboardController' => new \Admin\Controller\DashboardController($twig, $pdo),
             'EntrepriseController' => new \Admin\Controller\EntrepriseController($twig, $entrepriseService),
             'UserController' => new \Admin\Controller\UserController($twig, $userService),
             'BanqueController' => new \Admin\Controller\BanqueController($twig, $banqueService),
-            'PasswordController' => new \Admin\Controller\PasswordController($twig, $passwordService, $authConfig),
+            'PasswordController' => new \Admin\Controller\PasswordController($twig, $passwordService),
         };
 
         $controller->$action(...array_map('intval', $matches));

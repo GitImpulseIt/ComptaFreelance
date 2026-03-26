@@ -60,7 +60,7 @@ ComptaV2/
 
 ## Auth admin
 
-- Mot de passe stocké en SHA256 dans `admin/config/auth.php`
+- Mot de passe stocké en SHA256 dans la table `admin_settings` (clé `password_hash`)
 - Par défaut : `admin`
 - Changeable via l'interface admin (`/password`)
 - Reset des mots de passe utilisateurs : génère un mot de passe aléatoire affiché une seule fois

@@ -4,24 +4,24 @@ declare(strict_types=1);
 
 namespace Admin\Service;
 
+use PDO;
+
 class PasswordService
 {
-    private string $authConfigPath;
+    public function __construct(private PDO $pdo) {}
 
-    public function __construct(string $authConfigPath)
+    public function changeAdminPassword(string $currentPassword, string $newPassword): bool
     {
-        $this->authConfigPath = $authConfigPath;
-    }
-
-    public function changeAdminPassword(string $currentPassword, string $newPassword, string $storedHash): bool
-    {
+        $storedHash = $this->getStoredHash();
         $currentHash = hash('sha256', $currentPassword);
+
         if (!hash_equals($storedHash, $currentHash)) {
             return false;
         }
 
         $newHash = hash('sha256', $newPassword);
-        $this->writeHash($newHash);
+        $stmt = $this->pdo->prepare("UPDATE admin_settings SET value = :hash, updated_at = NOW() WHERE key = 'password_hash'");
+        $stmt->execute(['hash' => $newHash]);
         return true;
     }
 
@@ -36,19 +36,10 @@ class PasswordService
         return $password;
     }
 
-    private function writeHash(string $hash): void
+    private function getStoredHash(): string
     {
-        $content = "<?php\n\n"
-            . "// Mot de passe admin hashé en SHA256\n"
-            . "// Ce fichier est réécrit automatiquement lors du changement de mot de passe\n"
-            . "return [\n"
-            . "    'password_hash' => '" . $hash . "',\n"
-            . "];\n";
-
-        file_put_contents($this->authConfigPath, $content);
-
-        if (function_exists('opcache_invalidate')) {
-            opcache_invalidate($this->authConfigPath, true);
-        }
+        $stmt = $this->pdo->prepare("SELECT value FROM admin_settings WHERE key = 'password_hash'");
+        $stmt->execute();
+        return $stmt->fetchColumn() ?: '';
     }
 }

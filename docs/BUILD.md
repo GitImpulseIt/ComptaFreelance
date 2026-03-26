@@ -155,7 +155,7 @@ admin/docker/                   # Docker app admin
 
 L'app admin utilise une authentification par mot de passe unique :
 
-- Le hash SHA256 est stocké dans `admin/config/auth.php`
+- Le hash SHA256 est stocké en base de données dans la table `admin_settings`
 - Mot de passe par défaut : `admin`
 - Modifiable via l'interface admin (menu "Changer le mot de passe")
 - Reset des mots de passe utilisateurs : génère un mot de passe aléatoire affiché **une seule fois**

@@ -12,7 +12,6 @@ class AuthController
     public function __construct(
         private Environment $twig,
         private AuthMiddleware $auth,
-        private array $authConfig,
     ) {}
 
     public function showLogin(): void
@@ -31,7 +30,7 @@ class AuthController
     {
         $password = $_POST['password'] ?? '';
 
-        if ($this->auth->authenticate($password, $this->authConfig['password_hash'])) {
+        if ($this->auth->authenticate($password)) {
             header('Location: /dashboard');
         } else {
             $_SESSION['login_error'] = 'Mot de passe incorrect.';
