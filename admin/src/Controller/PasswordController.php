@@ -12,7 +12,6 @@ class PasswordController
     public function __construct(
         private Environment $twig,
         private PasswordService $passwordService,
-        private array $authConfig,
     ) {}
 
     public function showChange(): void
@@ -42,7 +41,7 @@ class PasswordController
             exit;
         }
 
-        if ($this->passwordService->changeAdminPassword($current, $new, $this->authConfig['password_hash'])) {
+        if ($this->passwordService->changeAdminPassword($current, $new)) {
             $_SESSION['password_success'] = 'Mot de passe modifié avec succès.';
         } else {
             $_SESSION['password_error'] = 'Mot de passe actuel incorrect.';
