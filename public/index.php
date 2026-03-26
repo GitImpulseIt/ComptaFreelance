@@ -20,14 +20,14 @@ $twig = new \Twig\Environment($loader, [
 
 // Connexion BDD
 $dsn = sprintf(
-    '%s:host=%s;port=%s;dbname=%s;charset=%s',
+    '%s:host=%s;port=%s;dbname=%s',
     $dbConfig['driver'],
     $dbConfig['host'],
     $dbConfig['port'],
-    $dbConfig['database'],
-    $dbConfig['charset']
+    $dbConfig['database']
 );
 $pdo = new PDO($dsn, $dbConfig['username'], $dbConfig['password'], $dbConfig['options']);
+$pdo->exec("SET client_encoding TO '" . $dbConfig['charset'] . "'");
 
 // Routing simple
 $method = $_SERVER['REQUEST_METHOD'];
