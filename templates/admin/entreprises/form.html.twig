@@ -1,0 +1,50 @@
+{% extends 'layout/admin.html.twig' %}
+
+{% block title %}{{ entreprise.id is defined ? 'Modifier' : 'Nouvelle' }} entreprise - Admin ComptaV2{% endblock %}
+{% block page_title %}{{ entreprise.id is defined ? 'Modifier' : 'Nouvelle' }} entreprise{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl">
+    <form method="POST" action="{{ entreprise.id is defined ? '/admin/entreprises/' ~ entreprise.id : '/admin/entreprises' }}" class="space-y-4">
+        <div>
+            <label for="raison_sociale" class="block text-sm font-medium text-gray-700">Raison sociale</label>
+            <input type="text" id="raison_sociale" name="raison_sociale" required
+                   value="{{ entreprise.raison_sociale ?? '' }}"
+                   class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm">
+        </div>
+        <div>
+            <label for="siret" class="block text-sm font-medium text-gray-700">SIRET</label>
+            <input type="text" id="siret" name="siret" required
+                   value="{{ entreprise.siret ?? '' }}"
+                   class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm">
+        </div>
+        <div class="grid grid-cols-3 gap-4">
+            <div class="col-span-1">
+                <label for="code_postal" class="block text-sm font-medium text-gray-700">Code postal</label>
+                <input type="text" id="code_postal" name="code_postal"
+                       value="{{ entreprise.code_postal ?? '' }}"
+                       class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm">
+            </div>
+            <div class="col-span-2">
+                <label for="ville" class="block text-sm font-medium text-gray-700">Ville</label>
+                <input type="text" id="ville" name="ville"
+                       value="{{ entreprise.ville ?? '' }}"
+                       class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm">
+            </div>
+        </div>
+        <div>
+            <label for="regime_tva" class="block text-sm font-medium text-gray-700">Régime TVA</label>
+            <select id="regime_tva" name="regime_tva"
+                    class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm">
+                <option value="franchise">Franchise en base</option>
+                <option value="reel_simplifie">Réel simplifié</option>
+                <option value="reel_normal">Réel normal</option>
+            </select>
+        </div>
+        <button type="submit"
+                class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
+            Enregistrer
+        </button>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends 'layout/base.html.twig' %}
+
+{% block body %}
+<div class="flex h-screen">
+    {# Sidebar #}
+    <aside class="w-64 bg-white border-r border-gray-200 flex flex-col">
+        <div class="p-6 border-b border-gray-200">
+            <h1 class="text-xl font-bold text-gray-800">ComptaV2</h1>
+            <p class="text-sm text-gray-500">{{ entreprise.raison_sociale ?? '' }}</p>
+        </div>
+        <nav class="flex-1 p-4 space-y-1">
+            <a href="/app" class="block px-4 py-2 rounded-lg hover:bg-gray-100">Tableau de bord</a>
+            <a href="/app/clients" class="block px-4 py-2 rounded-lg hover:bg-gray-100">Clients</a>
+            <a href="/app/factures" class="block px-4 py-2 rounded-lg hover:bg-gray-100">Factures</a>
+            <a href="/app/depenses" class="block px-4 py-2 rounded-lg hover:bg-gray-100">Dépenses</a>
+            <a href="/app/banque" class="block px-4 py-2 rounded-lg hover:bg-gray-100">Banque</a>
+            <a href="/app/tva" class="block px-4 py-2 rounded-lg hover:bg-gray-100">TVA</a>
+            <a href="/app/parametres" class="block px-4 py-2 rounded-lg hover:bg-gray-100">Paramètres</a>
+        </nav>
+        <div class="p-4 border-t border-gray-200">
+            <form action="/auth/logout" method="POST">
+                <button type="submit" class="text-sm text-gray-500 hover:text-gray-700">Déconnexion</button>
+            </form>
+        </div>
+    </aside>
+
+    {# Contenu principal #}
+    <main class="flex-1 overflow-y-auto">
+        <header class="bg-white border-b border-gray-200 px-8 py-4">
+            <h2 class="text-2xl font-semibold text-gray-800">{% block page_title %}{% endblock %}</h2>
+        </header>
+        <div class="p-8">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+</div>
+{% endblock %}

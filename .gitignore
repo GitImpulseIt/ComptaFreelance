@@ -1,0 +1,29 @@
+# Dépendances
+/vendor/
+/node_modules/
+
+# Environnement
+.env
+
+# Storage
+/storage/logs/*
+/storage/cache/*
+/storage/uploads/*
+!storage/logs/.gitkeep
+!storage/cache/.gitkeep
+!storage/uploads/.gitkeep
+!storage/uploads/banque/.gitkeep
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build
+/public/css/app.css
+/public/js/app.js

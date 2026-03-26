@@ -1,0 +1,17 @@
+{% extends 'layout/app.html.twig' %}
+
+{% block title %}Banque - ComptaV2{% endblock %}
+{% block page_title %}Comptes bancaires{% endblock %}
+
+{% block content %}
+<div class="flex gap-4 mb-8">
+    <a href="/app/banque/import" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+        Importer un fichier
+    </a>
+    <a href="/app/banque/connect" class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition">
+        Connecter un compte
+    </a>
+</div>
+
+{# Liste des comptes bancaires #}
+{% endblock %}

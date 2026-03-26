@@ -1,0 +1,12 @@
+{
+    "name": "comptav2",
+    "private": true,
+    "scripts": {
+        "dev": "npx @tailwindcss/cli -i ./src/css/input.css -o ./public/css/app.css --watch",
+        "build": "npx @tailwindcss/cli -i ./src/css/input.css -o ./public/css/app.css --minify"
+    },
+    "devDependencies": {
+        "@tailwindcss/cli": "^4.0",
+        "@tailwindcss/forms": "^0.5"
+    }
+}

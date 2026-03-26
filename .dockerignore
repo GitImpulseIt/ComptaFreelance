@@ -1,0 +1,9 @@
+node_modules/
+vendor/
+storage/logs/*
+storage/cache/*
+.git/
+docs/
+.env
+.idea/
+.vscode/
