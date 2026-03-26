@@ -67,6 +67,17 @@ class EntrepriseService
         $stmt->execute(['id' => $id]);
     }
 
+    public function delete(int $id): bool
+    {
+        $users = $this->findUsers($id);
+        if (count($users) > 0) {
+            return false;
+        }
+        $stmt = $this->pdo->prepare('DELETE FROM entreprises WHERE id = :id');
+        $stmt->execute(['id' => $id]);
+        return true;
+    }
+
     public function findUsers(int $entrepriseId): array
     {
         $stmt = $this->pdo->prepare('SELECT * FROM users WHERE entreprise_id = :id ORDER BY nom, prenom');

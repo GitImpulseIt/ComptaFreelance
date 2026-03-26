@@ -18,6 +18,7 @@ return [
     'GET /entreprises/{id}/edit' => ['EntrepriseController', 'edit'],
     'POST /entreprises/{id}' => ['EntrepriseController', 'update'],
     'POST /entreprises/{id}/suspend' => ['EntrepriseController', 'suspend'],
+    'POST /entreprises/{id}/delete' => ['EntrepriseController', 'delete'],
 
     // Utilisateurs
     'GET /users' => ['UserController', 'index'],
@@ -26,6 +27,7 @@ return [
     'GET /users/{id}' => ['UserController', 'show'],
     'GET /users/{id}/edit' => ['UserController', 'edit'],
     'POST /users/{id}' => ['UserController', 'update'],
+    'POST /users/{id}/delete' => ['UserController', 'delete'],
     'POST /users/{id}/reset-password' => ['UserController', 'resetPassword'],
 
     // Banque (supervision)

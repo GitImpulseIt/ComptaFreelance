@@ -99,6 +99,13 @@ class UserController
         exit;
     }
 
+    public function delete(int $id): void
+    {
+        $this->service->delete($id);
+        header('Location: /users');
+        exit;
+    }
+
     public function resetPassword(int $id): void
     {
         $user = $this->service->findById($id);

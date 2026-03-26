@@ -50,7 +50,9 @@ class EntrepriseController
         echo $this->twig->render('entreprises/show.html.twig', [
             'entreprise' => $entreprise,
             'users' => $users,
+            'error' => $_SESSION['entreprise_error'] ?? null,
         ]);
+        unset($_SESSION['entreprise_error']);
     }
 
     public function edit(int $id): void
@@ -80,6 +82,17 @@ class EntrepriseController
     {
         $this->service->suspend($id);
         header('Location: /entreprises/' . $id);
+        exit;
+    }
+
+    public function delete(int $id): void
+    {
+        if (!$this->service->delete($id)) {
+            $_SESSION['entreprise_error'] = 'Impossible de supprimer : cette entreprise a encore des utilisateurs.';
+            header('Location: /entreprises/' . $id);
+            exit;
+        }
+        header('Location: /entreprises');
         exit;
     }
 }

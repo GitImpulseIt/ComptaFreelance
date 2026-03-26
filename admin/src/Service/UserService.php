@@ -80,6 +80,12 @@ class UserService
         return (int) $stmt->fetchColumn() > 0;
     }
 
+    public function delete(int $id): void
+    {
+        $stmt = $this->pdo->prepare('DELETE FROM users WHERE id = :id');
+        $stmt->execute(['id' => $id]);
+    }
+
     public function resetPassword(int $id): string
     {
         $newPassword = $this->passwordService->generateRandomPassword();
