@@ -1,0 +1,57 @@
+{% extends 'layout/app.html.twig' %}
+
+{% block title %}Entreprises - ComptaV2 Admin{% endblock %}
+{% block page_title %}Entreprises{% endblock %}
+
+{% set active_page = 'entreprises' %}
+
+{% block content %}
+<div class="mb-6">
+    <a href="/entreprises/create" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+        Nouvelle entreprise
+    </a>
+</div>
+
+<div class="bg-white rounded-xl shadow-sm overflow-hidden">
+    <table class="w-full text-sm">
+        <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
+            <tr>
+                <th class="px-6 py-3 text-left">Raison sociale</th>
+                <th class="px-6 py-3 text-left">SIRET</th>
+                <th class="px-6 py-3 text-left">Ville</th>
+                <th class="px-6 py-3 text-center">Users</th>
+                <th class="px-6 py-3 text-center">Factures</th>
+                <th class="px-6 py-3 text-right">CA</th>
+                <th class="px-6 py-3 text-center">Statut</th>
+                <th class="px-6 py-3"></th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+            {% for e in entreprises %}
+            <tr class="hover:bg-gray-50">
+                <td class="px-6 py-4 font-medium text-gray-800">{{ e.raison_sociale }}</td>
+                <td class="px-6 py-4 text-gray-500">{{ e.siret }}</td>
+                <td class="px-6 py-4 text-gray-500">{{ e.ville }}</td>
+                <td class="px-6 py-4 text-center">{{ e.nb_users }}</td>
+                <td class="px-6 py-4 text-center">{{ e.nb_factures }}</td>
+                <td class="px-6 py-4 text-right">{{ e.ca_total|number_format(2, ',', ' ') }} &euro;</td>
+                <td class="px-6 py-4 text-center">
+                    {% if e.active %}
+                        <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-700">Active</span>
+                    {% else %}
+                        <span class="px-2 py-1 text-xs rounded-full bg-red-100 text-red-700">Suspendue</span>
+                    {% endif %}
+                </td>
+                <td class="px-6 py-4 text-right">
+                    <a href="/entreprises/{{ e.id }}" class="text-blue-600 hover:underline">Voir</a>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="8" class="px-6 py-8 text-center text-gray-400">Aucune entreprise enregistrée.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

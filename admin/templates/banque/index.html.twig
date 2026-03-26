@@ -1,0 +1,47 @@
+{% extends 'layout/app.html.twig' %}
+
+{% block title %}Banque - ComptaV2 Admin{% endblock %}
+{% block page_title %}Supervision bancaire{% endblock %}
+
+{% set active_page = 'banque' %}
+
+{% block content %}
+<div class="bg-white rounded-xl shadow-sm overflow-hidden">
+    <table class="w-full text-sm">
+        <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
+            <tr>
+                <th class="px-6 py-3 text-left">Compte</th>
+                <th class="px-6 py-3 text-left">Entreprise</th>
+                <th class="px-6 py-3 text-left">Banque</th>
+                <th class="px-6 py-3 text-center">Type</th>
+                <th class="px-6 py-3 text-center">Transactions</th>
+                <th class="px-6 py-3 text-center">Imports</th>
+                <th class="px-6 py-3"></th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+            {% for c in comptes %}
+            <tr class="hover:bg-gray-50">
+                <td class="px-6 py-4 font-medium text-gray-800">{{ c.nom }}</td>
+                <td class="px-6 py-4 text-gray-500">{{ c.entreprise_nom }}</td>
+                <td class="px-6 py-4 text-gray-500">{{ c.banque }}</td>
+                <td class="px-6 py-4 text-center">
+                    <span class="px-2 py-1 text-xs rounded-full {{ c.type_connexion == 'api' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600' }}">
+                        {{ c.type_connexion }}
+                    </span>
+                </td>
+                <td class="px-6 py-4 text-center">{{ c.nb_transactions }}</td>
+                <td class="px-6 py-4 text-center">{{ c.nb_imports }}</td>
+                <td class="px-6 py-4 text-right">
+                    <a href="/banque/{{ c.id }}" class="text-blue-600 hover:underline">Voir</a>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="7" class="px-6 py-8 text-center text-gray-400">Aucun compte bancaire enregistré.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

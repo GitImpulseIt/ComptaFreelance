@@ -1,0 +1,22 @@
+{
+    "name": "comptav2/admin",
+    "description": "Webapp admin ComptaV2",
+    "type": "project",
+    "license": "proprietary",
+    "require": {
+        "php": ">=8.3",
+        "twig/twig": "^3.0",
+        "ext-pdo": "*",
+        "ext-pdo_pgsql": "*",
+        "ext-intl": "*",
+        "ext-mbstring": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Admin\\": "src/"
+        }
+    },
+    "config": {
+        "sort-packages": true
+    }
+}

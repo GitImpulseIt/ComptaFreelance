@@ -1,0 +1,28 @@
+{% extends 'layout/app.html.twig' %}
+
+{% block title %}{{ user.prenom }} {{ user.nom }} - ComptaV2 Admin{% endblock %}
+{% block page_title %}{{ user.prenom }} {{ user.nom }}{% endblock %}
+
+{% set active_page = 'users' %}
+
+{% block content %}
+<div class="flex gap-4 mb-8">
+    <form action="/users/{{ user.id }}/reset-password" method="POST"
+          onsubmit="return confirm('Réinitialiser le mot de passe de cet utilisateur ?');">
+        <button type="submit" class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition">
+            Réinitialiser le mot de passe
+        </button>
+    </form>
+    <a href="/users" class="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition">Retour</a>
+</div>
+
+<div class="bg-white rounded-xl shadow-sm p-6 max-w-lg">
+    <dl class="space-y-3 text-sm">
+        <div class="flex justify-between"><dt class="text-gray-500">Nom</dt><dd>{{ user.prenom }} {{ user.nom }}</dd></div>
+        <div class="flex justify-between"><dt class="text-gray-500">Email</dt><dd>{{ user.email }}</dd></div>
+        <div class="flex justify-between"><dt class="text-gray-500">Rôle</dt><dd>{{ user.role }}</dd></div>
+        <div class="flex justify-between"><dt class="text-gray-500">Entreprise</dt><dd>{{ user.entreprise_nom ?? '-' }}</dd></div>
+        <div class="flex justify-between"><dt class="text-gray-500">Inscription</dt><dd>{{ user.created_at|date('d/m/Y H:i') }}</dd></div>
+    </dl>
+</div>
+{% endblock %}

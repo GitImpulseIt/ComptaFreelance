@@ -2,10 +2,11 @@
 
 ## Projet
 
-- Webapp de comptabilité pour freelance avec backend admin multi-entreprises
-- Technologies : PHP 8.3 / Twig / Tailwind CSS
-- Base de données : PostgreSQL 16
-- Environnement : Docker (PHP-FPM + Nginx + PostgreSQL)
+- Webapp de comptabilité pour freelance
+- Webapp admin séparée (image Docker distincte) pour gérer les entreprises/utilisateurs
+- Technologies : PHP 8.3 / Twig / Tailwind CSS v4
+- Base de données : PostgreSQL 16 (partagée entre les deux webapps)
+- Environnement : Docker (2x PHP-FPM + 2x Nginx + 1x PostgreSQL)
 
 ## Règles de développement
 
@@ -20,83 +21,46 @@
 
 ## Architecture
 
+Deux webapps indépendantes partageant la même base de données :
+
 ```
 ComptaV2/
-├── docker/
-│   ├── php/
-│   │   ├── Dockerfile
-│   │   └── php.ini
-│   ├── nginx/
-│   │   └── default.conf
-│   └── postgres/
-│       └── init.sql
+├── public/                     # App freelance - document root
+├── src/                        # App freelance - code PHP
+│   ├── Controller/App/         #   Controllers espace freelance
+│   ├── Controller/Auth/        #   Controllers authentification
+│   ├── Model/                  #   Entités métier
+│   ├── Repository/             #   Accès BDD
+│   ├── Service/Banque/         #   Intégration bancaire (parsers, import, connect)
+│   └── Middleware/             #   Auth, CSRF, contexte entreprise
+├── templates/                  # App freelance - templates Twig
+├── config/                     # App freelance - configuration
+├── docker/                     # Docker app freelance (php, nginx, postgres)
 │
-├── public/                          # Document root (seul répertoire exposé)
-│   ├── index.php                    # Front controller unique
-│   ├── css/app.css
-│   ├── js/app.js
-│   └── images/
+├── admin/                      # Webapp admin (image Docker séparée)
+│   ├── public/                 #   Document root admin
+│   ├── src/Controller/         #   Controllers admin
+│   ├── src/Service/            #   Services admin (password, users, entreprises, banque)
+│   ├── src/Middleware/         #   Auth admin (SHA256)
+│   ├── templates/              #   Templates admin
+│   ├── config/                 #   Configuration admin (dont auth.php avec hash SHA256)
+│   └── docker/                 #   Docker admin (php, nginx)
 │
-├── src/
-│   ├── Controller/
-│   │   ├── App/                     # Espace freelance
-│   │   ├── Admin/                   # Espace admin
-│   │   └── Auth/                    # Authentification
-│   ├── Model/                       # Entités métier
-│   ├── Repository/                  # Accès BDD (requêtes SQL)
-│   ├── Service/
-│   │   ├── Banque/                  # Intégration bancaire
-│   │   │   └── Parser/             # Parsers de fichiers (CSV, OFX, QIF)
-│   │   └── Admin/                   # Logique admin
-│   └── Middleware/                  # Auth, CSRF, contexte entreprise
-│
-├── templates/
-│   ├── layout/                      # Layouts (base, app, admin)
-│   ├── components/                  # Composants réutilisables
-│   ├── auth/
-│   ├── app/                         # Vues espace freelance
-│   │   ├── dashboard/
-│   │   ├── clients/
-│   │   ├── factures/
-│   │   ├── depenses/
-│   │   ├── banque/
-│   │   ├── tva/
-│   │   └── parametres/
-│   └── admin/                       # Vues espace admin
-│       ├── dashboard/
-│       ├── entreprises/
-│       ├── users/
-│       └── banque/
-│
-├── config/                          # Configuration applicative
-├── database/                        # Migrations et schéma SQL
-├── storage/                         # Logs, cache, uploads (non versionné)
-│   └── uploads/banque/
-├── docs/                            # Documentation
-│
-├── docker-compose.yml
-├── .env / .env.example
-├── composer.json
-├── package.json
-├── tailwind.config.js
-├── .gitignore
-└── .dockerignore
+├── database/                   # Schéma SQL et migrations (partagé)
+├── storage/                    # Logs, cache, uploads app freelance
+├── docs/                       # Documentation
+└── docker-compose.yml          # Orchestre les 5 services
 ```
-
-## Routes
-
-- `/auth/*` — authentification (login, register)
-- `/app/*` — espace freelance (scopé par entreprise)
-- `/admin/*` — espace admin (gestion des entreprises/utilisateurs)
 
 ## Docker
 
-```bash
-cp .env.example .env
-docker compose up -d
-docker compose exec php composer install
-```
+- **App freelance** : `http://localhost:8080` (nginx + php)
+- **App admin** : `http://localhost:8081` (admin-nginx + admin-php)
+- **PostgreSQL** : `localhost:5432` (partagé)
 
-- **php** : PHP 8.3-FPM (port 9000 interne)
-- **nginx** : reverse proxy (port 8080)
-- **postgres** : PostgreSQL 16 (port 5432)
+## Auth admin
+
+- Mot de passe stocké en SHA256 dans `admin/config/auth.php`
+- Par défaut : `admin`
+- Changeable via l'interface admin (`/password`)
+- Reset des mots de passe utilisateurs : génère un mot de passe aléatoire affiché une seule fois

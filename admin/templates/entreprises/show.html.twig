@@ -1,0 +1,42 @@
+{% extends 'layout/app.html.twig' %}
+
+{% block title %}{{ entreprise.raison_sociale }} - ComptaV2 Admin{% endblock %}
+{% block page_title %}{{ entreprise.raison_sociale }}{% endblock %}
+
+{% set active_page = 'entreprises' %}
+
+{% block content %}
+<div class="flex gap-4 mb-8">
+    <a href="/entreprises/{{ entreprise.id }}/edit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">Modifier</a>
+    <form action="/entreprises/{{ entreprise.id }}/suspend" method="POST">
+        <button type="submit" class="{{ entreprise.active ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700' }} text-white px-4 py-2 rounded-lg transition">
+            {{ entreprise.active ? 'Suspendre' : 'Réactiver' }}
+        </button>
+    </form>
+    <a href="/entreprises" class="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition">Retour</a>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="bg-white rounded-xl shadow-sm p-6">
+        <h3 class="text-lg font-semibold mb-4">Informations</h3>
+        <dl class="space-y-3 text-sm">
+            <div class="flex justify-between"><dt class="text-gray-500">SIRET</dt><dd>{{ entreprise.siret }}</dd></div>
+            <div class="flex justify-between"><dt class="text-gray-500">Adresse</dt><dd>{{ entreprise.adresse }}</dd></div>
+            <div class="flex justify-between"><dt class="text-gray-500">Ville</dt><dd>{{ entreprise.code_postal }} {{ entreprise.ville }}</dd></div>
+            <div class="flex justify-between"><dt class="text-gray-500">Téléphone</dt><dd>{{ entreprise.telephone }}</dd></div>
+            <div class="flex justify-between"><dt class="text-gray-500">Email</dt><dd>{{ entreprise.email }}</dd></div>
+            <div class="flex justify-between"><dt class="text-gray-500">Régime TVA</dt><dd>{{ entreprise.regime_tva }}</dd></div>
+            <div class="flex justify-between"><dt class="text-gray-500">Statut</dt><dd>{{ entreprise.active ? 'Active' : 'Suspendue' }}</dd></div>
+        </dl>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm p-6">
+        <h3 class="text-lg font-semibold mb-4">Statistiques</h3>
+        <dl class="space-y-3 text-sm">
+            <div class="flex justify-between"><dt class="text-gray-500">Utilisateurs</dt><dd>{{ entreprise.nb_users }}</dd></div>
+            <div class="flex justify-between"><dt class="text-gray-500">Factures</dt><dd>{{ entreprise.nb_factures }}</dd></div>
+            <div class="flex justify-between"><dt class="text-gray-500">CA total</dt><dd>{{ entreprise.ca_total|number_format(2, ',', ' ') }} &euro;</dd></div>
+            <div class="flex justify-between"><dt class="text-gray-500">Comptes bancaires</dt><dd>{{ entreprise.nb_comptes_bancaires }}</dd></div>
+        </dl>
+    </div>
+</div>
+{% endblock %}

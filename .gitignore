@@ -1,14 +1,14 @@
 # Dépendances
-/vendor/
-/node_modules/
+vendor/
+node_modules/
 
 # Environnement
 .env
 
 # Storage
-/storage/logs/*
-/storage/cache/*
-/storage/uploads/*
+storage/logs/*
+storage/cache/*
+storage/uploads/*
 !storage/logs/.gitkeep
 !storage/cache/.gitkeep
 !storage/uploads/.gitkeep

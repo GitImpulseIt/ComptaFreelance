@@ -1,0 +1,25 @@
+{% extends 'layout/app.html.twig' %}
+
+{% block title %}Dashboard - ComptaV2 Admin{% endblock %}
+{% block page_title %}Tableau de bord{% endblock %}
+
+{% set active_page = 'dashboard' %}
+
+{% block content %}
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div class="bg-white rounded-xl shadow-sm p-6">
+        <p class="text-sm text-gray-500">Entreprises</p>
+        <p class="text-3xl font-bold text-gray-800 mt-2">{{ stats.nb_entreprises }}</p>
+        <p class="text-sm text-green-600 mt-1">{{ stats.nb_entreprises_actives }} actives</p>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm p-6">
+        <p class="text-sm text-gray-500">Utilisateurs</p>
+        <p class="text-3xl font-bold text-gray-800 mt-2">{{ stats.nb_users }}</p>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm p-6">
+        <p class="text-sm text-gray-500">Comptes bancaires</p>
+        <p class="text-3xl font-bold text-gray-800 mt-2">{{ stats.nb_comptes_bancaires }}</p>
+        <p class="text-sm text-gray-400 mt-1">{{ stats.nb_imports }} imports</p>
+    </div>
+</div>
+{% endblock %}

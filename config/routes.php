@@ -55,25 +55,4 @@ return [
     'GET /app/parametres' => ['App\\ParametreController', 'index'],
     'POST /app/parametres' => ['App\\ParametreController', 'update'],
 
-    // Admin - Dashboard
-    'GET /admin' => ['Admin\\AdminDashboardController', 'index'],
-
-    // Admin - Entreprises
-    'GET /admin/entreprises' => ['Admin\\EntrepriseController', 'index'],
-    'GET /admin/entreprises/create' => ['Admin\\EntrepriseController', 'create'],
-    'POST /admin/entreprises' => ['Admin\\EntrepriseController', 'store'],
-    'GET /admin/entreprises/{id}' => ['Admin\\EntrepriseController', 'show'],
-    'GET /admin/entreprises/{id}/edit' => ['Admin\\EntrepriseController', 'edit'],
-    'POST /admin/entreprises/{id}' => ['Admin\\EntrepriseController', 'update'],
-    'POST /admin/entreprises/{id}/suspend' => ['Admin\\EntrepriseController', 'suspend'],
-
-    // Admin - Utilisateurs
-    'GET /admin/users' => ['Admin\\AdminUserController', 'index'],
-    'GET /admin/users/{id}' => ['Admin\\AdminUserController', 'show'],
-    'POST /admin/users/{id}' => ['Admin\\AdminUserController', 'update'],
-
-    // Admin - Banque (supervision)
-    'GET /admin/banque' => ['Admin\\AdminBanqueController', 'index'],
-    'GET /admin/banque/{id}' => ['Admin\\AdminBanqueController', 'show'],
-
 ];
