@@ -6,23 +6,26 @@
 {% set active_page = 'users' %}
 
 {% block content %}
-<div class="flex gap-4 mb-8">
+<div class="flex gap-3 mb-8">
     <form action="/users/{{ user.id }}/reset-password" method="POST"
           onsubmit="return confirm('Réinitialiser le mot de passe de cet utilisateur ?');">
-        <button type="submit" class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition">
+        <button type="submit" class="inline-flex items-center gap-2 bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 transition font-medium">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
             Réinitialiser le mot de passe
         </button>
     </form>
-    <a href="/users" class="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition">Retour</a>
+    <a href="/users" class="border border-slate-300 text-slate-600 px-4 py-2 rounded-lg hover:bg-slate-50 transition font-medium">Retour</a>
 </div>
 
 <div class="bg-white rounded-xl shadow-sm p-6 max-w-lg">
     <dl class="space-y-3 text-sm">
-        <div class="flex justify-between"><dt class="text-gray-500">Nom</dt><dd>{{ user.prenom }} {{ user.nom }}</dd></div>
-        <div class="flex justify-between"><dt class="text-gray-500">Email</dt><dd>{{ user.email }}</dd></div>
-        <div class="flex justify-between"><dt class="text-gray-500">Rôle</dt><dd>{{ user.role }}</dd></div>
-        <div class="flex justify-between"><dt class="text-gray-500">Entreprise</dt><dd>{{ user.entreprise_nom ?? '-' }}</dd></div>
-        <div class="flex justify-between"><dt class="text-gray-500">Inscription</dt><dd>{{ user.created_at|date('d/m/Y H:i') }}</dd></div>
+        <div class="flex justify-between py-1 border-b border-slate-50"><dt class="text-slate-500">Nom</dt><dd class="font-medium text-slate-700">{{ user.prenom }} {{ user.nom }}</dd></div>
+        <div class="flex justify-between py-1 border-b border-slate-50"><dt class="text-slate-500">Email</dt><dd class="text-slate-700">{{ user.email }}</dd></div>
+        <div class="flex justify-between py-1 border-b border-slate-50"><dt class="text-slate-500">Rôle</dt><dd>
+            <span class="px-2 py-0.5 text-xs font-medium rounded-full {{ user.role == 'admin' ? 'bg-purple-50 text-purple-700 ring-1 ring-purple-200' : 'bg-blue-50 text-blue-700 ring-1 ring-blue-200' }}">{{ user.role }}</span>
+        </dd></div>
+        <div class="flex justify-between py-1 border-b border-slate-50"><dt class="text-slate-500">Entreprise</dt><dd class="text-slate-700">{{ user.entreprise_nom ?? '-' }}</dd></div>
+        <div class="flex justify-between py-1"><dt class="text-slate-500">Inscription</dt><dd class="text-slate-700">{{ user.created_at|date('d/m/Y H:i') }}</dd></div>
     </dl>
 </div>
 {% endblock %}

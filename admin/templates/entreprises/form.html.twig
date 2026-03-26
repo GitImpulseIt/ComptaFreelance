@@ -7,58 +7,60 @@
 
 {% block content %}
 <div class="max-w-2xl">
-    <form method="POST" action="{{ entreprise.id is defined and entreprise.id ? '/entreprises/' ~ entreprise.id : '/entreprises' }}" class="space-y-4">
-        <div>
-            <label for="raison_sociale" class="block text-sm font-medium text-gray-700">Raison sociale</label>
-            <input type="text" id="raison_sociale" name="raison_sociale" required value="{{ entreprise.raison_sociale ?? '' }}"
-                   class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm">
-        </div>
-        <div>
-            <label for="siret" class="block text-sm font-medium text-gray-700">SIRET</label>
-            <input type="text" id="siret" name="siret" required value="{{ entreprise.siret ?? '' }}"
-                   class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm">
-        </div>
-        <div>
-            <label for="adresse" class="block text-sm font-medium text-gray-700">Adresse</label>
-            <input type="text" id="adresse" name="adresse" value="{{ entreprise.adresse ?? '' }}"
-                   class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm">
-        </div>
-        <div class="grid grid-cols-3 gap-4">
+    <div class="bg-white rounded-xl shadow-sm p-6">
+        <form method="POST" action="{{ entreprise.id is defined and entreprise.id ? '/entreprises/' ~ entreprise.id : '/entreprises' }}" class="space-y-5">
             <div>
-                <label for="code_postal" class="block text-sm font-medium text-gray-700">Code postal</label>
-                <input type="text" id="code_postal" name="code_postal" value="{{ entreprise.code_postal ?? '' }}"
-                       class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm">
-            </div>
-            <div class="col-span-2">
-                <label for="ville" class="block text-sm font-medium text-gray-700">Ville</label>
-                <input type="text" id="ville" name="ville" value="{{ entreprise.ville ?? '' }}"
-                       class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm">
-            </div>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-            <div>
-                <label for="telephone" class="block text-sm font-medium text-gray-700">Téléphone</label>
-                <input type="text" id="telephone" name="telephone" value="{{ entreprise.telephone ?? '' }}"
-                       class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm">
+                <label for="raison_sociale" class="block text-sm font-medium text-slate-700 mb-1">Raison sociale</label>
+                <input type="text" id="raison_sociale" name="raison_sociale" required value="{{ entreprise.raison_sociale ?? '' }}"
+                       placeholder="Ex: Ma Société SAS" class="block w-full">
             </div>
             <div>
-                <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
-                <input type="email" id="email" name="email" value="{{ entreprise.email ?? '' }}"
-                       class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm">
+                <label for="siret" class="block text-sm font-medium text-slate-700 mb-1">SIRET</label>
+                <input type="text" id="siret" name="siret" required value="{{ entreprise.siret ?? '' }}"
+                       placeholder="12345678901234" class="block w-full">
             </div>
-        </div>
-        <div>
-            <label for="regime_tva" class="block text-sm font-medium text-gray-700">Régime TVA</label>
-            <select id="regime_tva" name="regime_tva" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm">
-                <option value="franchise" {{ (entreprise.regime_tva ?? '') == 'franchise' ? 'selected' : '' }}>Franchise en base</option>
-                <option value="reel_simplifie" {{ (entreprise.regime_tva ?? '') == 'reel_simplifie' ? 'selected' : '' }}>Réel simplifié</option>
-                <option value="reel_normal" {{ (entreprise.regime_tva ?? '') == 'reel_normal' ? 'selected' : '' }}>Réel normal</option>
-            </select>
-        </div>
-        <div class="flex gap-4">
-            <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">Enregistrer</button>
-            <a href="/entreprises" class="border border-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-50 transition">Annuler</a>
-        </div>
-    </form>
+            <div>
+                <label for="adresse" class="block text-sm font-medium text-slate-700 mb-1">Adresse</label>
+                <input type="text" id="adresse" name="adresse" value="{{ entreprise.adresse ?? '' }}"
+                       placeholder="1 rue de la Paix" class="block w-full">
+            </div>
+            <div class="grid grid-cols-3 gap-4">
+                <div>
+                    <label for="code_postal" class="block text-sm font-medium text-slate-700 mb-1">Code postal</label>
+                    <input type="text" id="code_postal" name="code_postal" value="{{ entreprise.code_postal ?? '' }}"
+                           placeholder="75000" class="block w-full">
+                </div>
+                <div class="col-span-2">
+                    <label for="ville" class="block text-sm font-medium text-slate-700 mb-1">Ville</label>
+                    <input type="text" id="ville" name="ville" value="{{ entreprise.ville ?? '' }}"
+                           placeholder="Paris" class="block w-full">
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label for="telephone" class="block text-sm font-medium text-slate-700 mb-1">Téléphone</label>
+                    <input type="text" id="telephone" name="telephone" value="{{ entreprise.telephone ?? '' }}"
+                           placeholder="01 23 45 67 89" class="block w-full">
+                </div>
+                <div>
+                    <label for="email" class="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                    <input type="email" id="email" name="email" value="{{ entreprise.email ?? '' }}"
+                           placeholder="contact@societe.fr" class="block w-full">
+                </div>
+            </div>
+            <div>
+                <label for="regime_tva" class="block text-sm font-medium text-slate-700 mb-1">Régime TVA</label>
+                <select id="regime_tva" name="regime_tva" class="block w-full">
+                    <option value="franchise" {{ (entreprise.regime_tva ?? '') == 'franchise' ? 'selected' : '' }}>Franchise en base</option>
+                    <option value="reel_simplifie" {{ (entreprise.regime_tva ?? '') == 'reel_simplifie' ? 'selected' : '' }}>Réel simplifié</option>
+                    <option value="reel_normal" {{ (entreprise.regime_tva ?? '') == 'reel_normal' ? 'selected' : '' }}>Réel normal</option>
+                </select>
+            </div>
+            <div class="flex gap-3 pt-2">
+                <button type="submit" class="bg-indigo-600 text-white px-6 py-2.5 rounded-lg hover:bg-indigo-700 active:bg-indigo-800 transition font-medium">Enregistrer</button>
+                <a href="/entreprises" class="border border-slate-300 text-slate-600 px-6 py-2.5 rounded-lg hover:bg-slate-50 transition font-medium">Annuler</a>
+            </div>
+        </form>
+    </div>
 </div>
 {% endblock %}
