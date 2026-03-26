@@ -24,6 +24,6 @@
 .DS_Store
 Thumbs.db
 
-# Build
-/public/css/app.css
-/public/js/app.js
+# Build (décommenter si pipeline CI en place)
+# /public/css/app.css
+# /public/js/app.js
