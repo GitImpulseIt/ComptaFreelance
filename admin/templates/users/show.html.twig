@@ -7,6 +7,10 @@
 
 {% block content %}
 <div class="flex gap-3 mb-8">
+    <a href="/users/{{ user.id }}/edit" class="inline-flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition font-medium">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+        Modifier
+    </a>
     <form action="/users/{{ user.id }}/reset-password" method="POST"
           onsubmit="return confirm('Réinitialiser le mot de passe de cet utilisateur ?');">
         <button type="submit" class="inline-flex items-center gap-2 bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 transition font-medium">
@@ -19,12 +23,12 @@
 
 <div class="bg-white rounded-xl shadow-sm p-6 max-w-lg">
     <dl class="space-y-3 text-sm">
-        <div class="flex justify-between py-1 border-b border-slate-50"><dt class="text-slate-500">Nom</dt><dd class="font-medium text-slate-700">{{ user.prenom }} {{ user.nom }}</dd></div>
+        <div class="flex justify-between py-1 border-b border-slate-50"><dt class="text-slate-500">Prénom</dt><dd class="font-medium text-slate-700">{{ user.prenom }}</dd></div>
+        <div class="flex justify-between py-1 border-b border-slate-50"><dt class="text-slate-500">Nom</dt><dd class="font-medium text-slate-700">{{ user.nom }}</dd></div>
         <div class="flex justify-between py-1 border-b border-slate-50"><dt class="text-slate-500">Email</dt><dd class="text-slate-700">{{ user.email }}</dd></div>
-        <div class="flex justify-between py-1 border-b border-slate-50"><dt class="text-slate-500">Rôle</dt><dd>
-            <span class="px-2 py-0.5 text-xs font-medium rounded-full {{ user.role == 'admin' ? 'bg-purple-50 text-purple-700 ring-1 ring-purple-200' : 'bg-blue-50 text-blue-700 ring-1 ring-blue-200' }}">{{ user.role }}</span>
+        <div class="flex justify-between py-1 border-b border-slate-50"><dt class="text-slate-500">Entreprise</dt><dd>
+            <a href="/entreprises/{{ user.entreprise_id }}" class="text-indigo-600 hover:underline font-medium">{{ user.entreprise_nom }}</a>
         </dd></div>
-        <div class="flex justify-between py-1 border-b border-slate-50"><dt class="text-slate-500">Entreprise</dt><dd class="text-slate-700">{{ user.entreprise_nom ?? '-' }}</dd></div>
         <div class="flex justify-between py-1"><dt class="text-slate-500">Inscription</dt><dd class="text-slate-700">{{ user.created_at|date('d/m/Y H:i') }}</dd></div>
     </dl>
 </div>

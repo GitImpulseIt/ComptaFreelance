@@ -21,7 +21,11 @@ return [
 
     // Utilisateurs
     'GET /users' => ['UserController', 'index'],
+    'GET /users/create' => ['UserController', 'create'],
+    'POST /users' => ['UserController', 'store'],
     'GET /users/{id}' => ['UserController', 'show'],
+    'GET /users/{id}/edit' => ['UserController', 'edit'],
+    'POST /users/{id}' => ['UserController', 'update'],
     'POST /users/{id}/reset-password' => ['UserController', 'resetPassword'],
 
     // Banque (supervision)

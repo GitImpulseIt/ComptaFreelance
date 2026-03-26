@@ -46,7 +46,11 @@ class EntrepriseController
     {
         $entreprise = $this->service->findById($id);
         if (!$entreprise) { header('Location: /entreprises'); exit; }
-        echo $this->twig->render('entreprises/show.html.twig', ['entreprise' => $entreprise]);
+        $users = $this->service->findUsers($id);
+        echo $this->twig->render('entreprises/show.html.twig', [
+            'entreprise' => $entreprise,
+            'users' => $users,
+        ]);
     }
 
     public function edit(int $id): void

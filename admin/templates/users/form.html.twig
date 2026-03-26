@@ -1,0 +1,56 @@
+{% extends 'layout/app.html.twig' %}
+
+{% block title %}{{ user.id is defined and user.id ? 'Modifier' : 'Nouvel' }} utilisateur - ComptaV2 Admin{% endblock %}
+{% block page_title %}{{ user.id is defined and user.id ? 'Modifier' : 'Nouvel' }} utilisateur{% endblock %}
+
+{% set active_page = 'users' %}
+
+{% block content %}
+<div class="max-w-2xl">
+    {% if error %}
+    <div class="mb-4 px-4 py-3 bg-red-50 border-l-4 border-red-500 rounded-r-lg text-sm text-red-700">{{ error }}</div>
+    {% endif %}
+
+    <div class="bg-white rounded-xl shadow-sm p-6">
+        <form method="POST" action="{{ user.id is defined and user.id ? '/users/' ~ user.id : '/users' }}" class="space-y-5">
+            <div>
+                <label for="entreprise_id" class="block text-sm font-medium text-slate-700 mb-1">Entreprise</label>
+                <select id="entreprise_id" name="entreprise_id" required class="block w-full">
+                    <option value="">-- Sélectionner une entreprise --</option>
+                    {% for e in entreprises %}
+                    <option value="{{ e.id }}" {{ (user.entreprise_id is defined and user.entreprise_id == e.id) ? 'selected' : '' }}>{{ e.raison_sociale }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label for="prenom" class="block text-sm font-medium text-slate-700 mb-1">Prénom</label>
+                    <input type="text" id="prenom" name="prenom" required value="{{ user.prenom ?? '' }}"
+                           placeholder="Jean" class="block w-full">
+                </div>
+                <div>
+                    <label for="nom" class="block text-sm font-medium text-slate-700 mb-1">Nom</label>
+                    <input type="text" id="nom" name="nom" required value="{{ user.nom ?? '' }}"
+                           placeholder="Dupont" class="block w-full">
+                </div>
+            </div>
+            <div>
+                <label for="email" class="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                <input type="email" id="email" name="email" required value="{{ user.email ?? '' }}"
+                       placeholder="jean.dupont@exemple.fr" class="block w-full">
+            </div>
+            {% if not (user.id is defined and user.id) %}
+            <div>
+                <label for="password" class="block text-sm font-medium text-slate-700 mb-1">Mot de passe</label>
+                <input type="password" id="password" name="password" required minlength="8"
+                       placeholder="Minimum 8 caractères" class="block w-full">
+            </div>
+            {% endif %}
+            <div class="flex gap-3 pt-2">
+                <button type="submit" class="bg-indigo-600 text-white px-6 py-2.5 rounded-lg hover:bg-indigo-700 active:bg-indigo-800 transition font-medium">Enregistrer</button>
+                <a href="/users" class="border border-slate-300 text-slate-600 px-6 py-2.5 rounded-lg hover:bg-slate-50 transition font-medium">Annuler</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

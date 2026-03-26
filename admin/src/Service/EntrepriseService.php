@@ -66,4 +66,11 @@ class EntrepriseService
         $stmt = $this->pdo->prepare('UPDATE entreprises SET active = NOT active, updated_at = NOW() WHERE id = :id');
         $stmt->execute(['id' => $id]);
     }
+
+    public function findUsers(int $entrepriseId): array
+    {
+        $stmt = $this->pdo->prepare('SELECT * FROM users WHERE entreprise_id = :id ORDER BY nom, prenom');
+        $stmt->execute(['id' => $entrepriseId]);
+        return $stmt->fetchAll();
+    }
 }

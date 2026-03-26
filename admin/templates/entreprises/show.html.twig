@@ -54,4 +54,45 @@
         </dl>
     </div>
 </div>
+
+<div class="mt-8">
+    <div class="flex items-center justify-between mb-4">
+        <h3 class="text-base font-semibold text-slate-800 flex items-center gap-2">
+            <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+            Utilisateurs ({{ users|length }})
+        </h3>
+        <a href="/users/create" class="inline-flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-800 font-medium">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Ajouter
+        </a>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+        <table class="w-full text-sm">
+            <thead class="bg-slate-50 text-slate-500 uppercase text-xs tracking-wider">
+                <tr>
+                    <th class="px-6 py-3 text-left font-semibold">Nom</th>
+                    <th class="px-6 py-3 text-left font-semibold">Email</th>
+                    <th class="px-6 py-3 text-left font-semibold">Inscription</th>
+                    <th class="px-6 py-3"></th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                {% for u in users %}
+                <tr class="hover:bg-slate-50/50 transition">
+                    <td class="px-6 py-3 font-medium text-slate-800">{{ u.prenom }} {{ u.nom }}</td>
+                    <td class="px-6 py-3 text-slate-500">{{ u.email }}</td>
+                    <td class="px-6 py-3 text-slate-500">{{ u.created_at|date('d/m/Y') }}</td>
+                    <td class="px-6 py-3 text-right">
+                        <a href="/users/{{ u.id }}" class="text-indigo-600 hover:text-indigo-800 font-medium">Voir</a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" class="px-6 py-8 text-center text-slate-400">Aucun utilisateur pour cette entreprise.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 {% endblock %}

@@ -17,12 +17,11 @@ CREATE TABLE IF NOT EXISTS entreprises (
 
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
-    entreprise_id INTEGER REFERENCES entreprises(id),
+    entreprise_id INTEGER NOT NULL REFERENCES entreprises(id),
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     nom VARCHAR(100) NOT NULL,
     prenom VARCHAR(100) NOT NULL,
-    role VARCHAR(20) NOT NULL DEFAULT 'freelance',
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
