@@ -21,6 +21,15 @@
             </div>
             {% endif %}
             <form method="POST" action="/auth/register" class="space-y-5">
+                <div>
+                    <label for="entreprise_id" class="block text-sm font-medium text-slate-700 mb-1">Entreprise</label>
+                    <select id="entreprise_id" name="entreprise_id" required class="block w-full">
+                        <option value="">-- Sélectionner --</option>
+                        {% for e in entreprises %}
+                        <option value="{{ e.id }}">{{ e.raison_sociale }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label for="prenom" class="block text-sm font-medium text-slate-700 mb-1">Prénom</label>

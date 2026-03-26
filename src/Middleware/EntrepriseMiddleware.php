@@ -6,9 +6,8 @@ namespace App\Middleware;
 
 class EntrepriseMiddleware
 {
-    public function handle(): ?int
+    public function getEntrepriseId(): ?int
     {
-        // TODO: Résoudre l'entreprise active de l'utilisateur connecté
         return $_SESSION['entreprise_id'] ?? null;
     }
 }
