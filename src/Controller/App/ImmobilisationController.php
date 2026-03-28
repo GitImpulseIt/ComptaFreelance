@@ -42,9 +42,21 @@ class ImmobilisationController
 
     public function create(): void
     {
+        // Pré-remplissage depuis une transaction bancaire
+        $prefill = null;
+        if (isset($_GET['designation'])) {
+            $prefill = [
+                'designation' => $_GET['designation'] ?? '',
+                'date_acquisition' => $_GET['date_acquisition'] ?? '',
+                'valeur_acquisition' => $_GET['valeur'] ?? '',
+            ];
+        }
+
         echo $this->twig->render('app/immobilisations/form.html.twig', [
             'active_page' => 'immobilisations',
             'immo' => null,
+            'prefill' => $prefill,
+            'retour' => $_GET['retour'] ?? null,
         ]);
     }
 
@@ -67,7 +79,12 @@ class ImmobilisationController
             'compte' => trim($_POST['compte'] ?? '218'),
         ]);
 
-        header('Location: /app/immobilisations?success=1');
+        $retour = $_POST['retour'] ?? null;
+        if ($retour) {
+            header('Location: /app/banque/' . (int) $retour . '?success=1');
+        } else {
+            header('Location: /app/immobilisations?success=1');
+        }
         exit;
     }
 
