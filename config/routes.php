@@ -40,13 +40,10 @@ return [
     'POST /app/depenses/{id}/delete' => ['App\\DepenseController', 'delete'],
 
     // App - Banque
-    'GET /app/banque' => ['App\\BanqueController', 'index'],
+    'GET /app/banque' => ['App\\BanqueController', 'transactions'],
     'GET /app/banque/import' => ['App\\BanqueController', 'showImport'],
     'POST /app/banque/import' => ['App\\BanqueController', 'import'],
-    'GET /app/banque/connect' => ['App\\BanqueController', 'showConnect'],
-    'POST /app/banque/connect' => ['App\\BanqueController', 'connect'],
-    'GET /app/banque/transactions' => ['App\\BanqueController', 'transactions'],
-    'POST /app/banque/transactions/{id}/rapprocher' => ['App\\BanqueController', 'rapprocher'],
+    'POST /app/banque/{id}/rapprocher' => ['App\\BanqueController', 'rapprocher'],
 
     // App - TVA
     'GET /app/tva' => ['App\\TvaController', 'index'],

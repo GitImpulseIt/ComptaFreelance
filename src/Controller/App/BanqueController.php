@@ -24,17 +24,6 @@ class BanqueController
         $this->compteRepo = new CompteBancaireRepository($pdo);
     }
 
-    public function index(): void
-    {
-        $entrepriseId = $this->auth->getEntrepriseId();
-        $comptes = $this->compteRepo->findAllByEntreprise($entrepriseId);
-
-        echo $this->twig->render('app/banque/index.html.twig', [
-            'active_page' => 'banque',
-            'comptes' => $comptes,
-        ]);
-    }
-
     public function transactions(): void
     {
         $entrepriseId = $this->auth->getEntrepriseId();
@@ -52,7 +41,7 @@ class BanqueController
         $stats = $this->transactionRepo->countByEntreprise($entrepriseId);
         $comptes = $this->compteRepo->findAllByEntreprise($entrepriseId);
 
-        echo $this->twig->render('app/banque/transactions.html.twig', [
+        echo $this->twig->render('app/banque/index.html.twig', [
             'active_page' => 'banque',
             'transactions' => $transactions,
             'stats' => $stats,
@@ -69,13 +58,5 @@ class BanqueController
     }
 
     public function import(): void {}
-    public function showConnect(): void
-    {
-        echo $this->twig->render('app/banque/connect.html.twig', [
-            'active_page' => 'banque',
-        ]);
-    }
-
-    public function connect(): void {}
     public function rapprocher(int $id): void {}
 }
