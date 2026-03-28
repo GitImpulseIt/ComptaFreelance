@@ -7,6 +7,12 @@
 
 {% block content %}
 
+{% if import_success is defined and import_success is not null %}
+<div class="mb-4 px-4 py-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-sm">
+    {{ import_success }} opération{{ import_success > 1 ? 's' : '' }} importée{{ import_success > 1 ? 's' : '' }} avec succès.
+</div>
+{% endif %}
+
 {# Boutons d'action #}
 <div class="flex gap-3 mb-6">
     {% if comptes|length > 0 %}

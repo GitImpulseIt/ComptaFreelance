@@ -14,6 +14,12 @@
         <h3 class="text-lg font-semibold text-slate-800">Importer un relevé bancaire</h3>
     </div>
 
+    {% if error is defined and error %}
+    <div class="mb-4 px-4 py-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+        {{ error }}
+    </div>
+    {% endif %}
+
     <div class="bg-white rounded-xl shadow-sm p-6">
         <form method="POST" action="/app/banque/import" enctype="multipart/form-data" class="space-y-5">
             <div>

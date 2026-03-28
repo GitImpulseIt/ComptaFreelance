@@ -6,7 +6,10 @@ namespace App\Controller\App;
 
 use App\Middleware\AuthMiddleware;
 use App\Repository\CompteBancaireRepository;
+use App\Repository\ImportBancaireRepository;
 use App\Repository\TransactionBancaireRepository;
+use App\Service\Banque\ImportService;
+use App\Service\Banque\ParserFactory;
 use PDO;
 use Twig\Environment;
 
@@ -47,6 +50,7 @@ class BanqueController
             'stats' => $stats,
             'comptes' => $comptes,
             'filtres' => $filtres,
+            'import_success' => isset($_GET['import_success']) ? (int) $_GET['import_success'] : null,
         ]);
     }
 
@@ -61,6 +65,56 @@ class BanqueController
         ]);
     }
 
-    public function import(): void {}
+    public function import(): void
+    {
+        $entrepriseId = $this->auth->getEntrepriseId();
+        $comptes = $this->compteRepo->findAllByEntreprise($entrepriseId);
+
+        $compteId = (int) ($_POST['compte_id'] ?? 0);
+        $format = $_POST['format'] ?? '';
+
+        // Vérifier que le compte appartient à l'entreprise
+        $compte = $this->compteRepo->findById($compteId);
+        if (!$compte || (int) $compte['entreprise_id'] !== $entrepriseId) {
+            echo $this->twig->render('app/banque/import.html.twig', [
+                'active_page' => 'banque',
+                'comptes' => $comptes,
+                'error' => 'Compte bancaire invalide.',
+            ]);
+            return;
+        }
+
+        // Vérifier le fichier uploadé
+        if (!isset($_FILES['fichier']) || $_FILES['fichier']['error'] !== UPLOAD_ERR_OK) {
+            echo $this->twig->render('app/banque/import.html.twig', [
+                'active_page' => 'banque',
+                'comptes' => $comptes,
+                'error' => 'Erreur lors de l\'envoi du fichier.',
+            ]);
+            return;
+        }
+
+        $tmpPath = $_FILES['fichier']['tmp_name'];
+
+        try {
+            $importService = new ImportService(
+                new ParserFactory(),
+                new ImportBancaireRepository($this->pdo),
+                $this->transactionRepo,
+            );
+
+            $count = $importService->importerFichier($compteId, $tmpPath, $format);
+
+            header('Location: /app/banque?import_success=' . $count);
+            exit;
+        } catch (\Throwable $e) {
+            echo $this->twig->render('app/banque/import.html.twig', [
+                'active_page' => 'banque',
+                'comptes' => $comptes,
+                'error' => 'Erreur lors de l\'import : ' . $e->getMessage(),
+            ]);
+        }
+    }
+
     public function rapprocher(int $id): void {}
 }
