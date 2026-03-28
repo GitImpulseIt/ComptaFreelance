@@ -7,7 +7,11 @@
 
 {% block content %}
 <div class="flex gap-3 mb-8">
-    <a href="/app/banque/import" class="inline-flex items-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-lg hover:bg-indigo-700 active:bg-indigo-800 transition font-medium shadow-sm">
+    <a href="/app/banque/transactions" class="inline-flex items-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-lg hover:bg-indigo-700 active:bg-indigo-800 transition font-medium shadow-sm">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        Opérations bancaires
+    </a>
+    <a href="/app/banque/import" class="inline-flex items-center gap-2 border border-slate-300 text-slate-600 px-4 py-2.5 rounded-lg hover:bg-slate-50 transition font-medium">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
         Importer un fichier
     </a>
@@ -18,4 +22,31 @@
 </div>
 
 {# Liste des comptes bancaires #}
+{% if comptes is defined and comptes|length > 0 %}
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    {% for compte in comptes %}
+    <div class="bg-white rounded-xl shadow-sm p-5 border border-slate-200 hover:shadow-md transition">
+        <div class="flex items-start justify-between">
+            <div>
+                <h3 class="font-semibold text-slate-800">{{ compte.nom }}</h3>
+                <p class="text-sm text-slate-500 mt-0.5">{{ compte.banque }}</p>
+                {% if compte.iban %}
+                <p class="text-xs text-slate-400 mt-1 font-mono">{{ compte.iban }}</p>
+                {% endif %}
+            </div>
+            <span class="inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full
+                {{ compte.type_connexion == 'api' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600' }}">
+                {{ compte.type_connexion == 'api' ? 'Connecté' : 'Manuel' }}
+            </span>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="bg-white rounded-xl shadow-sm py-16 text-center">
+    <svg class="w-16 h-16 mx-auto text-slate-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+    <h3 class="text-lg font-medium text-slate-600 mb-1">Aucun compte bancaire</h3>
+    <p class="text-sm text-slate-400">Importez un relevé ou connectez un compte pour commencer.</p>
+</div>
+{% endif %}
 {% endblock %}

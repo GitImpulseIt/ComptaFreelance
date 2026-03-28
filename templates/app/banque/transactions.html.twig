@@ -1,8 +1,180 @@
 {% extends 'layout/app.html.twig' %}
 
-{% block title %}Transactions - ComptaV2{% endblock %}
-{% block page_title %}Transactions bancaires{% endblock %}
+{% block title %}Opérations bancaires - ComptaV2{% endblock %}
+{% block page_title %}Opérations bancaires{% endblock %}
+
+{% set active_page = 'banque' %}
 
 {% block content %}
-{# Tableau des transactions avec colonne de rapprochement #}
+
+{# Statistiques #}
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white rounded-xl shadow-sm p-5 border-l-4 border-indigo-500">
+        <p class="text-sm font-medium text-slate-500">Total opérations</p>
+        <p class="text-2xl font-bold text-slate-800 mt-1">{{ stats.total }}</p>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm p-5 border-l-4 border-emerald-500">
+        <p class="text-sm font-medium text-slate-500">Crédits</p>
+        <p class="text-2xl font-bold text-emerald-600 mt-1">+{{ stats.total_credits|number_format(2, ',', ' ') }} &euro;</p>
+        <p class="text-xs text-slate-400 mt-1">{{ stats.nb_credits }} opération{{ stats.nb_credits > 1 ? 's' : '' }}</p>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm p-5 border-l-4 border-red-400">
+        <p class="text-sm font-medium text-slate-500">Débits</p>
+        <p class="text-2xl font-bold text-red-600 mt-1">-{{ stats.total_debits|number_format(2, ',', ' ') }} &euro;</p>
+        <p class="text-xs text-slate-400 mt-1">{{ stats.nb_debits }} opération{{ stats.nb_debits > 1 ? 's' : '' }}</p>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm p-5 border-l-4 border-amber-400">
+        <p class="text-sm font-medium text-slate-500">Non rapprochées</p>
+        <p class="text-2xl font-bold text-amber-600 mt-1">{{ stats.nb_non_rapprochees }}</p>
+    </div>
+</div>
+
+{# Filtres #}
+<div class="bg-white rounded-xl shadow-sm p-5 mb-6">
+    <form id="filtres-form" method="GET" action="/app/banque/transactions" class="flex flex-wrap items-end gap-4">
+        <div class="flex-1 min-w-[200px]">
+            <label class="block text-xs font-medium text-slate-500 mb-1">Recherche</label>
+            <input type="text" name="q" value="{{ filtres.recherche }}" placeholder="Rechercher un libellé..."
+                   class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+        </div>
+        <div class="min-w-[160px]">
+            <label class="block text-xs font-medium text-slate-500 mb-1">Compte</label>
+            <select name="compte" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+                <option value="">Tous les comptes</option>
+                {% for compte in comptes %}
+                <option value="{{ compte.id }}" {{ filtres.compte_id == compte.id ? 'selected' : '' }}>{{ compte.nom }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="min-w-[120px]">
+            <label class="block text-xs font-medium text-slate-500 mb-1">Type</label>
+            <select name="type" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+                <option value="">Tous</option>
+                <option value="credit" {{ filtres.type == 'credit' ? 'selected' : '' }}>Crédit</option>
+                <option value="debit" {{ filtres.type == 'debit' ? 'selected' : '' }}>Débit</option>
+            </select>
+        </div>
+        <div class="min-w-[140px]">
+            <label class="block text-xs font-medium text-slate-500 mb-1">Statut</label>
+            <select name="statut" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+                <option value="">Tous</option>
+                <option value="non_rapproche" {{ filtres.statut == 'non_rapproche' ? 'selected' : '' }}>Non rapproché</option>
+                <option value="rapproche" {{ filtres.statut == 'rapproche' ? 'selected' : '' }}>Rapproché</option>
+                <option value="ignore" {{ filtres.statut == 'ignore' ? 'selected' : '' }}>Ignoré</option>
+            </select>
+        </div>
+        <div class="min-w-[140px]">
+            <label class="block text-xs font-medium text-slate-500 mb-1">Du</label>
+            <input type="date" name="date_debut" value="{{ filtres.date_debut }}"
+                   class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+        </div>
+        <div class="min-w-[140px]">
+            <label class="block text-xs font-medium text-slate-500 mb-1">Au</label>
+            <input type="date" name="date_fin" value="{{ filtres.date_fin }}"
+                   class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+        </div>
+        <div class="flex gap-2">
+            <button type="submit" class="inline-flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition text-sm font-medium">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                Filtrer
+            </button>
+            <a href="/app/banque/transactions" class="inline-flex items-center gap-1 border border-slate-300 text-slate-600 px-3 py-2 rounded-lg hover:bg-slate-50 transition text-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                Reset
+            </a>
+        </div>
+    </form>
+</div>
+
+{# Tableau des opérations #}
+<div class="bg-white rounded-xl shadow-sm overflow-hidden">
+    {% if transactions|length > 0 %}
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead>
+                <tr class="bg-slate-50 border-b border-slate-200">
+                    <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Date</th>
+                    <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Type</th>
+                    <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Libellé</th>
+                    <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Compte</th>
+                    <th class="text-right px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Montant</th>
+                    <th class="text-center px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Statut</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                {% for t in transactions %}
+                <tr class="transaction-row hover:bg-slate-50/80 transition cursor-default group" data-id="{{ t.id }}">
+                    <td class="px-5 py-3.5 text-sm text-slate-700 whitespace-nowrap">
+                        {{ t.date|date('d/m/Y') }}
+                    </td>
+                    <td class="px-5 py-3.5 whitespace-nowrap">
+                        {% if t.type == 'credit' %}
+                        <span class="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12"/></svg>
+                            Crédit
+                        </span>
+                        {% else %}
+                        <span class="inline-flex items-center gap-1.5 text-xs font-medium text-red-700 bg-red-50 px-2.5 py-1 rounded-full">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 13l-5 5m0 0l-5-5m5 5V6"/></svg>
+                            Débit
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td class="px-5 py-3.5 text-sm text-slate-700 max-w-xs truncate" title="{{ t.libelle }}">
+                        {{ t.libelle }}
+                    </td>
+                    <td class="px-5 py-3.5 text-sm text-slate-500 whitespace-nowrap">
+                        {{ t.compte_nom }}
+                    </td>
+                    <td class="px-5 py-3.5 text-sm font-semibold whitespace-nowrap text-right tabular-nums">
+                        {% if t.type == 'credit' %}
+                        <span class="text-emerald-600">+{{ t.montant|number_format(2, ',', ' ') }} &euro;</span>
+                        {% else %}
+                        <span class="text-red-600">-{{ t.montant|number_format(2, ',', ' ') }} &euro;</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-5 py-3.5 text-center whitespace-nowrap">
+                        {% if t.statut == 'rapproche' %}
+                        <span class="inline-flex items-center gap-1 text-xs font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full" title="Rapproché">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            Rapproché
+                        </span>
+                        {% elseif t.statut == 'ignore' %}
+                        <span class="inline-flex items-center gap-1 text-xs font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full" title="Ignoré">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                            Ignoré
+                        </span>
+                        {% else %}
+                        <span class="inline-flex items-center gap-1 text-xs font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full" title="Non rapproché">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+                            Non rapproché
+                        </span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {# Compteur #}
+    <div class="px-5 py-3 bg-slate-50 border-t border-slate-200 text-sm text-slate-500">
+        {{ transactions|length }} opération{{ transactions|length > 1 ? 's' : '' }} affichée{{ transactions|length > 1 ? 's' : '' }}
+    </div>
+
+    {% else %}
+
+    {# État vide #}
+    <div class="px-8 py-16 text-center">
+        <h3 class="text-lg font-medium text-slate-600 mb-1">Aucune opération bancaire</h3>
+        <p class="text-sm text-slate-400 mb-6">Importez un relevé bancaire pour voir vos opérations ici.</p>
+        <a href="/app/banque/import" class="inline-flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-lg hover:bg-indigo-700 transition font-medium text-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+            Importer un fichier
+        </a>
+    </div>
+
+    {% endif %}
+</div>
+
 {% endblock %}

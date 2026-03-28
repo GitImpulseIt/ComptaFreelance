@@ -12,6 +12,7 @@
 
 - Les langages doivent toujours être dans des fichiers séparés (HTML/PHP/CSS/JS, etc.)
 - Toujours commit et push après une modification
+- Toujours recompiler Tailwind après une modification de template ou de CSS (`npm run build` pour l'app, `cd admin && npm run build` pour l'admin)
 
 ## Documentation
 
