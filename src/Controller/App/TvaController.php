@@ -60,20 +60,28 @@ class TvaController
             // Détail des opérations TVA
             $ech['detail_lignes_tva'] = $this->getDetailLignesTVA($entrepriseId, $annee, $ech['periode']);
 
-            // Pour la régularisation : soustraire les acomptes déjà payés
-            // On arrondit la TVA brute à l'euro le plus proche avant de soustraire
-            // les acomptes (déjà entiers via floor), pour éviter un résidu artificiel
+            // Pour la régularisation : somme des restes à payer de chaque acompte
+            // Reste = TVA attendue (floor) - montant effectivement payé
+            // Donne 0 quand les acomptes couvrent exactement les opérations,
+            // et capture les nouvelles opérations ajoutées après paiement
             if ($ech['type'] === 'regularisation') {
                 $ech['tva_due_brute'] = $ech['tva_due'];
-                $ech['acomptes_payes'] = $totalPayeAcomptes;
-                $ech['tva_due'] = (float) ((int) round($ech['tva_due']) - (int) $totalPayeAcomptes);
+                $acomptesAttendus = 0;
+                foreach ($echeances as $e) {
+                    if ($e['type'] !== 'acompte') {
+                        continue;
+                    }
+                    $acomptesAttendus += (int) floor($e['tva_due']);
+                }
+                $ech['acomptes_attendus'] = $acomptesAttendus;
+                $ech['acomptes_payes'] = (int) $totalPayeAcomptes;
+                $ech['tva_due'] = (float) ($acomptesAttendus - (int) $totalPayeAcomptes);
             }
 
             // Pré-remplir les cases du formulaire 3514
             $tvaDue = $ech['tva_due'];
-            $isRegul = $ech['type'] === 'regularisation';
             $ech['cases_auto'] = [
-                'case_01' => $tvaDue > 0 ? ($isRegul ? (int) round($tvaDue) : (int) floor($tvaDue)) : 0,
+                'case_01' => $tvaDue > 0 ? (int) floor($tvaDue) : 0,
                 'case_02' => 0,
                 'case_03' => 0,
                 'case_05' => $tvaDue < 0 ? (int) round($tvaCalc['total_tva_collectee']) : 0,

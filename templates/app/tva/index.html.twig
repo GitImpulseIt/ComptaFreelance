@@ -88,12 +88,12 @@
                     </div>
                     {% if ech.type == 'regularisation' %}
                     <div class="flex justify-between">
-                        <span class="text-slate-600">TVA brute due pour l'année</span>
-                        <span class="font-medium tabular-nums">{{ ech.tva_due_brute|number_format(2, ',', ' ') }} &euro;</span>
+                        <span class="text-slate-600">Acomptes attendus (arrondi)</span>
+                        <span class="font-medium tabular-nums">{{ ech.acomptes_attendus|number_format(0, ',', ' ') }} &euro;</span>
                     </div>
                     <div class="flex justify-between">
-                        <span class="text-slate-600">Moins : acomptes déjà payés</span>
-                        <span class="font-medium tabular-nums text-emerald-600">-{{ ech.acomptes_payes|number_format(2, ',', ' ') }} &euro;</span>
+                        <span class="text-slate-600">Acomptes payés</span>
+                        <span class="font-medium tabular-nums text-emerald-600">{{ ech.acomptes_payes|number_format(0, ',', ' ') }} &euro;</span>
                     </div>
                     {% endif %}
                     <div class="flex justify-between pt-2 border-t border-blue-200">
