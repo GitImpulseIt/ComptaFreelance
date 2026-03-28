@@ -10,9 +10,71 @@ class EntrepriseRepository
 {
     public function __construct(private PDO $pdo) {}
 
-    public function findAll(): array { return []; }
-    public function findById(int $id): ?array { return null; }
-    public function create(array $data): int { return 0; }
-    public function update(int $id, array $data): void {}
-    public function suspend(int $id): void {}
+    public function findAll(): array
+    {
+        $stmt = $this->pdo->query("SELECT * FROM entreprises ORDER BY raison_sociale");
+        return $stmt->fetchAll();
+    }
+
+    public function findById(int $id): ?array
+    {
+        $stmt = $this->pdo->prepare("SELECT * FROM entreprises WHERE id = :id");
+        $stmt->execute(['id' => $id]);
+        $result = $stmt->fetch();
+        return $result ?: null;
+    }
+
+    public function create(array $data): int
+    {
+        $stmt = $this->pdo->prepare(
+            "INSERT INTO entreprises (raison_sociale, siret, adresse, code_postal, ville, telephone, email, regime_tva, statut_juridique, option_ir, option_ir_fin)
+             VALUES (:raison_sociale, :siret, :adresse, :code_postal, :ville, :telephone, :email, :regime_tva, :statut_juridique, :option_ir, :option_ir_fin)"
+        );
+        $stmt->execute([
+            'raison_sociale' => $data['raison_sociale'],
+            'siret' => $data['siret'],
+            'adresse' => $data['adresse'] ?? '',
+            'code_postal' => $data['code_postal'] ?? '',
+            'ville' => $data['ville'] ?? '',
+            'telephone' => $data['telephone'] ?? '',
+            'email' => $data['email'] ?? '',
+            'regime_tva' => $data['regime_tva'] ?? 'franchise',
+            'statut_juridique' => $data['statut_juridique'] ?? 'SASU',
+            'option_ir' => $data['option_ir'] ?? false,
+            'option_ir_fin' => $data['option_ir_fin'] ?? null,
+        ]);
+        return (int) $this->pdo->lastInsertId();
+    }
+
+    public function update(int $id, array $data): void
+    {
+        $stmt = $this->pdo->prepare(
+            "UPDATE entreprises SET
+                raison_sociale = :raison_sociale, siret = :siret, adresse = :adresse,
+                code_postal = :code_postal, ville = :ville, telephone = :telephone,
+                email = :email, regime_tva = :regime_tva, statut_juridique = :statut_juridique,
+                option_ir = :option_ir, option_ir_fin = :option_ir_fin, updated_at = NOW()
+             WHERE id = :id"
+        );
+        $stmt->execute([
+            'id' => $id,
+            'raison_sociale' => $data['raison_sociale'],
+            'siret' => $data['siret'],
+            'adresse' => $data['adresse'] ?? '',
+            'code_postal' => $data['code_postal'] ?? '',
+            'ville' => $data['ville'] ?? '',
+            'telephone' => $data['telephone'] ?? '',
+            'email' => $data['email'] ?? '',
+            'regime_tva' => $data['regime_tva'] ?? 'franchise',
+            'statut_juridique' => $data['statut_juridique'] ?? 'SASU',
+            'option_ir' => $data['option_ir'] ?? false,
+            'option_ir_fin' => $data['option_ir_fin'] ?? null,
+        ]);
+    }
+
+    public function suspend(int $id): void
+    {
+        $stmt = $this->pdo->prepare("UPDATE entreprises SET active = FALSE, updated_at = NOW() WHERE id = :id");
+        $stmt->execute(['id' => $id]);
+    }
 }

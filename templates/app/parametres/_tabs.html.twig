@@ -5,6 +5,11 @@
            {% if active_tab == 'general' %}bg-white border border-b-white border-slate-200 -mb-px text-indigo-600{% else %}text-slate-500 hover:text-slate-700 hover:bg-slate-50{% endif %}">
             Général
         </a>
+        <a href="/app/parametres/entreprise"
+           class="px-4 py-2.5 text-sm font-medium rounded-t-lg transition
+           {% if active_tab == 'entreprise' %}bg-white border border-b-white border-slate-200 -mb-px text-indigo-600{% else %}text-slate-500 hover:text-slate-700 hover:bg-slate-50{% endif %}">
+            Entreprise
+        </a>
         <a href="/app/parametres/comptes-bancaires"
            class="px-4 py-2.5 text-sm font-medium rounded-t-lg transition
            {% if active_tab == 'comptes-bancaires' %}bg-white border border-b-white border-slate-200 -mb-px text-indigo-600{% else %}text-slate-500 hover:text-slate-700 hover:bg-slate-50{% endif %}">

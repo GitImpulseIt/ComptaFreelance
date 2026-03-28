@@ -6,12 +6,14 @@ namespace App\Controller\App;
 
 use App\Middleware\AuthMiddleware;
 use App\Repository\CompteBancaireRepository;
+use App\Repository\EntrepriseRepository;
 use PDO;
 use Twig\Environment;
 
 class ParametreController
 {
     private CompteBancaireRepository $compteRepo;
+    private EntrepriseRepository $entrepriseRepo;
 
     public function __construct(
         private Environment $twig,
@@ -19,6 +21,7 @@ class ParametreController
         private AuthMiddleware $auth,
     ) {
         $this->compteRepo = new CompteBancaireRepository($pdo);
+        $this->entrepriseRepo = new EntrepriseRepository($pdo);
     }
 
     public function index(): void
@@ -30,6 +33,70 @@ class ParametreController
     }
 
     public function update(): void {}
+
+    // --- Entreprise ---
+
+    public function entreprise(): void
+    {
+        $entrepriseId = $this->auth->getEntrepriseId();
+        $entreprise = $this->entrepriseRepo->findById($entrepriseId);
+
+        echo $this->twig->render('app/parametres/entreprise.html.twig', [
+            'active_page' => 'parametres',
+            'active_tab' => 'entreprise',
+            'entreprise' => $entreprise,
+            'success' => $_GET['success'] ?? null,
+        ]);
+    }
+
+    public function updateEntreprise(): void
+    {
+        $entrepriseId = $this->auth->getEntrepriseId();
+        $entreprise = $this->entrepriseRepo->findById($entrepriseId);
+
+        if (!$entreprise) {
+            header('Location: /app/parametres/entreprise');
+            exit;
+        }
+
+        $raisonSociale = trim($_POST['raison_sociale'] ?? '');
+        $siret = trim($_POST['siret'] ?? '');
+
+        if ($raisonSociale === '' || $siret === '') {
+            echo $this->twig->render('app/parametres/entreprise.html.twig', [
+                'active_page' => 'parametres',
+                'active_tab' => 'entreprise',
+                'entreprise' => $entreprise,
+                'error' => 'La raison sociale et le SIRET sont obligatoires.',
+                'old' => $_POST,
+            ]);
+            return;
+        }
+
+        $statutJuridique = $_POST['statut_juridique'] ?? $entreprise['statut_juridique'];
+        $optionIr = in_array($statutJuridique, ['SAS', 'SASU']) && isset($_POST['option_ir']);
+        $optionIrFin = $optionIr && !empty($_POST['option_ir_fin']) ? $_POST['option_ir_fin'] : null;
+
+        $this->entrepriseRepo->update($entrepriseId, [
+            'raison_sociale' => $raisonSociale,
+            'siret' => $siret,
+            'adresse' => trim($_POST['adresse'] ?? ''),
+            'code_postal' => trim($_POST['code_postal'] ?? ''),
+            'ville' => trim($_POST['ville'] ?? ''),
+            'telephone' => trim($_POST['telephone'] ?? ''),
+            'email' => trim($_POST['email'] ?? ''),
+            'regime_tva' => $_POST['regime_tva'] ?? $entreprise['regime_tva'],
+            'statut_juridique' => $statutJuridique,
+            'option_ir' => $optionIr,
+            'option_ir_fin' => $optionIrFin,
+        ]);
+
+        // Mettre à jour le nom en session
+        $_SESSION['user']['entreprise_nom'] = $raisonSociale;
+
+        header('Location: /app/parametres/entreprise?success=updated');
+        exit;
+    }
 
     // --- Comptes bancaires ---
 

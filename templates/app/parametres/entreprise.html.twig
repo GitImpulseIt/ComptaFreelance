@@ -1,0 +1,165 @@
+{% extends 'layout/app.html.twig' %}
+
+{% block title %}Entreprise - Paramètres - ComptaV2{% endblock %}
+{% block page_title %}Paramètres{% endblock %}
+
+{% set active_page = 'parametres' %}
+
+{% block content %}
+{% include 'app/parametres/_tabs.html.twig' %}
+
+{% if success == 'updated' %}
+<div class="mb-4 px-4 py-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-sm">
+    Informations de l'entreprise mises à jour.
+</div>
+{% endif %}
+
+{% if error is defined and error %}
+<div class="mb-4 px-4 py-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+    {{ error }}
+</div>
+{% endif %}
+
+{% set e = old is defined and old ? old : entreprise %}
+
+<form method="POST" action="/app/parametres/entreprise" class="max-w-2xl space-y-6">
+
+    {# Identité #}
+    <div class="bg-white rounded-xl shadow-sm p-6">
+        <h3 class="text-sm font-semibold text-slate-700 mb-4">Identité</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label for="raison_sociale" class="block text-sm font-medium text-slate-700 mb-1">Raison sociale <span class="text-red-500">*</span></label>
+                <input type="text" id="raison_sociale" name="raison_sociale" required
+                       value="{{ e.raison_sociale }}"
+                       class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+            </div>
+            <div>
+                <label for="siret" class="block text-sm font-medium text-slate-700 mb-1">SIRET <span class="text-red-500">*</span></label>
+                <input type="text" id="siret" name="siret" required
+                       value="{{ e.siret }}"
+                       class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+            </div>
+        </div>
+    </div>
+
+    {# Statut juridique #}
+    <div class="bg-white rounded-xl shadow-sm p-6">
+        <h3 class="text-sm font-semibold text-slate-700 mb-4">Statut juridique</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label for="statut_juridique" class="block text-sm font-medium text-slate-700 mb-1">Forme juridique</label>
+                <select id="statut_juridique" name="statut_juridique"
+                        class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                        onchange="toggleOptionIr()">
+                    <option value="EI" {{ e.statut_juridique == 'EI' ? 'selected' : '' }}>EI - Entreprise Individuelle</option>
+                    <option value="EURL" {{ e.statut_juridique == 'EURL' ? 'selected' : '' }}>EURL</option>
+                    <option value="SARL" {{ e.statut_juridique == 'SARL' ? 'selected' : '' }}>SARL</option>
+                    <option value="SAS" {{ e.statut_juridique == 'SAS' ? 'selected' : '' }}>SAS</option>
+                    <option value="SASU" {{ e.statut_juridique == 'SASU' ? 'selected' : '' }}>SASU</option>
+                </select>
+            </div>
+            <div>
+                <label for="regime_tva" class="block text-sm font-medium text-slate-700 mb-1">Régime TVA</label>
+                <select id="regime_tva" name="regime_tva"
+                        class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+                    <option value="franchise" {{ e.regime_tva == 'franchise' ? 'selected' : '' }}>Franchise en base</option>
+                    <option value="reel_simplifie" {{ e.regime_tva == 'reel_simplifie' ? 'selected' : '' }}>Réel simplifié</option>
+                    <option value="reel_normal" {{ e.regime_tva == 'reel_normal' ? 'selected' : '' }}>Réel normal</option>
+                </select>
+            </div>
+        </div>
+
+        {# Option IR (SAS/SASU uniquement) #}
+        <div id="option-ir-block" class="mt-4 p-4 bg-slate-50 rounded-lg {{ e.statut_juridique in ['SAS', 'SASU'] ? '' : 'hidden' }}">
+            <div class="flex items-start gap-3">
+                <input type="checkbox" id="option_ir" name="option_ir" value="1"
+                       {{ e.option_ir ? 'checked' : '' }}
+                       onchange="toggleOptionIrFin()"
+                       class="mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                <div class="flex-1">
+                    <label for="option_ir" class="text-sm font-medium text-slate-700">Option pour l'impôt sur le revenu (IR)</label>
+                    <p class="text-xs text-slate-500 mt-0.5">Les SAS/SASU sont par défaut à l'IS. L'option IR est possible pour une durée limitée.</p>
+                    <div id="option-ir-fin-block" class="mt-3 {{ e.option_ir ? '' : 'hidden' }}">
+                        <label for="option_ir_fin" class="block text-sm font-medium text-slate-700 mb-1">Date de fin de l'option IR</label>
+                        <input type="date" id="option_ir_fin" name="option_ir_fin"
+                               value="{{ e.option_ir_fin is defined and e.option_ir_fin ? e.option_ir_fin|date('Y-m-d') : '' }}"
+                               class="w-48 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Coordonnées #}
+    <div class="bg-white rounded-xl shadow-sm p-6">
+        <h3 class="text-sm font-semibold text-slate-700 mb-4">Coordonnées</h3>
+        <div class="space-y-4">
+            <div>
+                <label for="adresse" class="block text-sm font-medium text-slate-700 mb-1">Adresse</label>
+                <input type="text" id="adresse" name="adresse"
+                       value="{{ e.adresse }}"
+                       class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="code_postal" class="block text-sm font-medium text-slate-700 mb-1">Code postal</label>
+                    <input type="text" id="code_postal" name="code_postal"
+                           value="{{ e.code_postal }}"
+                           class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+                </div>
+                <div>
+                    <label for="ville" class="block text-sm font-medium text-slate-700 mb-1">Ville</label>
+                    <input type="text" id="ville" name="ville"
+                           value="{{ e.ville }}"
+                           class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="telephone" class="block text-sm font-medium text-slate-700 mb-1">Téléphone</label>
+                    <input type="text" id="telephone" name="telephone"
+                           value="{{ e.telephone }}"
+                           class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+                </div>
+                <div>
+                    <label for="email" class="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                    <input type="email" id="email" name="email"
+                           value="{{ e.email }}"
+                           class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div>
+        <button type="submit" class="inline-flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-lg hover:bg-indigo-700 transition font-medium text-sm shadow-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            Enregistrer
+        </button>
+    </div>
+</form>
+
+<script>
+function toggleOptionIr() {
+    var statut = document.getElementById('statut_juridique').value;
+    var block = document.getElementById('option-ir-block');
+    if (statut === 'SAS' || statut === 'SASU') {
+        block.classList.remove('hidden');
+    } else {
+        block.classList.add('hidden');
+        document.getElementById('option_ir').checked = false;
+        toggleOptionIrFin();
+    }
+}
+function toggleOptionIrFin() {
+    var checked = document.getElementById('option_ir').checked;
+    var block = document.getElementById('option-ir-fin-block');
+    if (checked) {
+        block.classList.remove('hidden');
+    } else {
+        block.classList.add('hidden');
+    }
+}
+</script>
+{% endblock %}

@@ -56,6 +56,10 @@ return [
     'GET /app/parametres' => ['App\\ParametreController', 'index'],
     'POST /app/parametres' => ['App\\ParametreController', 'update'],
 
+    // App - Paramètres > Entreprise
+    'GET /app/parametres/entreprise' => ['App\\ParametreController', 'entreprise'],
+    'POST /app/parametres/entreprise' => ['App\\ParametreController', 'updateEntreprise'],
+
     // App - Paramètres > Comptes bancaires
     'GET /app/parametres/comptes-bancaires' => ['App\\ParametreController', 'comptesBancaires'],
     'GET /app/parametres/comptes-bancaires/create' => ['App\\ParametreController', 'createCompte'],
