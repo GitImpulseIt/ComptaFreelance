@@ -74,8 +74,18 @@ class ParametreController
         }
 
         $statutJuridique = $_POST['statut_juridique'] ?? $entreprise['statut_juridique'];
-        $optionIr = in_array($statutJuridique, ['SAS', 'SASU']) && isset($_POST['option_ir']);
-        $optionIrFin = $optionIr && !empty($_POST['option_ir_fin']) ? $_POST['option_ir_fin'] : null;
+
+        if (in_array($statutJuridique, ['SAS', 'SASU'])) {
+            $optionIr = isset($_POST['option_ir']);
+            $optionIrFin = $optionIr && !empty($_POST['option_ir_fin']) ? $_POST['option_ir_fin'] : null;
+        } elseif (in_array($statutJuridique, ['EURL', 'SARL'])) {
+            $optionIr = ($_POST['option_ir_eurl'] ?? '0') === '1';
+            $optionIrFin = null;
+        } else {
+            // EI : toujours IR par nature
+            $optionIr = true;
+            $optionIrFin = null;
+        }
 
         $this->entrepriseRepo->update($entrepriseId, [
             'raison_sociale' => $raisonSociale,

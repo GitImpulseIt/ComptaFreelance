@@ -70,17 +70,35 @@
             </div>
         </div>
 
-        {# Option IR (SAS/SASU uniquement) #}
+        {# Imposition EURL/SARL : choix IR ou IS #}
+        <div id="imposition-eurl-block" class="mt-4 p-4 bg-slate-50 rounded-lg {{ e.statut_juridique in ['EURL', 'SARL'] ? '' : 'hidden' }}">
+            <label class="block text-sm font-medium text-slate-700 mb-2">Régime d'imposition</label>
+            <p class="text-xs text-slate-500 mb-3">Les EURL/SARL peuvent opter pour l'IR ou l'IS.</p>
+            <div class="flex gap-2">
+                <button type="button" id="btn-eurl-ir"
+                        onclick="setImposition(true)"
+                        class="px-4 py-2 text-sm font-medium rounded-lg border transition {{ e.option_ir and e.statut_juridique in ['EURL', 'SARL'] ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50' }}">
+                    IR - Impôt sur le revenu
+                </button>
+                <button type="button" id="btn-eurl-is"
+                        onclick="setImposition(false)"
+                        class="px-4 py-2 text-sm font-medium rounded-lg border transition {{ not e.option_ir and e.statut_juridique in ['EURL', 'SARL'] ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50' }}">
+                    IS - Impôt sur les sociétés
+                </button>
+            </div>
+        </div>
+
+        {# Option IR (SAS/SASU) : checkbox + date de fin #}
         <div id="option-ir-block" class="mt-4 p-4 bg-slate-50 rounded-lg {{ e.statut_juridique in ['SAS', 'SASU'] ? '' : 'hidden' }}">
             <div class="flex items-start gap-3">
                 <input type="checkbox" id="option_ir" name="option_ir" value="1"
-                       {{ e.option_ir ? 'checked' : '' }}
+                       {{ e.option_ir and e.statut_juridique in ['SAS', 'SASU'] ? 'checked' : '' }}
                        onchange="toggleOptionIrFin()"
                        class="mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
                 <div class="flex-1">
                     <label for="option_ir" class="text-sm font-medium text-slate-700">Option pour l'impôt sur le revenu (IR)</label>
                     <p class="text-xs text-slate-500 mt-0.5">Les SAS/SASU sont par défaut à l'IS. L'option IR est possible pour une durée limitée.</p>
-                    <div id="option-ir-fin-block" class="mt-3 {{ e.option_ir ? '' : 'hidden' }}">
+                    <div id="option-ir-fin-block" class="mt-3 {{ e.option_ir and e.statut_juridique in ['SAS', 'SASU'] ? '' : 'hidden' }}">
                         <label for="option_ir_fin" class="block text-sm font-medium text-slate-700 mb-1">Date de fin de l'option IR</label>
                         <input type="date" id="option_ir_fin" name="option_ir_fin"
                                value="{{ e.option_ir_fin is defined and e.option_ir_fin ? e.option_ir_fin|date('Y-m-d') : '' }}"
@@ -89,6 +107,9 @@
                 </div>
             </div>
         </div>
+
+        {# Input caché pour stocker le choix IR des EURL/SARL #}
+        <input type="hidden" id="option_ir_hidden" name="option_ir_eurl" value="{{ e.option_ir and e.statut_juridique in ['EURL', 'SARL'] ? '1' : '0' }}"
     </div>
 
     {# Coordonnées #}
@@ -141,17 +162,32 @@
 </form>
 
 <script>
+var activeClass = 'bg-indigo-600 text-white border-indigo-600';
+var inactiveClass = 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50';
+
 function toggleOptionIr() {
     var statut = document.getElementById('statut_juridique').value;
-    var block = document.getElementById('option-ir-block');
+    var sasSasuBlock = document.getElementById('option-ir-block');
+    var eurlBlock = document.getElementById('imposition-eurl-block');
+
     if (statut === 'SAS' || statut === 'SASU') {
-        block.classList.remove('hidden');
-    } else {
-        block.classList.add('hidden');
+        sasSasuBlock.classList.remove('hidden');
+        eurlBlock.classList.add('hidden');
+        document.getElementById('option_ir_hidden').value = '0';
+    } else if (statut === 'EURL' || statut === 'SARL') {
+        eurlBlock.classList.remove('hidden');
+        sasSasuBlock.classList.add('hidden');
         document.getElementById('option_ir').checked = false;
+        toggleOptionIrFin();
+    } else {
+        sasSasuBlock.classList.add('hidden');
+        eurlBlock.classList.add('hidden');
+        document.getElementById('option_ir').checked = false;
+        document.getElementById('option_ir_hidden').value = '0';
         toggleOptionIrFin();
     }
 }
+
 function toggleOptionIrFin() {
     var checked = document.getElementById('option_ir').checked;
     var block = document.getElementById('option-ir-fin-block');
@@ -159,6 +195,22 @@ function toggleOptionIrFin() {
         block.classList.remove('hidden');
     } else {
         block.classList.add('hidden');
+    }
+}
+
+function setImposition(isIr) {
+    var btnIr = document.getElementById('btn-eurl-ir');
+    var btnIs = document.getElementById('btn-eurl-is');
+    var hidden = document.getElementById('option_ir_hidden');
+
+    if (isIr) {
+        btnIr.className = 'px-4 py-2 text-sm font-medium rounded-lg border transition ' + activeClass;
+        btnIs.className = 'px-4 py-2 text-sm font-medium rounded-lg border transition ' + inactiveClass;
+        hidden.value = '1';
+    } else {
+        btnIs.className = 'px-4 py-2 text-sm font-medium rounded-lg border transition ' + activeClass;
+        btnIr.className = 'px-4 py-2 text-sm font-medium rounded-lg border transition ' + inactiveClass;
+        hidden.value = '0';
     }
 }
 </script>
