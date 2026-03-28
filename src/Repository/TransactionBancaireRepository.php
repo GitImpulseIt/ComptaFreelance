@@ -116,8 +116,8 @@ class TransactionBancaireRepository
     {
         $count = 0;
         $stmt = $this->pdo->prepare(
-            "INSERT INTO transactions_bancaires (compte_bancaire_id, import_bancaire_id, date, libelle, montant, type)
-             VALUES (:compte_bancaire_id, :import_bancaire_id, :date, :libelle, :montant, :type)"
+            "INSERT INTO transactions_bancaires (compte_bancaire_id, import_bancaire_id, date, libelle, montant, type, reference_externe)
+             VALUES (:compte_bancaire_id, :import_bancaire_id, :date, :libelle, :montant, :type, :reference_externe)"
         );
 
         foreach ($transactions as $t) {
@@ -128,6 +128,7 @@ class TransactionBancaireRepository
                 'libelle' => $t['libelle'],
                 'montant' => $t['montant'],
                 'type' => $t['type'],
+                'reference_externe' => $t['reference_externe'] ?? null,
             ]);
             $count++;
         }
