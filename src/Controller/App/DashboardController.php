@@ -88,40 +88,35 @@ class DashboardController
             }
         }
 
-        // Solde bancaire
+        // Solde bancaire en début d'exercice (avant le 1er janvier de l'année)
         $stmt = $this->pdo->prepare(
-            "SELECT
-                COALESCE(SUM(CASE WHEN t.type = 'credit' THEN t.montant ELSE -t.montant END), 0)
+            "SELECT COALESCE(SUM(CASE WHEN t.type = 'credit' THEN t.montant ELSE -t.montant END), 0)
              FROM transactions_bancaires t
              JOIN comptes_bancaires cb ON cb.id = t.compte_bancaire_id
-             WHERE cb.entreprise_id = :eid"
+             WHERE cb.entreprise_id = :eid AND t.date < :debut"
         );
-        $stmt->execute(['eid' => $entrepriseId]);
-        $soldeBancaire = (float) $stmt->fetchColumn();
+        $stmt->execute(['eid' => $entrepriseId, 'debut' => $annee . '-01-01']);
+        $soldeDebut = (float) $stmt->fetchColumn();
 
-        // Nombre de transactions et lignes comptables de l'année
+        // Solde bancaire en fin d'exercice (ou à date si exercice en cours)
+        $currentYear = (int) date('Y');
+        $dateFin = ($annee < $currentYear) ? ($annee + 1) . '-01-01' : date('Y-m-d', strtotime('+1 day'));
         $stmt = $this->pdo->prepare(
-            "SELECT COUNT(*) FROM transactions_bancaires t
+            "SELECT COALESCE(SUM(CASE WHEN t.type = 'credit' THEN t.montant ELSE -t.montant END), 0)
+             FROM transactions_bancaires t
              JOIN comptes_bancaires cb ON cb.id = t.compte_bancaire_id
-             WHERE cb.entreprise_id = :eid AND EXTRACT(YEAR FROM t.date) = :annee"
+             WHERE cb.entreprise_id = :eid AND t.date < :fin"
         );
-        $stmt->execute(['eid' => $entrepriseId, 'annee' => $annee]);
-        $nbTransactions = (int) $stmt->fetchColumn();
+        $stmt->execute(['eid' => $entrepriseId, 'fin' => $dateFin]);
+        $soldeFin = (float) $stmt->fetchColumn();
 
-        $stmt = $this->pdo->prepare(
-            "SELECT COUNT(*) FROM lignes_comptables l
-             JOIN transactions_bancaires t ON t.id = l.transaction_bancaire_id
-             JOIN comptes_bancaires cb ON cb.id = t.compte_bancaire_id
-             WHERE cb.entreprise_id = :eid AND EXTRACT(YEAR FROM t.date) = :annee"
-        );
-        $stmt->execute(['eid' => $entrepriseId, 'annee' => $annee]);
-        $nbLignes = (int) $stmt->fetchColumn();
+        $soldeVariation = $soldeFin - $soldeDebut;
+        $exerciceTermine = $annee < $currentYear;
 
         $tvaDiff = $tvaEntrant - $tvaSortant;
         $benefice = $caHt - $charges - $impots;
 
         // Nombre de mois écoulés dans l'année sélectionnée
-        $currentYear = (int) date('Y');
         $currentMonth = (int) date('n');
         $nbMois = ($annee < $currentYear) ? 12 : (($annee === $currentYear) ? $currentMonth : 1);
 
@@ -129,10 +124,11 @@ class DashboardController
             'active_page' => 'dashboard',
             'annee' => $annee,
             'annees' => $annees,
+            'exercice_termine' => $exerciceTermine,
             'stats' => [
-                'nb_transactions' => $nbTransactions,
-                'nb_lignes' => $nbLignes,
-                'solde_bancaire' => $soldeBancaire,
+                'solde_debut' => $soldeDebut,
+                'solde_fin' => $soldeFin,
+                'solde_variation' => $soldeVariation,
                 'ca_ht' => $caHt,
                 'tva_entrant' => $tvaEntrant,
                 'tva_sortant' => $tvaSortant,
