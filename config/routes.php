@@ -55,6 +55,14 @@ return [
     'POST /app/tva/payer' => ['App\\TvaController', 'payer'],
     'POST /app/tva/date-paiement' => ['App\\TvaController', 'updateDatePaiement'],
 
+    // App - Immobilisations
+    'GET /app/immobilisations' => ['App\\ImmobilisationController', 'index'],
+    'GET /app/immobilisations/create' => ['App\\ImmobilisationController', 'create'],
+    'POST /app/immobilisations' => ['App\\ImmobilisationController', 'store'],
+    'GET /app/immobilisations/{id}/edit' => ['App\\ImmobilisationController', 'edit'],
+    'POST /app/immobilisations/{id}' => ['App\\ImmobilisationController', 'update'],
+    'POST /app/immobilisations/{id}/delete' => ['App\\ImmobilisationController', 'delete'],
+
     // App - Paramètres
     'GET /app/parametres' => ['App\\ParametreController', 'index'],
     'POST /app/parametres' => ['App\\ParametreController', 'update'],

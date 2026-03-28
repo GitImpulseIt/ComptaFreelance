@@ -1,0 +1,93 @@
+{% extends 'layout/app.html.twig' %}
+
+{% block title %}{{ immo ? 'Modifier' : 'Nouvelle' }} immobilisation - ComptaV2{% endblock %}
+{% block page_title %}{{ immo ? 'Modifier une immobilisation' : 'Nouvelle immobilisation' }}{% endblock %}
+
+{% set active_page = 'immobilisations' %}
+
+{% block content %}
+
+<form method="POST" action="{{ immo ? '/app/immobilisations/' ~ immo.id : '/app/immobilisations' }}" class="max-w-2xl">
+    <div class="bg-white rounded-xl shadow-sm p-6 space-y-5">
+
+        <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Désignation</label>
+            <input type="text" name="designation" value="{{ immo ? immo.designation : '' }}" required
+                   class="w-full" placeholder="Ex : MacBook Pro 16 pouces">
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Date d'acquisition</label>
+                <input type="date" name="date_acquisition" value="{{ immo ? immo.date_acquisition : '' }}" required class="w-full">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Date de mise en service</label>
+                <input type="date" name="date_mise_en_service" value="{{ immo ? immo.date_mise_en_service : '' }}" class="w-full">
+                <p class="text-xs text-slate-400 mt-1">Si différente de l'acquisition</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Valeur d'acquisition HT</label>
+                <input type="text" name="valeur_acquisition" value="{{ immo ? immo.valeur_acquisition : '' }}" required
+                       class="w-full" placeholder="0.00">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Compte comptable</label>
+                <input type="text" name="compte" value="{{ immo ? immo.compte : '218' }}" class="w-full" placeholder="218">
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Durée d'amortissement</label>
+                <select name="duree_amortissement" class="w-full">
+                    {% for d in [1, 2, 3, 4, 5, 6, 7, 8, 10, 15, 20, 25, 30] %}
+                    <option value="{{ d }}" {{ immo and immo.duree_amortissement == d ? 'selected' : (not immo and d == 5 ? 'selected' : '') }}>{{ d }} an{{ d > 1 ? 's' : '' }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Type d'amortissement</label>
+                <select name="type_amortissement" class="w-full">
+                    <option value="lineaire" {{ immo and immo.type_amortissement == 'lineaire' ? 'selected' : '' }}>Linéaire</option>
+                    <option value="degressif" {{ immo and immo.type_amortissement == 'degressif' ? 'selected' : '' }}>Dégressif</option>
+                </select>
+            </div>
+        </div>
+
+        {% if immo %}
+        <div class="border-t border-slate-200 pt-5">
+            <h3 class="text-sm font-semibold text-slate-700 mb-3">Cession / Sortie</h3>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Date de cession</label>
+                    <input type="date" name="cession_date" value="{{ immo.cession_date }}" class="w-full">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Montant de cession</label>
+                    <input type="text" name="cession_montant" value="{{ immo.cession_montant }}" class="w-full" placeholder="0.00">
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="flex items-center gap-3 mt-5">
+        <button type="submit" class="inline-flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-lg hover:bg-indigo-700 transition font-medium text-sm shadow-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            {{ immo ? 'Enregistrer' : 'Créer' }}
+        </button>
+        <a href="/app/immobilisations" class="text-sm text-slate-500 hover:text-slate-700 transition">Annuler</a>
+
+        {% if immo %}
+        <form method="POST" action="/app/immobilisations/{{ immo.id }}/delete" class="ml-auto" onsubmit="return confirm('Supprimer cette immobilisation ?')">
+            <button type="submit" class="text-sm text-red-500 hover:text-red-700 transition">Supprimer</button>
+        </form>
+        {% endif %}
+    </div>
+</form>
+
+{% endblock %}

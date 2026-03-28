@@ -1,0 +1,81 @@
+{% extends 'layout/app.html.twig' %}
+
+{% block title %}Immobilisations - ComptaV2{% endblock %}
+{% block page_title %}Immobilisations{% endblock %}
+
+{% set active_page = 'immobilisations' %}
+
+{% block content %}
+
+{% if success %}
+<div class="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-lg mb-6 text-sm font-medium">
+    Opération enregistrée avec succès.
+</div>
+{% endif %}
+
+<div class="flex items-center justify-between mb-6">
+    <p class="text-sm text-slate-500">{{ immobilisations|length }} immobilisation{{ immobilisations|length > 1 ? 's' : '' }}</p>
+    <a href="/app/immobilisations/create" class="inline-flex items-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-lg hover:bg-indigo-700 transition font-medium text-sm shadow-sm">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Nouvelle immobilisation
+    </a>
+</div>
+
+{% if immobilisations|length == 0 %}
+<div class="bg-white rounded-xl shadow-sm px-8 py-16 text-center">
+    <svg class="w-12 h-12 text-slate-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+    <h3 class="text-lg font-medium text-slate-600 mb-1">Aucune immobilisation</h3>
+    <p class="text-sm text-slate-400">Ajoutez vos actifs immobilisés pour suivre leur amortissement.</p>
+</div>
+{% else %}
+
+<div class="bg-white rounded-xl shadow-sm overflow-hidden">
+    <table class="w-full text-sm">
+        <thead>
+            <tr class="text-xs text-slate-500 uppercase tracking-wider bg-slate-50">
+                <th class="text-left py-3 px-4 font-medium">Désignation</th>
+                <th class="text-left py-3 px-3 font-medium">Compte</th>
+                <th class="text-left py-3 px-3 font-medium">Date acquisition</th>
+                <th class="text-right py-3 px-3 font-medium">Valeur</th>
+                <th class="text-center py-3 px-3 font-medium">Durée</th>
+                <th class="text-right py-3 px-3 font-medium">Annuité</th>
+                <th class="text-right py-3 px-3 font-medium">Amort. cumulé</th>
+                <th class="text-right py-3 px-3 font-medium">VNC</th>
+                <th class="text-center py-3 px-3 font-medium">Statut</th>
+                <th class="py-3 px-4"></th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+            {% for immo in immobilisations %}
+            <tr class="hover:bg-slate-50 transition">
+                <td class="py-3 px-4 font-medium text-slate-800">{{ immo.designation }}</td>
+                <td class="py-3 px-3 text-slate-500 font-mono text-xs">{{ immo.compte }}</td>
+                <td class="py-3 px-3 text-slate-600">{{ immo.date_acquisition|date('d/m/Y') }}</td>
+                <td class="py-3 px-3 text-right tabular-nums">{{ immo.valeur_acquisition|number_format(2, ',', ' ') }} &euro;</td>
+                <td class="py-3 px-3 text-center text-slate-600">{{ immo.duree_amortissement }} ans</td>
+                <td class="py-3 px-3 text-right tabular-nums">{{ immo.amortissement.annuite|number_format(2, ',', ' ') }} &euro;</td>
+                <td class="py-3 px-3 text-right tabular-nums">{{ immo.amortissement.cumul|number_format(2, ',', ' ') }} &euro;</td>
+                <td class="py-3 px-3 text-right tabular-nums font-semibold">{{ immo.amortissement.vnc|number_format(2, ',', ' ') }} &euro;</td>
+                <td class="py-3 px-3 text-center">
+                    {% if immo.cession_date %}
+                    <span class="inline-flex text-xs font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">Cédé</span>
+                    {% elseif immo.amortissement.termine %}
+                    <span class="inline-flex text-xs font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">Amorti</span>
+                    {% else %}
+                    <span class="inline-flex text-xs font-medium text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full">En cours</span>
+                    {% endif %}
+                </td>
+                <td class="py-3 px-4 text-right">
+                    <a href="/app/immobilisations/{{ immo.id }}/edit" class="text-slate-400 hover:text-indigo-600 transition" title="Modifier">
+                        <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endif %}
+
+{% endblock %}
