@@ -34,6 +34,15 @@ return [
     'GET /banque' => ['BanqueController', 'index'],
     'GET /banque/{id}' => ['BanqueController', 'show'],
 
+    // Barème IR
+    'GET /ir' => ['IrController', 'index'],
+    'GET /ir/create' => ['IrController', 'create'],
+    'POST /ir' => ['IrController', 'store'],
+    'GET /ir/{id}/edit' => ['IrController', 'edit'],
+    'POST /ir/{id}' => ['IrController', 'update'],
+    'POST /ir/{id}/delete' => ['IrController', 'delete'],
+    'POST /ir/{id}/duplicate' => ['IrController', 'duplicate'],
+
     // Mot de passe admin
     'GET /password' => ['PasswordController', 'showChange'],
     'POST /password' => ['PasswordController', 'change'],

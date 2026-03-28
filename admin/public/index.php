@@ -68,6 +68,7 @@ foreach ($routes as $pattern => $handler) {
             'UserController' => new \Admin\Controller\UserController($twig, $userService),
             'BanqueController' => new \Admin\Controller\BanqueController($twig, $banqueService),
             'PasswordController' => new \Admin\Controller\PasswordController($twig, $passwordService),
+            'IrController' => new \Admin\Controller\IrController($twig, $pdo),
         };
 
         $controller->$action(...array_map('intval', $matches));
