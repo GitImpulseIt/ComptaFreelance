@@ -11,6 +11,7 @@ return [
 
     // App - Dashboard
     'GET /app' => ['App\\DashboardController', 'index'],
+    'POST /app/quotient' => ['App\\DashboardController', 'updateQuotient'],
 
     // App - Clients
     'GET /app/clients' => ['App\\ClientController', 'index'],
