@@ -100,7 +100,7 @@
             </thead>
             <tbody id="compta-tbody" class="divide-y divide-slate-100">
                 {% for line in lignes %}
-                <tr class="compta-row" {% if line.is_main is defined and line.is_main %}data-main="1"{% endif %}>
+                <tr class="compta-row group hover:bg-slate-50/80 transition" {% if line.is_main is defined and line.is_main %}data-main="1"{% endif %}>
                     <td class="px-4 py-3 text-sm text-slate-700">{{ line.compte }}<input type="hidden" name="compte[]" value="{{ line.compte }}"></td>
                     <td class="px-4 py-3 text-sm text-slate-700">{{ line.montant_ht|replace({'.': ','}) }}<input type="hidden" name="montant_ht[]" value="{{ line.montant_ht }}"></td>
                     <td class="px-4 py-3 text-sm text-slate-700">{{ line.type == 'DBT' ? 'Débit' : 'Crédit' }}<input type="hidden" name="type[]" value="{{ line.type }}"></td>
