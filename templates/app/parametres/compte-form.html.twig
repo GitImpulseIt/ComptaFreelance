@@ -24,11 +24,12 @@
 
     <form method="POST" action="{{ compte ? '/app/parametres/comptes-bancaires/' ~ compte.id : '/app/parametres/comptes-bancaires' }}" class="bg-white rounded-xl shadow-sm p-6 space-y-5">
         <div>
-            <label for="nom" class="block text-sm font-medium text-slate-700 mb-1">Nom du compte <span class="text-red-500">*</span></label>
-            <input type="text" id="nom" name="nom" required
+            <label for="nom" class="block text-sm font-medium text-slate-700 mb-1">Nom du compte</label>
+            <input type="text" id="nom" name="nom"
                    value="{{ old.nom is defined ? old.nom : (compte ? compte.nom : '') }}"
-                   placeholder="Ex : Compte courant pro"
+                   placeholder="Optionnel (utilise le nom de la banque)"
                    class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+            <p class="text-xs text-slate-400 mt-1">Si vide, le nom de la banque sera utilisé.</p>
         </div>
         <div>
             <label for="banque" class="block text-sm font-medium text-slate-700 mb-1">Banque</label>

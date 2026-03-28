@@ -63,15 +63,19 @@ class ParametreController
         $banque = trim($_POST['banque'] ?? '');
         $iban = trim($_POST['iban'] ?? '');
 
-        if ($nom === '') {
+        if ($nom === '' && $banque === '') {
             echo $this->twig->render('app/parametres/compte-form.html.twig', [
                 'active_page' => 'parametres',
                 'active_tab' => 'comptes-bancaires',
                 'compte' => null,
-                'error' => 'Le nom du compte est obligatoire.',
+                'error' => 'Le nom ou la banque doit être renseigné.',
                 'old' => $_POST,
             ]);
             return;
+        }
+
+        if ($nom === '') {
+            $nom = $this->generateNomCompte($entrepriseId, $banque);
         }
 
         $this->compteRepo->create([
@@ -114,15 +118,19 @@ class ParametreController
         $banque = trim($_POST['banque'] ?? '');
         $iban = trim($_POST['iban'] ?? '');
 
-        if ($nom === '') {
+        if ($nom === '' && $banque === '') {
             echo $this->twig->render('app/parametres/compte-form.html.twig', [
                 'active_page' => 'parametres',
                 'active_tab' => 'comptes-bancaires',
                 'compte' => $compte,
-                'error' => 'Le nom du compte est obligatoire.',
+                'error' => 'Le nom ou la banque doit être renseigné.',
                 'old' => $_POST,
             ]);
             return;
+        }
+
+        if ($nom === '') {
+            $nom = $this->generateNomCompte($this->auth->getEntrepriseId(), $banque, $id);
         }
 
         $this->compteRepo->update($id, [
@@ -133,6 +141,30 @@ class ParametreController
 
         header('Location: /app/parametres/comptes-bancaires?success=updated');
         exit;
+    }
+
+    private function generateNomCompte(int $entrepriseId, string $banque, ?int $excludeId = null): string
+    {
+        $comptes = $this->compteRepo->findAllByEntreprise($entrepriseId);
+
+        $existingNames = [];
+        foreach ($comptes as $c) {
+            if ($excludeId !== null && (int) $c['id'] === $excludeId) {
+                continue;
+            }
+            $existingNames[] = $c['nom'];
+        }
+
+        if (!in_array($banque, $existingNames, true)) {
+            return $banque;
+        }
+
+        $i = 2;
+        while (in_array($banque . ' ' . $i, $existingNames, true)) {
+            $i++;
+        }
+
+        return $banque . ' ' . $i;
     }
 
     public function deleteCompte(int $id): void
