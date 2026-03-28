@@ -86,6 +86,7 @@ foreach ($routes as $pattern => $handler) {
             'App\\DepenseController' => new \App\Controller\App\DepenseController($twig, $pdo, $authMiddleware),
             'App\\BanqueController' => new \App\Controller\App\BanqueController($twig, $pdo, $authMiddleware),
             'App\\TvaController' => new \App\Controller\App\TvaController($twig, $pdo, $authMiddleware),
+            'App\\ImmobilisationController' => new \App\Controller\App\ImmobilisationController($twig, $pdo, $authMiddleware),
             'App\\ParametreController' => new \App\Controller\App\ParametreController($twig, $pdo, $authMiddleware),
         };
 
