@@ -63,6 +63,7 @@ class TransactionBancaireRepository
                     COUNT(*) FILTER (WHERE t.type = 'debit') AS nb_debits,
                     COALESCE(SUM(CASE WHEN t.type = 'credit' THEN t.montant ELSE 0 END), 0) AS total_credits,
                     COALESCE(SUM(CASE WHEN t.type = 'debit' THEN t.montant ELSE 0 END), 0) AS total_debits,
+                    COALESCE(SUM(CASE WHEN t.type = 'credit' THEN t.montant ELSE -t.montant END), 0) AS solde,
                     COUNT(*) FILTER (WHERE t.statut = 'non_rapproche') AS nb_non_rapprochees
                 FROM transactions_bancaires t
                 JOIN comptes_bancaires cb ON cb.id = t.compte_bancaire_id

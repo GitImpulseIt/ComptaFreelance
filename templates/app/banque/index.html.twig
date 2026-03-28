@@ -32,25 +32,29 @@
     </a>
 </div>
 
-{# Statistiques #}
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-    <div class="bg-white rounded-xl shadow-sm p-5 border-l-4 border-indigo-500">
-        <p class="text-sm font-medium text-slate-500">Total opérations</p>
-        <p class="text-2xl font-bold text-slate-800 mt-1">{{ stats.total }}</p>
+{# Solde #}
+<div class="bg-white rounded-xl shadow-sm p-6 mb-6 flex items-center justify-between">
+    <div>
+        <p class="text-sm font-medium text-slate-500">Solde du compte</p>
+        <p class="text-3xl font-bold mt-1 {{ stats.solde >= 0 ? 'text-emerald-600' : 'text-red-600' }}">{{ stats.solde|number_format(2, ',', ' ') }} &euro;</p>
     </div>
-    <div class="bg-white rounded-xl shadow-sm p-5 border-l-4 border-emerald-500">
-        <p class="text-sm font-medium text-slate-500">Crédits</p>
-        <p class="text-2xl font-bold text-emerald-600 mt-1">+{{ stats.total_credits|number_format(2, ',', ' ') }} &euro;</p>
-        <p class="text-xs text-slate-400 mt-1">{{ stats.nb_credits }} opération{{ stats.nb_credits > 1 ? 's' : '' }}</p>
-    </div>
-    <div class="bg-white rounded-xl shadow-sm p-5 border-l-4 border-red-400">
-        <p class="text-sm font-medium text-slate-500">Débits</p>
-        <p class="text-2xl font-bold text-red-600 mt-1">-{{ stats.total_debits|number_format(2, ',', ' ') }} &euro;</p>
-        <p class="text-xs text-slate-400 mt-1">{{ stats.nb_debits }} opération{{ stats.nb_debits > 1 ? 's' : '' }}</p>
-    </div>
-    <div class="bg-white rounded-xl shadow-sm p-5 border-l-4 border-amber-400">
-        <p class="text-sm font-medium text-slate-500">Non rapprochées</p>
-        <p class="text-2xl font-bold text-amber-600 mt-1">{{ stats.nb_non_rapprochees }}</p>
+    <div class="flex gap-6 text-sm text-slate-500">
+        <div class="text-right">
+            <p class="text-xs text-slate-400">Crédits</p>
+            <p class="font-semibold text-emerald-600">+{{ stats.total_credits|number_format(2, ',', ' ') }} &euro;</p>
+        </div>
+        <div class="text-right">
+            <p class="text-xs text-slate-400">Débits</p>
+            <p class="font-semibold text-red-600">-{{ stats.total_debits|number_format(2, ',', ' ') }} &euro;</p>
+        </div>
+        <div class="text-right">
+            <p class="text-xs text-slate-400">Opérations</p>
+            <p class="font-semibold text-slate-700">{{ stats.total }}</p>
+        </div>
+        <div class="text-right">
+            <p class="text-xs text-slate-400">Non rapprochées</p>
+            <p class="font-semibold text-amber-600">{{ stats.nb_non_rapprochees }}</p>
+        </div>
     </div>
 </div>
 
