@@ -43,6 +43,8 @@ return [
     'GET /app/banque' => ['App\\BanqueController', 'transactions'],
     'GET /app/banque/import' => ['App\\BanqueController', 'showImport'],
     'POST /app/banque/import' => ['App\\BanqueController', 'import'],
+    'GET /app/banque/{id}' => ['App\\BanqueController', 'show'],
+    'POST /app/banque/{id}' => ['App\\BanqueController', 'qualify'],
     'POST /app/banque/{id}/rapprocher' => ['App\\BanqueController', 'rapprocher'],
 
     // App - TVA

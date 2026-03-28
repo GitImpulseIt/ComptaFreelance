@@ -132,7 +132,7 @@
             </thead>
             <tbody class="divide-y divide-slate-100">
                 {% for t in transactions %}
-                <tr class="transaction-row hover:bg-slate-50/80 transition cursor-default group" data-id="{{ t.id }}">
+                <tr class="transaction-row hover:bg-slate-50/80 transition cursor-pointer group" data-id="{{ t.id }}" onclick="window.location='/app/banque/{{ t.id }}'">
                     <td class="px-5 py-3.5 text-sm text-slate-700 whitespace-nowrap">
                         {{ t.date|date('d/m/Y') }}
                     </td>
