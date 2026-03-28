@@ -34,6 +34,14 @@ return [
     'GET /banque' => ['BanqueController', 'index'],
     'GET /banque/{id}' => ['BanqueController', 'show'],
 
+    // Calendrier TVA
+    'GET /tva-calendrier' => ['TvaCalendrierController', 'index'],
+    'GET /tva-calendrier/create' => ['TvaCalendrierController', 'create'],
+    'POST /tva-calendrier' => ['TvaCalendrierController', 'store'],
+    'GET /tva-calendrier/{id}/edit' => ['TvaCalendrierController', 'edit'],
+    'POST /tva-calendrier/{id}' => ['TvaCalendrierController', 'update'],
+    'POST /tva-calendrier/{id}/delete' => ['TvaCalendrierController', 'delete'],
+
     // Barème IR
     'GET /ir' => ['IrController', 'index'],
     'GET /ir/create' => ['IrController', 'create'],

@@ -1,0 +1,162 @@
+{% extends 'layout/app.html.twig' %}
+
+{% block title %}TVA - ComptaV2{% endblock %}
+{% block page_title %}TVA - Régime simplifié{% endblock %}
+
+{% set active_page = 'tva' %}
+
+{% block content %}
+
+{# Sélecteur d'année #}
+<div class="flex items-center gap-3 mb-6">
+    <label class="text-sm font-medium text-slate-500">Exercice</label>
+    <div class="flex rounded-lg border border-slate-300 overflow-hidden">
+        {% for a in annees %}
+        <a href="/app/tva?annee={{ a }}"
+           class="px-4 py-1.5 text-sm font-medium transition
+           {{ a == annee ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-50' }}
+           {{ not loop.last ? 'border-r border-slate-300' : '' }}">
+            {{ a }}
+        </a>
+        {% endfor %}
+    </div>
+</div>
+
+{% if echeances|length == 0 %}
+<div class="bg-white rounded-xl shadow-sm px-8 py-16 text-center">
+    <h3 class="text-lg font-medium text-slate-600 mb-1">Aucune échéance TVA pour {{ annee }}</h3>
+    <p class="text-sm text-slate-400">Le calendrier TVA doit être configuré dans le portail admin.</p>
+</div>
+{% else %}
+
+<div class="space-y-4">
+    {% for ech in echeances %}
+    <div class="bg-white rounded-xl shadow-sm overflow-hidden border-l-4
+        {{ ech.statut_display == 'payee' ? 'border-emerald-500' : (ech.statut_display == 'en_retard' ? 'border-red-500' : 'border-amber-400') }}">
+
+        {# En-tête cliquable #}
+        <div class="px-6 py-4 flex items-center justify-between cursor-pointer" onclick="document.getElementById('ech-{{ ech.id }}').classList.toggle('hidden'); this.querySelector('.chevron').classList.toggle('rotate-90')">
+            <div>
+                <h3 class="text-sm font-semibold text-slate-800">{{ ech.libelle }}</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Échéance : {{ ech.date_echeance|date('d/m/Y') }}</p>
+            </div>
+            <div class="flex items-center gap-4">
+                {% if ech.statut_display == 'payee' %}
+                <span class="inline-flex items-center gap-1 text-xs font-medium text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    Payé {{ ech.declaration.montant_paye|number_format(0, ',', ' ') }} &euro;
+                </span>
+                {% elseif ech.statut_display == 'en_retard' %}
+                <span class="inline-flex items-center text-xs font-medium text-red-700 bg-red-50 px-2.5 py-1 rounded-full">En retard</span>
+                {% else %}
+                <span class="inline-flex items-center text-xs font-medium text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full">À payer</span>
+                {% endif %}
+                <span class="chevron text-slate-400 transition-transform">&#9654;</span>
+            </div>
+        </div>
+
+        {# Contenu dépliable #}
+        <div id="ech-{{ ech.id }}" class="hidden border-t border-slate-100">
+
+            {# Calcul automatique #}
+            <div class="px-6 py-4 bg-slate-50/50">
+                <h4 class="text-xs font-semibold text-slate-500 uppercase mb-2">Calcul automatique</h4>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                    <div>
+                        <p class="text-xs text-slate-400">TVA collectée</p>
+                        <p class="font-semibold text-emerald-600 tabular-nums">{{ ech.tva_collectee|number_format(2, ',', ' ') }} &euro;</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-400">TVA déductible</p>
+                        <p class="font-semibold text-red-600 tabular-nums">{{ ech.tva_deductible|number_format(2, ',', ' ') }} &euro;</p>
+                    </div>
+                    {% if ech.type == 'regularisation' %}
+                    <div>
+                        <p class="text-xs text-slate-400">TVA brute annuelle</p>
+                        <p class="font-semibold text-slate-700 tabular-nums">{{ ech.tva_due_brute|number_format(2, ',', ' ') }} &euro;</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-400">Acomptes déjà payés</p>
+                        <p class="font-semibold text-slate-700 tabular-nums">-{{ ech.acomptes_payes|number_format(2, ',', ' ') }} &euro;</p>
+                    </div>
+                    {% endif %}
+                    <div>
+                        <p class="text-xs text-slate-400">{{ ech.type == 'regularisation' ? 'Solde TVA' : 'TVA due' }}</p>
+                        <p class="font-bold {{ ech.tva_due >= 0 ? 'text-amber-700' : 'text-indigo-700' }} tabular-nums">
+                            {{ ech.tva_due|number_format(2, ',', ' ') }} &euro;
+                            {% if ech.tva_due < 0 %}<span class="text-xs font-normal">(crédit)</span>{% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            {# Formulaire CA12 (si non payé) #}
+            {% if ech.statut_display != 'payee' %}
+            <div class="px-6 py-4 border-t border-slate-100">
+                <form method="POST" action="/app/tva/payer">
+                    <input type="hidden" name="echeance_id" value="{{ ech.id }}">
+                    <input type="hidden" name="annee" value="{{ annee }}">
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-500 mb-1">Case 01 - Montant à payer</label>
+                            <input type="text" name="case_01" value="{{ ech.case_01_auto is defined ? ech.case_01_auto : 0 }}"
+                                   class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm tabular-nums focus:ring-2 focus:ring-indigo-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-500 mb-1">Case 02 - Crédit à déduire</label>
+                            <input type="text" name="case_02" value="0"
+                                   class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm tabular-nums focus:ring-2 focus:ring-indigo-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-500 mb-1">Case 03 - Net à payer</label>
+                            <input type="text" name="case_03" value="{{ ech.case_01_auto is defined ? ech.case_01_auto : 0 }}" readonly
+                                   class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm tabular-nums bg-slate-50 text-slate-500">
+                        </div>
+                    </div>
+
+                    {% if ech.tva_due < 0 %}
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-500 mb-1">Case 05 - TVA collectée</label>
+                            <input type="text" name="case_05" value="{{ ech.tva_collectee }}"
+                                   class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm tabular-nums focus:ring-2 focus:ring-indigo-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-500 mb-1">Case 06 - TVA déductible</label>
+                            <input type="text" name="case_06" value="{{ ech.tva_deductible }}"
+                                   class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm tabular-nums focus:ring-2 focus:ring-indigo-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-500 mb-1">Case 07 - Crédit TVA</label>
+                            <input type="text" name="case_07" value="{{ (ech.tva_due * -1)|round(2) }}" readonly
+                                   class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm tabular-nums bg-slate-50 text-slate-500">
+                        </div>
+                    </div>
+                    <div class="mb-4" style="max-width: 33%">
+                        <label class="block text-xs font-medium text-slate-500 mb-1">Case 08 - Remboursement demandé</label>
+                        <input type="text" name="case_08" value="0"
+                               class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm tabular-nums focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+                    {% endif %}
+
+                    <button type="submit" class="inline-flex items-center gap-2 bg-emerald-600 text-white px-5 py-2.5 rounded-lg hover:bg-emerald-700 transition font-medium text-sm shadow-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        Valider le paiement
+                    </button>
+                </form>
+            </div>
+            {% else %}
+            {# Résumé paiement #}
+            <div class="px-6 py-3 border-t border-slate-100 text-sm text-slate-500">
+                Payé le {{ ech.declaration.date_paiement|date('d/m/Y') }} &middot; {{ ech.declaration.montant_paye|number_format(2, ',', ' ') }} &euro;
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% endif %}
+
+{% endblock %}

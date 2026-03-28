@@ -53,10 +53,14 @@ if (!$isPublicRoute && !$authMiddleware->isAuthenticated()) {
 // Injecter user et entreprise dans Twig pour les routes protégées
 if ($authMiddleware->isAuthenticated()) {
     $twig->addGlobal('current_user', $authMiddleware->getUser());
-    $twig->addGlobal('entreprise', [
-        'id' => $authMiddleware->getEntrepriseId(),
-        'raison_sociale' => $_SESSION['user']['entreprise_nom'] ?? '',
-    ]);
+    $entrepriseId = $authMiddleware->getEntrepriseId();
+    $entrepriseData = ['id' => $entrepriseId, 'raison_sociale' => $_SESSION['user']['entreprise_nom'] ?? ''];
+    if ($entrepriseId) {
+        $stmtE = $pdo->prepare("SELECT regime_tva FROM entreprises WHERE id = :id");
+        $stmtE->execute(['id' => $entrepriseId]);
+        $entrepriseData['regime_tva'] = $stmtE->fetchColumn() ?: 'franchise';
+    }
+    $twig->addGlobal('entreprise', $entrepriseData);
 }
 
 // Router avec support des paramètres {id}

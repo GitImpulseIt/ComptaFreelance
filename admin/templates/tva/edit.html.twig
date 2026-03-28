@@ -1,0 +1,60 @@
+{% extends 'layout/app.html.twig' %}
+
+{% block title %}Calendrier TVA {{ annee }} - Admin{% endblock %}
+{% block page_title %}Calendrier TVA{% endblock %}
+
+{% set active_page = 'tva' %}
+
+{% block content %}
+<div class="max-w-2xl">
+    <div class="flex items-center gap-3 mb-6">
+        <a href="/tva-calendrier" class="text-slate-400 hover:text-slate-600 transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        </a>
+        <h3 class="text-lg font-semibold text-slate-800">Calendrier {{ annee }}</h3>
+    </div>
+
+    <form method="POST" action="/tva-calendrier/{{ annee }}" class="bg-white rounded-xl shadow-sm p-6 space-y-4">
+        {% for e in echeances %}
+        <div class="border border-slate-200 rounded-lg p-4">
+            <input type="hidden" name="id[]" value="{{ e.id }}">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-medium text-slate-500 mb-1">Libellé</label>
+                    <input type="text" name="libelle[]" value="{{ e.libelle }}" required
+                           class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-500 mb-1">Type</label>
+                    <select name="type[]" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                        <option value="acompte" {{ e.type == 'acompte' ? 'selected' : '' }}>Acompte</option>
+                        <option value="regularisation" {{ e.type == 'regularisation' ? 'selected' : '' }}>Régularisation</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-500 mb-1">Période</label>
+                    <select name="periode[]" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                        <option value="S1" {{ e.periode == 'S1' ? 'selected' : '' }}>1er semestre</option>
+                        <option value="S2" {{ e.periode == 'S2' ? 'selected' : '' }}>2ème semestre</option>
+                        <option value="ANNUEL" {{ e.periode == 'ANNUEL' ? 'selected' : '' }}>Annuel</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-500 mb-1">Date limite</label>
+                    <input type="date" name="date_echeance[]" value="{{ e.date_echeance|date('Y-m-d') }}" required
+                           class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        <div class="flex gap-3 pt-2">
+            <button type="submit" class="inline-flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-lg hover:bg-indigo-700 transition font-medium text-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                Enregistrer
+            </button>
+            <a href="/tva-calendrier" class="inline-flex items-center px-4 py-2.5 border border-slate-300 text-slate-600 rounded-lg hover:bg-slate-50 transition text-sm">Annuler</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
