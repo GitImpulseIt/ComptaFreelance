@@ -56,7 +56,16 @@ class ClotureController
     }
 
     public function tab2035(): void      { $this->renderTab('2035'); }
-    public function tab2035Suite(): void  { $this->renderTab('2035-suite'); }
+    public function tab2035Suite(): void
+    {
+        $entrepriseId = $this->auth->getEntrepriseId();
+        $annee = isset($_GET['annee']) ? (int) $_GET['annee'] : (int) date('Y') - 1;
+
+        // Immobilisations avec amortissement
+        $immos = $this->getImmobilisationsAvecAmortissement($entrepriseId, $annee);
+
+        $this->renderTab('2035-suite', ['immobilisations' => $immos]);
+    }
     public function tab2035A(): void      { $this->renderTab('2035-a'); }
     public function tab2035B(): void      { $this->renderTab('2035-b'); }
     public function tab2035E(): void      { $this->renderTab('2035-e'); }
@@ -92,7 +101,7 @@ class ClotureController
         exit;
     }
 
-    private function renderTab(string $slug): void
+    private function renderTab(string $slug, array $extraData = []): void
     {
         $entrepriseId = $this->auth->getEntrepriseId();
         $entreprise = $this->entrepriseRepo->findById($entrepriseId);
@@ -120,7 +129,7 @@ class ClotureController
         $declaration = $this->getOrCreateDeclaration($entrepriseId, $annee);
         $savedData = json_decode($declaration[$dataColumn] ?? '{}', true) ?: [];
 
-        echo $this->twig->render('app/cloture/' . $slug . '.html.twig', [
+        echo $this->twig->render('app/cloture/' . $slug . '.html.twig', array_merge([
             'active_page' => 'cloture',
             'active_tab' => $slug,
             'tabs' => self::TABS,
@@ -130,7 +139,109 @@ class ClotureController
             'declaration' => $declaration,
             'data' => $savedData,
             'success' => isset($_GET['success']),
-        ]);
+        ], $extraData));
+    }
+
+    private function getImmobilisationsAvecAmortissement(int $entrepriseId, int $annee): array
+    {
+        $stmt = $this->pdo->prepare(
+            "SELECT * FROM immobilisations WHERE entreprise_id = :eid ORDER BY date_acquisition"
+        );
+        $stmt->execute(['eid' => $entrepriseId]);
+        $immos = $stmt->fetchAll();
+
+        $finAnnee = $annee . '-12-31';
+        $result = [];
+
+        foreach ($immos as $immo) {
+            $dateAcq = $immo['date_mise_en_service'] ?? $immo['date_acquisition'];
+            $anneeAcq = (int) (new \DateTime($dateAcq))->format('Y');
+
+            // Ignorer les immos acquises après l'année
+            if ($anneeAcq > $annee) {
+                continue;
+            }
+
+            // Ignorer les immos cédées avant l'année
+            if ($immo['cession_date'] && (new \DateTime($immo['cession_date']))->format('Y') < $annee) {
+                continue;
+            }
+
+            $valeur = (float) $immo['valeur_acquisition'];
+            $duree = (int) $immo['duree_amortissement'];
+            $moisDebut = (int) (new \DateTime($dateAcq))->format('n');
+
+            // Calcul amortissement cumulé fin N-1 et dotation N
+            $annuiteLineaire = $duree > 0 ? round($valeur / $duree, 2) : 0;
+            $prorata1 = (12 - $moisDebut + 1) / 12;
+
+            $cumulFinN1 = 0;
+            $dotationN = 0;
+
+            if ($immo['type_amortissement'] === 'degressif') {
+                $coeff = (float) ($immo['coeff_degressif'] ?? 1.25);
+                $tauxDeg = (1 / $duree) * $coeff;
+                $vnc = $valeur;
+                $dureeRestante = $duree;
+
+                for ($a = $anneeAcq; $a <= $annee && $vnc > 0; $a++) {
+                    $tauxLinRestant = $dureeRestante > 0 ? 1 / $dureeRestante : 1;
+                    $taux = max($tauxDeg, $tauxLinRestant);
+                    $dot = round($vnc * $taux, 2);
+                    if ($a === $anneeAcq) {
+                        $dot = round($dot * $prorata1, 2);
+                    }
+                    $dot = min($dot, $vnc);
+
+                    if ($a < $annee) {
+                        $cumulFinN1 += $dot;
+                    } else {
+                        $dotationN = $dot;
+                    }
+                    $vnc = round($valeur - $cumulFinN1 - ($a >= $annee ? $dotationN : 0), 2);
+                    $dureeRestante--;
+                }
+            } else {
+                // Linéaire
+                for ($a = $anneeAcq; $a <= $annee; $a++) {
+                    $dot = $annuiteLineaire;
+                    if ($a === $anneeAcq) {
+                        $dot = round($annuiteLineaire * $prorata1, 2);
+                    }
+                    $restant = $valeur - $cumulFinN1 - ($a >= $annee ? $dotationN : 0);
+                    $dot = min($dot, max(0, $valeur - $cumulFinN1));
+
+                    if ($a < $annee) {
+                        $cumulFinN1 += $dot;
+                    } else {
+                        $dotationN = $dot;
+                    }
+                }
+            }
+
+            $cumulFinN1 = min($cumulFinN1, $valeur);
+            $dotationN = min($dotationN, $valeur - $cumulFinN1);
+            $cumulFinN = $cumulFinN1 + $dotationN;
+            $vnc = round($valeur - $cumulFinN, 2);
+
+            $result[] = [
+                'designation' => $immo['designation'],
+                'date_acquisition' => $immo['date_acquisition'],
+                'date_mise_en_service' => $immo['date_mise_en_service'],
+                'valeur' => $valeur,
+                'duree' => $duree,
+                'type' => $immo['type_amortissement'],
+                'compte' => $immo['compte'],
+                'cumul_anterieur' => round($cumulFinN1, 2),
+                'dotation' => round($dotationN, 2),
+                'cumul_total' => round($cumulFinN, 2),
+                'vnc' => max(0, $vnc),
+                'cession_date' => $immo['cession_date'],
+                'cession_montant' => $immo['cession_montant'],
+            ];
+        }
+
+        return $result;
     }
 
     private function getOrCreateDeclaration(int $entrepriseId, int $annee): array
