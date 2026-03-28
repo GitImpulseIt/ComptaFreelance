@@ -12,9 +12,20 @@ class TransactionBancaireRepository
 
     public function findAllByEntreprise(int $entrepriseId, array $filtres = []): array
     {
-        $sql = "SELECT t.*, cb.nom AS compte_nom, cb.banque, cb.iban
+        $sql = "SELECT t.*, cb.nom AS compte_nom, cb.banque, cb.iban,
+                    COALESCE(lc.nb_lignes, 0) AS nb_lignes,
+                    CASE
+                        WHEN lc.nb_lignes > 0 AND ABS(COALESCE(lc.total_dbt, 0) - COALESCE(lc.total_crd, 0)) <= 0.01 THEN TRUE
+                        ELSE FALSE
+                    END AS qualifiee
                 FROM transactions_bancaires t
                 JOIN comptes_bancaires cb ON cb.id = t.compte_bancaire_id
+                LEFT JOIN LATERAL (
+                    SELECT COUNT(*) AS nb_lignes,
+                           SUM(CASE WHEN l.type = 'DBT' THEN l.montant_ht + l.tva ELSE 0 END) AS total_dbt,
+                           SUM(CASE WHEN l.type = 'CRD' THEN l.montant_ht + l.tva ELSE 0 END) AS total_crd
+                    FROM lignes_comptables l WHERE l.transaction_bancaire_id = t.id
+                ) lc ON TRUE
                 WHERE cb.entreprise_id = :entreprise_id";
         $params = ['entreprise_id' => $entrepriseId];
 
