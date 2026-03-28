@@ -115,7 +115,27 @@
         </div>
 
         {# Input caché pour stocker le choix IR des EURL/SARL #}
-        <input type="hidden" id="option_ir_hidden" name="option_ir_eurl" value="{{ e.option_ir and e.statut_juridique in ['EURL', 'SARL'] ? '1' : '0' }}"
+        <input type="hidden" id="option_ir_hidden" name="option_ir_eurl" value="{{ e.option_ir and e.statut_juridique in ['EURL', 'SARL'] ? '1' : '0' }}">
+
+        {# Régime des bénéfices (BNC/BIC) — affiché quand l'entreprise est à l'IR #}
+        {% set is_ir = (e.statut_juridique == 'EI') or (e.statut_juridique in ['EURL', 'SARL'] and e.option_ir) or (e.statut_juridique in ['SAS', 'SASU'] and e.option_ir) %}
+        <div id="regime-benefices-block" class="mt-4 p-4 bg-slate-50 rounded-lg {{ is_ir ? '' : 'hidden' }}">
+            <label class="block text-sm font-medium text-slate-700 mb-2">Régime des bénéfices</label>
+            <p class="text-xs text-slate-500 mb-3">Les entreprises à l'IR relèvent soit des BNC (professions libérales, prestations intellectuelles) soit des BIC (activités commerciales, artisanales).</p>
+            <div class="flex gap-2">
+                <button type="button" id="btn-bnc"
+                        onclick="setRegimeBenefices('BNC')"
+                        class="px-4 py-2 text-sm font-medium rounded-lg border transition {{ e.regime_benefices is not defined or e.regime_benefices == 'BNC' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50' }}">
+                    BNC - Bénéfices non commerciaux
+                </button>
+                <button type="button" id="btn-bic"
+                        onclick="setRegimeBenefices('BIC')"
+                        class="px-4 py-2 text-sm font-medium rounded-lg border transition {{ e.regime_benefices is defined and e.regime_benefices == 'BIC' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50' }}">
+                    BIC - Bénéfices industriels et commerciaux
+                </button>
+            </div>
+            <input type="hidden" id="regime_benefices_hidden" name="regime_benefices" value="{{ e.regime_benefices ?? 'BNC' }}">
+        </div>
     </div>
 
     {# Coordonnées #}
@@ -192,6 +212,7 @@ function toggleOptionIr() {
         document.getElementById('option_ir_hidden').value = '0';
         toggleOptionIrFin();
     }
+    updateRegimeBeneficesVisibility();
 }
 
 function toggleOptionIrFin() {
@@ -202,6 +223,7 @@ function toggleOptionIrFin() {
     } else {
         block.classList.add('hidden');
     }
+    updateRegimeBeneficesVisibility();
 }
 
 function setImposition(isIr) {
@@ -217,6 +239,42 @@ function setImposition(isIr) {
         btnIs.className = 'px-4 py-2 text-sm font-medium rounded-lg border transition ' + activeClass;
         btnIr.className = 'px-4 py-2 text-sm font-medium rounded-lg border transition ' + inactiveClass;
         hidden.value = '0';
+    }
+    updateRegimeBeneficesVisibility();
+}
+
+function setRegimeBenefices(regime) {
+    var btnBnc = document.getElementById('btn-bnc');
+    var btnBic = document.getElementById('btn-bic');
+    var hidden = document.getElementById('regime_benefices_hidden');
+
+    if (regime === 'BNC') {
+        btnBnc.className = 'px-4 py-2 text-sm font-medium rounded-lg border transition ' + activeClass;
+        btnBic.className = 'px-4 py-2 text-sm font-medium rounded-lg border transition ' + inactiveClass;
+    } else {
+        btnBic.className = 'px-4 py-2 text-sm font-medium rounded-lg border transition ' + activeClass;
+        btnBnc.className = 'px-4 py-2 text-sm font-medium rounded-lg border transition ' + inactiveClass;
+    }
+    hidden.value = regime;
+}
+
+function updateRegimeBeneficesVisibility() {
+    var statut = document.getElementById('statut_juridique').value;
+    var block = document.getElementById('regime-benefices-block');
+    var isIr = false;
+
+    if (statut === 'EI') {
+        isIr = true;
+    } else if (statut === 'EURL' || statut === 'SARL') {
+        isIr = document.getElementById('option_ir_hidden').value === '1';
+    } else if (statut === 'SAS' || statut === 'SASU') {
+        isIr = document.getElementById('option_ir').checked;
+    }
+
+    if (isIr) {
+        block.classList.remove('hidden');
+    } else {
+        block.classList.add('hidden');
     }
 }
 </script>

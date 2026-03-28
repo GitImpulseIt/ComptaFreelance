@@ -53,7 +53,8 @@ class EntrepriseRepository
                 raison_sociale = :raison_sociale, siret = :siret, adresse = :adresse,
                 code_postal = :code_postal, ville = :ville, telephone = :telephone,
                 email = :email, regime_tva = :regime_tva, statut_juridique = :statut_juridique,
-                option_ir = :option_ir, option_ir_fin_exercice = :option_ir_fin_exercice, updated_at = NOW()
+                option_ir = :option_ir, option_ir_fin_exercice = :option_ir_fin_exercice,
+                regime_benefices = :regime_benefices, updated_at = NOW()
              WHERE id = :id"
         );
         $stmt->execute([
@@ -69,6 +70,7 @@ class EntrepriseRepository
             'statut_juridique' => $data['statut_juridique'] ?? 'SASU',
             'option_ir' => $data['option_ir'] ?? false,
             'option_ir_fin_exercice' => $data['option_ir_fin_exercice'] ?? null,
+            'regime_benefices' => $data['regime_benefices'] ?? 'BNC',
         ]);
     }
 

@@ -98,6 +98,7 @@ class ParametreController
             'statut_juridique' => $statutJuridique,
             'option_ir' => $optionIr,
             'option_ir_fin_exercice' => $optionIrFinExercice,
+            'regime_benefices' => $optionIr ? ($_POST['regime_benefices'] ?? 'BNC') : 'BNC',
         ]);
 
         // Mettre à jour le nom en session
