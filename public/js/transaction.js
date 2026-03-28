@@ -221,4 +221,113 @@
             }
         }
     });
+
+    // --- Gestion des liens documents ---
+    (function() {
+        var section = document.getElementById('liens-section');
+        if (!section) return;
+
+        var transactionId = section.dataset.transactionId;
+        var list = document.getElementById('liens-list');
+        var addLienBtn = document.getElementById('add-lien');
+        var emptyMsg = document.getElementById('liens-empty');
+
+        function hideEmpty() {
+            if (emptyMsg) emptyMsg.style.display = list.querySelectorAll('.lien-item').length ? 'none' : '';
+        }
+
+        function createLienElement(id, url) {
+            var li = document.createElement('li');
+            li.className = 'lien-item group flex items-center gap-2';
+            li.dataset.id = id;
+            li.innerHTML =
+                '<svg class="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>' +
+                '<a href="' + url + '" target="_blank" rel="noopener" class="text-sm text-indigo-600 hover:text-indigo-800 truncate max-w-md" title="' + url + '">' + url + '</a>' +
+                '<button type="button" class="lien-remove opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-500 transition shrink-0" data-id="' + id + '" title="Supprimer">' +
+                    '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>' +
+                '</button>';
+            return li;
+        }
+
+        // Ajouter un lien
+        addLienBtn.addEventListener('click', function() {
+            if (list.querySelector('.lien-input-item')) return;
+
+            var li = document.createElement('li');
+            li.className = 'lien-input-item flex items-center gap-2';
+            li.innerHTML =
+                '<input type="text" class="lien-input flex-1 border border-slate-300 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none" placeholder="https://..." />' +
+                '<button type="button" class="lien-ok text-emerald-600 hover:text-emerald-800 transition" title="Valider"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg></button>' +
+                '<button type="button" class="lien-cancel text-slate-400 hover:text-red-500 transition" title="Annuler"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>';
+            list.appendChild(li);
+            li.querySelector('input').focus();
+            if (emptyMsg) emptyMsg.style.display = 'none';
+        });
+
+        list.addEventListener('click', function(e) {
+            var target = e.target.closest('button') || e.target;
+
+            // Valider l'ajout
+            if (target.classList.contains('lien-ok')) {
+                var li = target.closest('li');
+                var input = li.querySelector('input');
+                var url = input.value.trim();
+                if (!url) { li.remove(); hideEmpty(); return; }
+
+                input.disabled = true;
+                var form = new FormData();
+                form.append('url', url);
+
+                fetch('/app/banque/' + transactionId + '/liens', { method: 'POST', body: form })
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        if (data.success) {
+                            var newLi = createLienElement(data.id, url);
+                            list.replaceChild(newLi, li);
+                        } else {
+                            input.disabled = false;
+                        }
+                        hideEmpty();
+                    });
+            }
+
+            // Annuler
+            if (target.classList.contains('lien-cancel')) {
+                target.closest('li').remove();
+                hideEmpty();
+            }
+
+            // Supprimer un lien existant
+            if (target.classList.contains('lien-remove') || target.closest('.lien-remove')) {
+                var btn = target.closest('.lien-remove') || target;
+                var lienId = btn.dataset.id;
+                var li = btn.closest('li');
+
+                var form = new FormData();
+                form.append('lien_id', lienId);
+
+                fetch('/app/banque/' + transactionId + '/liens/delete', { method: 'POST', body: form })
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        if (data.success) {
+                            li.remove();
+                            hideEmpty();
+                        }
+                    });
+            }
+        });
+
+        // Enter/Escape dans l'input lien
+        list.addEventListener('keydown', function(e) {
+            if (e.target.classList.contains('lien-input')) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    e.target.closest('li').querySelector('.lien-ok').click();
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    e.target.closest('li').querySelector('.lien-cancel').click();
+                }
+            }
+        });
+    })();
 })();

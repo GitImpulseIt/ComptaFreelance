@@ -7,6 +7,7 @@ namespace App\Controller\App;
 use App\Middleware\AuthMiddleware;
 use App\Repository\CompteBancaireRepository;
 use App\Repository\ImportBancaireRepository;
+use App\Repository\LienDocumentRepository;
 use App\Repository\LigneComptableRepository;
 use App\Repository\TransactionBancaireRepository;
 use App\Service\Banque\ImportService;
@@ -19,6 +20,7 @@ class BanqueController
     private TransactionBancaireRepository $transactionRepo;
     private CompteBancaireRepository $compteRepo;
     private LigneComptableRepository $ligneRepo;
+    private LienDocumentRepository $lienRepo;
 
     public function __construct(
         private Environment $twig,
@@ -28,6 +30,7 @@ class BanqueController
         $this->transactionRepo = new TransactionBancaireRepository($pdo);
         $this->compteRepo = new CompteBancaireRepository($pdo);
         $this->ligneRepo = new LigneComptableRepository($pdo);
+        $this->lienRepo = new LienDocumentRepository($pdo);
     }
 
     public function transactions(): void
@@ -155,10 +158,13 @@ class BanqueController
             }
         }
 
+        $liens = $this->lienRepo->findByTransaction($id);
+
         echo $this->twig->render('app/banque/show.html.twig', [
             'active_page' => 'banque',
             'transaction' => $transaction,
             'lignes' => $lignes,
+            'liens' => $liens,
             'success' => isset($_GET['success']),
         ]);
     }
@@ -198,6 +204,53 @@ class BanqueController
 
         header('Location: /app/banque/' . $id . '?success=1');
         exit;
+    }
+
+    public function addLien(int $id): void
+    {
+        $entrepriseId = $this->auth->getEntrepriseId();
+        $transaction = $this->transactionRepo->findById($id);
+        $compte = $transaction ? $this->compteRepo->findById((int) $transaction['compte_bancaire_id']) : null;
+
+        if (!$transaction || !$compte || (int) $compte['entreprise_id'] !== $entrepriseId) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Non autorisé']);
+            return;
+        }
+
+        $url = trim($_POST['url'] ?? '');
+        if ($url === '') {
+            http_response_code(400);
+            echo json_encode(['error' => 'URL vide']);
+            return;
+        }
+
+        $lienId = $this->lienRepo->create($id, $url);
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true, 'id' => $lienId]);
+    }
+
+    public function deleteLien(int $id): void
+    {
+        $entrepriseId = $this->auth->getEntrepriseId();
+        $transaction = $this->transactionRepo->findById($id);
+        $compte = $transaction ? $this->compteRepo->findById((int) $transaction['compte_bancaire_id']) : null;
+
+        if (!$transaction || !$compte || (int) $compte['entreprise_id'] !== $entrepriseId) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Non autorisé']);
+            return;
+        }
+
+        $lienId = (int) ($_POST['lien_id'] ?? 0);
+        $lien = $this->lienRepo->findById($lienId);
+
+        if ($lien && (int) $lien['transaction_bancaire_id'] === $id) {
+            $this->lienRepo->delete($lienId);
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true]);
     }
 
     public function rapprocher(int $id): void {}
