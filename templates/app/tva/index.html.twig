@@ -152,7 +152,7 @@
                         </thead>
                         <tbody class="divide-y divide-slate-100">
                             {% for ligne in ech.detail_lignes_tva %}
-                            <tr class="hover:bg-slate-50 border-l-3 {{ ligne.sens_tva == 'collectee' ? 'border-l-emerald-400' : 'border-l-red-400' }}">
+                            <tr class="hover:bg-slate-50">
                                 <td class="py-2 pr-3 text-slate-600 whitespace-nowrap">{{ ligne.date|date('d/m/Y') }}</td>
                                 <td class="py-2 pr-3 text-slate-800 max-w-xs truncate" title="{{ ligne.libelle }}">{{ ligne.libelle }}</td>
                                 <td class="py-2 pr-3 text-slate-500 font-mono text-xs">{{ ligne.compte }}</td>
@@ -187,33 +187,28 @@
                         <div class="bg-indigo-600 text-white text-xs font-semibold uppercase tracking-wide px-4 py-2 rounded-t-lg">
                             1 - Acquittement de l'acompte attendu, modulation ou suspension, imputation d'un crédit de TVA
                         </div>
-                        <div class="border border-t-0 border-slate-200 rounded-b-lg p-4 space-y-3">
-                            {# Case 01 #}
-                            <div class="flex items-center gap-3 p-3 bg-white rounded-lg border border-slate-200 {{ ech.tva_due > 0 ? 'border-l-4 border-l-blue-400 bg-blue-50/30' : '' }}">
+                        <div class="border border-t-0 border-slate-200 rounded-b-lg py-3 px-4 space-y-2">
+                            <div class="flex items-center gap-3 py-1.5">
                                 <span class="shrink-0 bg-indigo-600 text-white text-xs font-bold px-2.5 py-1.5 rounded text-center min-w-[40px]">01</span>
                                 <span class="flex-1 text-sm text-slate-700">Montant de l'acompte attendu ou modulé</span>
                                 <input type="number" step="1" name="case_01"
-                                       class="w-28 border border-slate-300 rounded-lg px-3 py-2 text-sm text-right tabular-nums focus:ring-2 focus:ring-indigo-500 outline-none tva-case"
+                                       class="w-28 border border-slate-300 rounded-lg pl-3 pr-1 py-2 text-sm text-right tabular-nums focus:ring-2 focus:ring-indigo-500 outline-none tva-case"
                                        data-ech="{{ ech.id }}"
                                        value="{{ decl ? decl.case_01|round : ech.cases_auto.case_01 }}" placeholder="0">
                             </div>
-
-                            {# Case 02 #}
-                            <div class="flex items-center gap-3 p-3 bg-white rounded-lg border border-slate-200">
+                            <div class="flex items-center gap-3 py-1.5">
                                 <span class="shrink-0 bg-indigo-600 text-white text-xs font-bold px-2.5 py-1.5 rounded text-center min-w-[40px]">02</span>
                                 <span class="flex-1 text-sm text-slate-700">Montant du crédit ou de l'excédent de TVA figurant sur la précédente déclaration CA12/CA12E</span>
                                 <input type="number" step="1" name="case_02"
-                                       class="w-28 border border-slate-300 rounded-lg px-3 py-2 text-sm text-right tabular-nums focus:ring-2 focus:ring-indigo-500 outline-none tva-case"
+                                       class="w-28 border border-slate-300 rounded-lg pl-3 pr-1 py-2 text-sm text-right tabular-nums focus:ring-2 focus:ring-indigo-500 outline-none tva-case"
                                        data-ech="{{ ech.id }}"
                                        value="{{ decl ? decl.case_02|round : 0 }}" placeholder="0">
                             </div>
-
-                            {# Case 03 (calculé) #}
-                            <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200 border-l-4 border-l-amber-400">
+                            <div class="flex items-center gap-3 py-1.5 bg-slate-50 rounded-lg px-2">
                                 <span class="shrink-0 bg-indigo-600 text-white text-xs font-bold px-2.5 py-1.5 rounded text-center min-w-[40px]">03</span>
                                 <span class="flex-1 text-sm text-slate-700 font-medium">Montant total de la TVA à payer à la place de l'acompte de TVA</span>
                                 <input type="number" step="1" name="case_03" readonly
-                                       class="w-28 border border-slate-200 rounded-lg px-3 py-2 text-sm text-right tabular-nums bg-slate-100 font-semibold text-slate-700 tva-result"
+                                       class="w-28 border border-slate-200 rounded-lg pl-3 pr-1 py-2 text-sm text-right tabular-nums bg-slate-100 font-semibold text-slate-700 tva-result"
                                        data-ech="{{ ech.id }}"
                                        value="{{ decl ? decl.case_03|round : ech.cases_auto.case_01 }}" placeholder="0">
                             </div>
@@ -225,45 +220,39 @@
                         <div class="bg-indigo-600 text-white text-xs font-semibold uppercase tracking-wide px-4 py-2 rounded-t-lg">
                             2 - Remboursement de crédit de TVA sur investissements
                         </div>
-                        <div class="border border-t-0 border-slate-200 rounded-b-lg p-4 space-y-3">
-                            {# Case 05 #}
-                            <div class="flex items-center gap-3 p-3 bg-white rounded-lg border border-slate-200 {{ ech.tva_due < 0 ? 'border-l-4 border-l-blue-400 bg-blue-50/30' : '' }}">
+                        <div class="border border-t-0 border-slate-200 rounded-b-lg py-3 px-4 space-y-2">
+                            <div class="flex items-center gap-3 py-1.5">
                                 <span class="shrink-0 bg-indigo-600 text-white text-xs font-bold px-2.5 py-1.5 rounded text-center min-w-[40px]">05</span>
                                 <span class="flex-1 text-sm text-slate-700">Montant de la TVA collectée au titre du semestre</span>
                                 <input type="number" step="1" name="case_05"
-                                       class="w-28 border border-slate-300 rounded-lg px-3 py-2 text-sm text-right tabular-nums focus:ring-2 focus:ring-indigo-500 outline-none tva-case"
+                                       class="w-28 border border-slate-300 rounded-lg pl-3 pr-1 py-2 text-sm text-right tabular-nums focus:ring-2 focus:ring-indigo-500 outline-none tva-case"
                                        data-ech="{{ ech.id }}"
                                        {{ ech.tva_due < 0 ? 'readonly' : '' }}
                                        value="{{ decl ? decl.case_05|round : ech.cases_auto.case_05 }}" placeholder="0">
                             </div>
-
-                            {# Case 06 #}
-                            <div class="flex items-center gap-3 p-3 bg-white rounded-lg border border-slate-200 {{ ech.tva_due < 0 ? 'border-l-4 border-l-blue-400 bg-blue-50/30' : '' }}">
+                            <div class="flex items-center gap-3 py-1.5">
                                 <span class="shrink-0 bg-indigo-600 text-white text-xs font-bold px-2.5 py-1.5 rounded text-center min-w-[40px]">06</span>
                                 <span class="flex-1 text-sm text-slate-700">Montant de la TVA déductible au titre du semestre</span>
                                 <input type="number" step="1" name="case_06"
-                                       class="w-28 border border-slate-300 rounded-lg px-3 py-2 text-sm text-right tabular-nums focus:ring-2 focus:ring-indigo-500 outline-none tva-case"
+                                       class="w-28 border border-slate-300 rounded-lg pl-3 pr-1 py-2 text-sm text-right tabular-nums focus:ring-2 focus:ring-indigo-500 outline-none tva-case"
                                        data-ech="{{ ech.id }}"
                                        {{ ech.tva_due < 0 ? 'readonly' : '' }}
                                        value="{{ decl ? decl.case_06|round : ech.cases_auto.case_06 }}" placeholder="0">
                             </div>
 
-                            {# Case 07 (calculé) #}
-                            <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200 border-l-4 border-l-amber-400">
+                            <div class="flex items-center gap-3 py-1.5 bg-slate-50 rounded-lg px-2">
                                 <span class="shrink-0 bg-indigo-600 text-white text-xs font-bold px-2.5 py-1.5 rounded text-center min-w-[40px]">07</span>
                                 <span class="flex-1 text-sm text-slate-700 font-medium">Crédit de TVA dégagé au titre du semestre</span>
                                 <input type="number" step="1" name="case_07" readonly
-                                       class="w-28 border border-slate-200 rounded-lg px-3 py-2 text-sm text-right tabular-nums bg-slate-100 font-semibold text-slate-700 tva-result"
+                                       class="w-28 border border-slate-200 rounded-lg pl-3 pr-1 py-2 text-sm text-right tabular-nums bg-slate-100 font-semibold text-slate-700 tva-result"
                                        data-ech="{{ ech.id }}"
                                        value="{{ decl ? decl.case_07|round : ech.cases_auto.case_07 }}" placeholder="0">
                             </div>
-
-                            {# Case 08 #}
-                            <div class="flex items-center gap-3 p-3 bg-white rounded-lg border border-slate-200">
+                            <div class="flex items-center gap-3 py-1.5">
                                 <span class="shrink-0 bg-indigo-600 text-white text-xs font-bold px-2.5 py-1.5 rounded text-center min-w-[40px]">08</span>
                                 <span class="flex-1 text-sm text-slate-700">Remboursement de la TVA sur investissements sollicité</span>
                                 <input type="number" step="1" name="case_08"
-                                       class="w-28 border border-slate-300 rounded-lg px-3 py-2 text-sm text-right tabular-nums focus:ring-2 focus:ring-indigo-500 outline-none tva-case tva-case-08"
+                                       class="w-28 border border-slate-300 rounded-lg pl-3 pr-1 py-2 text-sm text-right tabular-nums focus:ring-2 focus:ring-indigo-500 outline-none tva-case tva-case-08"
                                        data-ech="{{ ech.id }}"
                                        value="{{ decl ? decl.case_08|round : 0 }}" placeholder="0">
                             </div>
