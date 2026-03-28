@@ -77,14 +77,13 @@ class ParametreController
 
         if (in_array($statutJuridique, ['SAS', 'SASU'])) {
             $optionIr = isset($_POST['option_ir']);
-            $optionIrFin = $optionIr && !empty($_POST['option_ir_fin']) ? $_POST['option_ir_fin'] : null;
+            $optionIrFinExercice = $optionIr && !empty($_POST['option_ir_fin_exercice']) ? (int) $_POST['option_ir_fin_exercice'] : null;
         } elseif (in_array($statutJuridique, ['EURL', 'SARL'])) {
             $optionIr = ($_POST['option_ir_eurl'] ?? '0') === '1';
-            $optionIrFin = null;
+            $optionIrFinExercice = null;
         } else {
-            // EI : toujours IR par nature
             $optionIr = true;
-            $optionIrFin = null;
+            $optionIrFinExercice = null;
         }
 
         $this->entrepriseRepo->update($entrepriseId, [
@@ -98,7 +97,7 @@ class ParametreController
             'regime_tva' => $_POST['regime_tva'] ?? $entreprise['regime_tva'],
             'statut_juridique' => $statutJuridique,
             'option_ir' => $optionIr,
-            'option_ir_fin' => $optionIrFin,
+            'option_ir_fin_exercice' => $optionIrFinExercice,
         ]);
 
         // Mettre à jour le nom en session

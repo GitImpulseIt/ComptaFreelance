@@ -99,10 +99,16 @@
                     <label for="option_ir" class="text-sm font-medium text-slate-700">Option pour l'impôt sur le revenu (IR)</label>
                     <p class="text-xs text-slate-500 mt-0.5">Les SAS/SASU sont par défaut à l'IS. L'option IR est possible pour une durée limitée.</p>
                     <div id="option-ir-fin-block" class="mt-3 {{ e.option_ir and e.statut_juridique in ['SAS', 'SASU'] ? '' : 'hidden' }}">
-                        <label for="option_ir_fin" class="block text-sm font-medium text-slate-700 mb-1">Date de fin de l'option IR</label>
-                        <input type="date" id="option_ir_fin" name="option_ir_fin"
-                               value="{{ e.option_ir_fin is defined and e.option_ir_fin ? e.option_ir_fin|date('Y-m-d') : '' }}"
-                               class="w-48 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+                        <label for="option_ir_fin_exercice" class="block text-sm font-medium text-slate-700 mb-1">Dernier exercice sous option IR</label>
+                        <select id="option_ir_fin_exercice" name="option_ir_fin_exercice"
+                                class="w-32 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+                            <option value="">--</option>
+                            {% set current_year = "now"|date("Y") %}
+                            {% for y in range(current_year - 2, current_year + 5) %}
+                            <option value="{{ y }}" {{ e.option_ir_fin_exercice is defined and e.option_ir_fin_exercice == y ? 'selected' : '' }}>{{ y }}</option>
+                            {% endfor %}
+                        </select>
+                        <p class="text-xs text-slate-500 mt-1">L'exercice {{ e.option_ir_fin_exercice ?? '...' }} sera le dernier à bénéficier de l'option IR.</p>
                     </div>
                 </div>
             </div>

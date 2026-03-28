@@ -27,8 +27,8 @@ class EntrepriseRepository
     public function create(array $data): int
     {
         $stmt = $this->pdo->prepare(
-            "INSERT INTO entreprises (raison_sociale, siret, adresse, code_postal, ville, telephone, email, regime_tva, statut_juridique, option_ir, option_ir_fin)
-             VALUES (:raison_sociale, :siret, :adresse, :code_postal, :ville, :telephone, :email, :regime_tva, :statut_juridique, :option_ir, :option_ir_fin)"
+            "INSERT INTO entreprises (raison_sociale, siret, adresse, code_postal, ville, telephone, email, regime_tva, statut_juridique, option_ir, option_ir_fin_exercice)
+             VALUES (:raison_sociale, :siret, :adresse, :code_postal, :ville, :telephone, :email, :regime_tva, :statut_juridique, :option_ir, :option_ir_fin_exercice)"
         );
         $stmt->execute([
             'raison_sociale' => $data['raison_sociale'],
@@ -41,7 +41,7 @@ class EntrepriseRepository
             'regime_tva' => $data['regime_tva'] ?? 'franchise',
             'statut_juridique' => $data['statut_juridique'] ?? 'SASU',
             'option_ir' => $data['option_ir'] ?? false,
-            'option_ir_fin' => $data['option_ir_fin'] ?? null,
+            'option_ir_fin_exercice' => $data['option_ir_fin_exercice'] ?? null,
         ]);
         return (int) $this->pdo->lastInsertId();
     }
@@ -53,7 +53,7 @@ class EntrepriseRepository
                 raison_sociale = :raison_sociale, siret = :siret, adresse = :adresse,
                 code_postal = :code_postal, ville = :ville, telephone = :telephone,
                 email = :email, regime_tva = :regime_tva, statut_juridique = :statut_juridique,
-                option_ir = :option_ir, option_ir_fin = :option_ir_fin, updated_at = NOW()
+                option_ir = :option_ir, option_ir_fin_exercice = :option_ir_fin_exercice, updated_at = NOW()
              WHERE id = :id"
         );
         $stmt->execute([
@@ -68,7 +68,7 @@ class EntrepriseRepository
             'regime_tva' => $data['regime_tva'] ?? 'franchise',
             'statut_juridique' => $data['statut_juridique'] ?? 'SASU',
             'option_ir' => $data['option_ir'] ?? false,
-            'option_ir_fin' => $data['option_ir_fin'] ?? null,
+            'option_ir_fin_exercice' => $data['option_ir_fin_exercice'] ?? null,
         ]);
     }
 
