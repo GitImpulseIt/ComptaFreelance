@@ -56,16 +56,7 @@ class ClotureController
     }
 
     public function tab2035(): void      { $this->renderTab('2035'); }
-    public function tab2035Suite(): void
-    {
-        $entrepriseId = $this->auth->getEntrepriseId();
-        $annee = isset($_GET['annee']) ? (int) $_GET['annee'] : (int) date('Y') - 1;
-
-        // Immobilisations avec amortissement
-        $immos = $this->getImmobilisationsAvecAmortissement($entrepriseId, $annee);
-
-        $this->renderTab('2035-suite', ['immobilisations' => $immos]);
-    }
+    public function tab2035Suite(): void  { $this->renderTab('2035-suite'); }
     public function tab2035A(): void      { $this->renderTab('2035-a'); }
     public function tab2035B(): void      { $this->renderTab('2035-b'); }
     public function tab2035E(): void      { $this->renderTab('2035-e'); }
