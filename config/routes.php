@@ -53,6 +53,7 @@ return [
     // App - TVA
     'GET /app/tva' => ['App\\TvaController', 'index'],
     'POST /app/tva/payer' => ['App\\TvaController', 'payer'],
+    'POST /app/tva/date-paiement' => ['App\\TvaController', 'updateDatePaiement'],
 
     // App - Paramètres
     'GET /app/parametres' => ['App\\ParametreController', 'index'],

@@ -148,6 +148,25 @@ class TvaController
         exit;
     }
 
+    public function updateDatePaiement(): void
+    {
+        $entrepriseId = $this->auth->getEntrepriseId();
+        $echeanceId = (int) ($_POST['echeance_id'] ?? 0);
+        $annee = (int) ($_POST['annee'] ?? date('Y'));
+        $datePaiement = $_POST['date_paiement'] ?? '';
+
+        if ($datePaiement && $echeanceId) {
+            $stmt = $this->pdo->prepare(
+                "UPDATE tva_declarations SET date_paiement = :dp, updated_at = NOW()
+                 WHERE entreprise_id = :eid AND echeance_id = :ecid"
+            );
+            $stmt->execute(['dp' => $datePaiement, 'eid' => $entrepriseId, 'ecid' => $echeanceId]);
+        }
+
+        header('Location: /app/tva?annee=' . $annee);
+        exit;
+    }
+
     private function calculerTVA(int $entrepriseId, int $annee, string $periode): array
     {
         [$dateDebut, $dateFin] = $this->bornesPeriode($annee, $periode);

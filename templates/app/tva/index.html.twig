@@ -281,12 +281,23 @@
             </div>
             {% else %}
             {# Résumé paiement #}
-            <div class="px-6 py-3 border-t border-slate-100 text-sm text-slate-500">
-                Payé le {{ decl.date_paiement|date('d/m/Y') }}
-                &middot; {{ decl.montant_paye|number_format(2, ',', ' ') }} &euro;
-                &middot; Cases : 01={{ decl.case_01|round }}, 02={{ decl.case_02|round }}, 03={{ decl.case_03|round }}
-                {% if decl.case_07 > 0 %}, 05={{ decl.case_05|round }}, 06={{ decl.case_06|round }}, 07={{ decl.case_07|round }}{% endif %}
-                {% if decl.case_08 > 0 %}, 08={{ decl.case_08|round }}{% endif %}
+            <div class="px-6 py-3 border-t border-slate-100 text-sm text-slate-500 flex items-center justify-between">
+                <div class="flex items-center gap-1">
+                    <span>Payé le</span>
+                    <form method="POST" action="/app/tva/date-paiement" class="inline-flex items-center gap-1">
+                        <input type="hidden" name="echeance_id" value="{{ ech.id }}">
+                        <input type="hidden" name="annee" value="{{ annee }}">
+                        <input type="date" name="date_paiement" value="{{ decl.date_paiement }}"
+                               class="border border-transparent hover:border-slate-300 focus:border-indigo-500 rounded px-1.5 py-0.5 text-sm text-slate-600 bg-transparent focus:bg-white outline-none transition"
+                               onchange="this.form.submit()">
+                    </form>
+                    <span>&middot; {{ decl.montant_paye|number_format(2, ',', ' ') }} &euro;</span>
+                </div>
+                <span class="text-xs text-slate-400">
+                    Cases : 01={{ decl.case_01|round }}, 02={{ decl.case_02|round }}, 03={{ decl.case_03|round }}
+                    {% if decl.case_07 > 0 %}, 05={{ decl.case_05|round }}, 06={{ decl.case_06|round }}, 07={{ decl.case_07|round }}{% endif %}
+                    {% if decl.case_08 > 0 %}, 08={{ decl.case_08|round }}{% endif %}
+                </span>
             </div>
             {% endif %}
         </div>
