@@ -29,7 +29,9 @@
         <div class="flex items-start justify-between">
             <div>
                 <h3 class="font-semibold text-slate-800">{{ compte.nom }}</h3>
+                {% if compte.banque and compte.banque != compte.nom %}
                 <p class="text-sm text-slate-500 mt-0.5">{{ compte.banque }}</p>
+                {% endif %}
                 {% if compte.iban %}
                 <p class="text-xs text-slate-400 mt-1 font-mono">{{ compte.iban }}</p>
                 {% endif %}
