@@ -14,16 +14,30 @@ class ClotureController
     private EntrepriseRepository $entrepriseRepo;
 
     private const TABS = [
-        ['slug' => '2035',        'label' => '2035'],
-        ['slug' => '2035-suite',  'label' => '2035-SUITE'],
-        ['slug' => '2035-a-p1',   'label' => '2035-A (p.1)'],
-        ['slug' => '2035-a-p2',   'label' => '2035-A (p.2)'],
-        ['slug' => '2035-b',      'label' => '2035-B'],
-        ['slug' => '2035-e',      'label' => '2035-E'],
-        ['slug' => '2035-g',      'label' => '2035-G'],
-        ['slug' => '2035-rci',    'label' => '2035-RCI'],
-        ['slug' => '2049',        'label' => '2049'],
-        ['slug' => 'annexe-libre','label' => 'Annexe libre'],
+        ['slug' => '2035',       'label' => '2035'],
+        ['slug' => '2035-suite', 'label' => '2035-SUITE'],
+        ['slug' => '2035-a',     'label' => '2035-A'],
+        ['slug' => '2035-b',     'label' => '2035-B'],
+        ['slug' => '2035-e',     'label' => '2035-E'],
+        ['slug' => '2035-f',     'label' => '2035-F'],
+        ['slug' => '2035-g',     'label' => '2035-G'],
+        ['slug' => '2035-rci',   'label' => '2035-RCI'],
+        ['slug' => '2468',       'label' => '2468'],
+        ['slug' => 'annexlib01', 'label' => 'ANNEXE LIBRE'],
+    ];
+
+    // Mapping slug onglet → colonne JSONB en base
+    private const TAB_COLUMN = [
+        '2035'       => 'data_2035',
+        '2035-suite' => 'data_2035_suite',
+        '2035-a'     => 'data_2035_a_p1',
+        '2035-b'     => 'data_2035_b',
+        '2035-e'     => 'data_2035_e',
+        '2035-f'     => 'data_2035_a_p2',
+        '2035-g'     => 'data_2035_g',
+        '2035-rci'   => 'data_2035_rci',
+        '2468'       => 'data_2049',
+        'annexlib01' => 'data_annexe_libre',
     ];
 
     public function __construct(
@@ -41,55 +55,16 @@ class ClotureController
         exit;
     }
 
-    public function tab2035(): void
-    {
-        $this->renderTab('2035', 'data_2035');
-    }
-
-    public function tab2035Suite(): void
-    {
-        $this->renderTab('2035-suite', 'data_2035_suite');
-    }
-
-    public function tab2035AP1(): void
-    {
-        $this->renderTab('2035-a-p1', 'data_2035_a_p1');
-    }
-
-    public function tab2035AP2(): void
-    {
-        $this->renderTab('2035-a-p2', 'data_2035_a_p2');
-    }
-
-    public function tab2035B(): void
-    {
-        $this->renderTab('2035-b', 'data_2035_b');
-    }
-
-    public function tab2035E(): void
-    {
-        $this->renderTab('2035-e', 'data_2035_e');
-    }
-
-    public function tab2035G(): void
-    {
-        $this->renderTab('2035-g', 'data_2035_g');
-    }
-
-    public function tabRCI(): void
-    {
-        $this->renderTab('2035-rci', 'data_2035_rci');
-    }
-
-    public function tab2049(): void
-    {
-        $this->renderTab('2049', 'data_2049');
-    }
-
-    public function tabAnnexeLibre(): void
-    {
-        $this->renderTab('annexe-libre', 'data_annexe_libre');
-    }
+    public function tab2035(): void      { $this->renderTab('2035'); }
+    public function tab2035Suite(): void  { $this->renderTab('2035-suite'); }
+    public function tab2035A(): void      { $this->renderTab('2035-a'); }
+    public function tab2035B(): void      { $this->renderTab('2035-b'); }
+    public function tab2035E(): void      { $this->renderTab('2035-e'); }
+    public function tab2035F(): void      { $this->renderTab('2035-f'); }
+    public function tab2035G(): void      { $this->renderTab('2035-g'); }
+    public function tabRCI(): void        { $this->renderTab('2035-rci'); }
+    public function tab2468(): void       { $this->renderTab('2468'); }
+    public function tabAnnexeLibre(): void { $this->renderTab('annexlib01'); }
 
     public function save(): void
     {
@@ -98,20 +73,7 @@ class ClotureController
         $tab = $_POST['tab'] ?? '';
         $fields = $_POST['fields'] ?? [];
 
-        $columnMap = [
-            '2035' => 'data_2035',
-            '2035-suite' => 'data_2035_suite',
-            '2035-a-p1' => 'data_2035_a_p1',
-            '2035-a-p2' => 'data_2035_a_p2',
-            '2035-b' => 'data_2035_b',
-            '2035-e' => 'data_2035_e',
-            '2035-g' => 'data_2035_g',
-            '2035-rci' => 'data_2035_rci',
-            '2049' => 'data_2049',
-            'annexe-libre' => 'data_annexe_libre',
-        ];
-
-        $column = $columnMap[$tab] ?? null;
+        $column = self::TAB_COLUMN[$tab] ?? null;
         if (!$column) {
             header('Location: /app/cloture?annee=' . $annee);
             exit;
@@ -130,19 +92,17 @@ class ClotureController
         exit;
     }
 
-    private function renderTab(string $slug, string $dataColumn): void
+    private function renderTab(string $slug): void
     {
         $entrepriseId = $this->auth->getEntrepriseId();
         $entreprise = $this->entrepriseRepo->findById($entrepriseId);
         $annee = isset($_GET['annee']) ? (int) $_GET['annee'] : (int) date('Y') - 1;
 
-        // Vérifier BNC
         if (($entreprise['regime_benefices'] ?? '') !== 'BNC') {
             header('Location: /app');
             exit;
         }
 
-        // Années disponibles
         $stmt = $this->pdo->prepare(
             "SELECT DISTINCT EXTRACT(YEAR FROM t.date)::int AS annee
              FROM transactions_bancaires t
@@ -156,6 +116,7 @@ class ClotureController
             $annees = [(int) date('Y') - 1];
         }
 
+        $dataColumn = self::TAB_COLUMN[$slug];
         $declaration = $this->getOrCreateDeclaration($entrepriseId, $annee);
         $savedData = json_decode($declaration[$dataColumn] ?? '{}', true) ?: [];
 
