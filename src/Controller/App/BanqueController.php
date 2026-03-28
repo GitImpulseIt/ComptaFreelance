@@ -159,12 +159,14 @@ class BanqueController
         }
 
         $liens = $this->lienRepo->findByTransaction($id);
+        $comptesUtilises = $this->ligneRepo->findDistinctComptes();
 
         echo $this->twig->render('app/banque/show.html.twig', [
             'active_page' => 'banque',
             'transaction' => $transaction,
             'lignes' => $lignes,
             'liens' => $liens,
+            'comptes_utilises' => $comptesUtilises,
             'success' => isset($_GET['success']),
         ]);
     }

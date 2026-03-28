@@ -40,7 +40,7 @@
         var tr = document.createElement('tr');
         tr.className = 'compta-input-row bg-slate-50/50';
         tr.innerHTML =
-            '<td class="px-4 py-2"><input type="text" class="compta-input-compte w-24" placeholder="512000" /></td>' +
+            '<td class="px-4 py-2"><input type="text" list="comptes-list" class="compta-input-compte w-24" placeholder="512000" autocomplete="off" /></td>' +
             '<td class="px-4 py-2"><input type="text" class="compta-input-montant-ht w-28" placeholder="0,00" /></td>' +
             '<td class="px-4 py-2"><select class="compta-input-type w-24">' +
                 '<option value="DBT">Débit</option>' +

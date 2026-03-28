@@ -138,5 +138,10 @@
 {% endblock %}
 
 {% block scripts %}
+<datalist id="comptes-list">
+    {% for c in comptes_utilises %}
+    <option value="{{ c }}">
+    {% endfor %}
+</datalist>
 <script src="/js/transaction.js"></script>
 {% endblock %}

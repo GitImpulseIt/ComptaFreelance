@@ -19,6 +19,14 @@ class LigneComptableRepository
         return $stmt->fetchAll();
     }
 
+    public function findDistinctComptes(): array
+    {
+        $stmt = $this->pdo->query(
+            "SELECT DISTINCT compte FROM lignes_comptables ORDER BY compte"
+        );
+        return $stmt->fetchAll(PDO::FETCH_COLUMN);
+    }
+
     public function replaceForTransaction(int $transactionId, array $lignes): void
     {
         $this->pdo->beginTransaction();
