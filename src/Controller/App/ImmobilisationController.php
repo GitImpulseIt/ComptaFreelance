@@ -65,8 +65,8 @@ class ImmobilisationController
         $entrepriseId = $this->auth->getEntrepriseId();
 
         $stmt = $this->pdo->prepare(
-            "INSERT INTO immobilisations (entreprise_id, designation, date_acquisition, date_mise_en_service, valeur_acquisition, duree_amortissement, type_amortissement, compte)
-             VALUES (:eid, :designation, :date_acq, :date_mes, :valeur, :duree, :type, :compte)"
+            "INSERT INTO immobilisations (entreprise_id, designation, date_acquisition, date_mise_en_service, valeur_acquisition, duree_amortissement, type_amortissement, coeff_degressif, compte)
+             VALUES (:eid, :designation, :date_acq, :date_mes, :valeur, :duree, :type, :coeff, :compte)"
         );
         $stmt->execute([
             'eid' => $entrepriseId,
@@ -76,6 +76,7 @@ class ImmobilisationController
             'valeur' => (float) str_replace(',', '.', $_POST['valeur_acquisition'] ?? '0'),
             'duree' => (int) ($_POST['duree_amortissement'] ?? 5),
             'type' => $_POST['type_amortissement'] ?? 'lineaire',
+            'coeff' => (float) ($_POST['coeff_degressif'] ?? 1.25),
             'compte' => trim($_POST['compte'] ?? '218'),
         ]);
 
@@ -114,8 +115,8 @@ class ImmobilisationController
         $stmt = $this->pdo->prepare(
             "UPDATE immobilisations SET designation = :designation, date_acquisition = :date_acq,
                 date_mise_en_service = :date_mes, valeur_acquisition = :valeur,
-                duree_amortissement = :duree, type_amortissement = :type, compte = :compte,
-                cession_date = :cess_date, cession_montant = :cess_montant, updated_at = NOW()
+                duree_amortissement = :duree, type_amortissement = :type, coeff_degressif = :coeff,
+                compte = :compte, cession_date = :cess_date, cession_montant = :cess_montant, updated_at = NOW()
              WHERE id = :id AND entreprise_id = :eid"
         );
         $stmt->execute([
@@ -126,6 +127,7 @@ class ImmobilisationController
             'valeur' => (float) str_replace(',', '.', $_POST['valeur_acquisition'] ?? '0'),
             'duree' => (int) ($_POST['duree_amortissement'] ?? 5),
             'type' => $_POST['type_amortissement'] ?? 'lineaire',
+            'coeff' => (float) ($_POST['coeff_degressif'] ?? 1.25),
             'compte' => trim($_POST['compte'] ?? '218'),
             'cess_date' => $_POST['cession_date'] ?: null,
             'cess_montant' => $_POST['cession_montant'] ? (float) str_replace(',', '.', $_POST['cession_montant']) : null,
@@ -150,55 +152,90 @@ class ImmobilisationController
     {
         $valeur = (float) $immo['valeur_acquisition'];
         $duree = (int) $immo['duree_amortissement'];
+        $type = $immo['type_amortissement'];
         $dateAcq = $immo['date_mise_en_service'] ?? $immo['date_acquisition'];
 
         if ($duree <= 0 || $valeur <= 0) {
             return ['annuite' => 0, 'cumul' => 0, 'vnc' => $valeur, 'termine' => false];
         }
 
-        $annuite = round($valeur / $duree, 2);
         $debut = new \DateTime($dateAcq);
         $now = new \DateTime($today);
-
-        // Nombre d'années écoulées (prorata au mois pour la 1ère année)
         $moisDebut = (int) $debut->format('n');
         $anneeDebut = (int) $debut->format('Y');
         $anneeNow = (int) $now->format('Y');
 
-        // Prorata de la première année
+        if ($type === 'degressif') {
+            return $this->calculerDegressif($valeur, $duree, (float) ($immo['coeff_degressif'] ?? 1.25), $moisDebut, $anneeDebut, $anneeNow, $immo);
+        }
+
+        // Amortissement linéaire
+        $annuite = round($valeur / $duree, 2);
         $prorata1 = (12 - $moisDebut + 1) / 12;
         $cumul = 0;
 
         if ($anneeNow >= $anneeDebut) {
-            // Première année (prorata)
             $cumul = round($annuite * $prorata1, 2);
-
-            // Années complètes intermédiaires
             $anneesCompletes = max(0, $anneeNow - $anneeDebut - 1);
             $cumul += $annuite * $anneesCompletes;
-
-            // Année en cours (si différente de la 1ère)
             if ($anneeNow > $anneeDebut) {
                 $moisNow = (int) $now->format('n');
                 $cumul += round($annuite * $moisNow / 12, 2);
             }
         }
 
-        // Plafonner au montant total
         $cumul = min($cumul, $valeur);
         $vnc = round($valeur - $cumul, 2);
         $termine = $vnc <= 0;
 
-        // Si cédé, l'amortissement s'arrête à la date de cession
         if ($immo['cession_date']) {
             $termine = true;
         }
 
-        return [
-            'annuite' => $annuite,
-            'cumul' => round($cumul, 2),
-            'vnc' => $vnc,
-            'termine' => $termine,
-        ];
+        return ['annuite' => $annuite, 'cumul' => round($cumul, 2), 'vnc' => $vnc, 'termine' => $termine];
     }
+
+    private function calculerDegressif(float $valeur, int $duree, float $coeff, int $moisDebut, int $anneeDebut, int $anneeNow, array $immo): array
+    {
+        $tauxLineaire = 1 / $duree;
+        $tauxDegressif = $tauxLineaire * $coeff;
+
+        $vnc = $valeur;
+        $cumul = 0;
+        $annuite = 0;
+        $dureeRestante = $duree;
+
+        for ($a = $anneeDebut; $a <= $anneeDebut + $duree && $vnc > 0; $a++) {
+            // Taux linéaire sur durée restante
+            $tauxLinRestant = $dureeRestante > 0 ? 1 / $dureeRestante : 1;
+
+            // On bascule en linéaire quand c'est plus avantageux
+            $taux = max($tauxDegressif, $tauxLinRestant);
+            $dotation = round($vnc * $taux, 2);
+
+            // Prorata la première année (mois de mise en service)
+            if ($a === $anneeDebut) {
+                $prorata = (12 - $moisDebut + 1) / 12;
+                $dotation = round($dotation * $prorata, 2);
+            }
+
+            $dotation = min($dotation, $vnc);
+            $cumul += $dotation;
+            $vnc = round($valeur - $cumul, 2);
+            $annuite = $dotation;
+            $dureeRestante--;
+
+            if ($a >= $anneeNow) {
+                break;
+            }
+        }
+
+        $termine = $vnc <= 0;
+        if ($immo['cession_date']) {
+            $termine = true;
+        }
+
+        return ['annuite' => $annuite, 'cumul' => round($cumul, 2), 'vnc' => max(0, $vnc), 'termine' => $termine];
+    }
+
 }

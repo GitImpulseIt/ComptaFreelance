@@ -52,7 +52,7 @@
                 <td class="py-3 px-3 text-slate-500 font-mono text-xs">{{ immo.compte }}</td>
                 <td class="py-3 px-3 text-slate-600">{{ immo.date_acquisition|date('d/m/Y') }}</td>
                 <td class="py-3 px-3 text-right tabular-nums">{{ immo.valeur_acquisition|number_format(2, ',', ' ') }} &euro;</td>
-                <td class="py-3 px-3 text-center text-slate-600">{{ immo.duree_amortissement }} ans</td>
+                <td class="py-3 px-3 text-center text-slate-600">{{ immo.duree_amortissement }} ans <span class="text-xs text-slate-400">{{ immo.type_amortissement == 'degressif' ? 'D ' ~ immo.coeff_degressif : 'L' }}</span></td>
                 <td class="py-3 px-3 text-right tabular-nums">{{ immo.amortissement.annuite|number_format(2, ',', ' ') }} &euro;</td>
                 <td class="py-3 px-3 text-right tabular-nums">{{ immo.amortissement.cumul|number_format(2, ',', ' ') }} &euro;</td>
                 <td class="py-3 px-3 text-right tabular-nums font-semibold">{{ immo.amortissement.vnc|number_format(2, ',', ' ') }} &euro;</td>

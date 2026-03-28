@@ -43,7 +43,7 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-3 gap-4">
             <div>
                 <label class="block text-sm font-medium text-slate-700 mb-1">Durée d'amortissement</label>
                 <select name="duree_amortissement" class="w-full">
@@ -54,9 +54,17 @@
             </div>
             <div>
                 <label class="block text-sm font-medium text-slate-700 mb-1">Type d'amortissement</label>
-                <select name="type_amortissement" class="w-full">
+                <select name="type_amortissement" id="type_amortissement" class="w-full" onchange="document.getElementById('coeff-group').style.display = this.value === 'degressif' ? '' : 'none'">
                     <option value="lineaire" {{ immo and immo.type_amortissement == 'lineaire' ? 'selected' : '' }}>Linéaire</option>
                     <option value="degressif" {{ immo and immo.type_amortissement == 'degressif' ? 'selected' : '' }}>Dégressif</option>
+                </select>
+            </div>
+            <div id="coeff-group" style="{{ (immo and immo.type_amortissement == 'degressif') ? '' : 'display:none' }}">
+                <label class="block text-sm font-medium text-slate-700 mb-1">Coefficient dégressif</label>
+                <select name="coeff_degressif" class="w-full">
+                    {% for c in [1.25, 1.75, 2.25] %}
+                    <option value="{{ c }}" {{ immo and immo.coeff_degressif == c ? 'selected' : (not immo and c == 1.25 ? 'selected' : '') }}>{{ c }}</option>
+                    {% endfor %}
                 </select>
             </div>
         </div>
