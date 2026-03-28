@@ -55,4 +55,10 @@ class CompteBancaireRepository
             'iban' => $data['iban'] ?? '',
         ]);
     }
+
+    public function delete(int $id): void
+    {
+        $stmt = $this->pdo->prepare("UPDATE comptes_bancaires SET active = FALSE, updated_at = NOW() WHERE id = :id");
+        $stmt->execute(['id' => $id]);
+    }
 }

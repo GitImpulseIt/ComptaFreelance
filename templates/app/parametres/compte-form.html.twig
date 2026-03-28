@@ -1,0 +1,58 @@
+{% extends 'layout/app.html.twig' %}
+
+{% block title %}{{ compte ? 'Modifier' : 'Ajouter' }} un compte bancaire - Paramètres - ComptaV2{% endblock %}
+{% block page_title %}Paramètres{% endblock %}
+
+{% set active_page = 'parametres' %}
+
+{% block content %}
+{% include 'app/parametres/_tabs.html.twig' %}
+
+<div class="max-w-xl">
+    <div class="flex items-center gap-3 mb-6">
+        <a href="/app/parametres/comptes-bancaires" class="text-slate-400 hover:text-slate-600 transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        </a>
+        <h3 class="text-lg font-semibold text-slate-800">{{ compte ? 'Modifier le compte' : 'Nouveau compte bancaire' }}</h3>
+    </div>
+
+    {% if error is defined and error %}
+    <div class="mb-4 px-4 py-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+        {{ error }}
+    </div>
+    {% endif %}
+
+    <form method="POST" action="{{ compte ? '/app/parametres/comptes-bancaires/' ~ compte.id : '/app/parametres/comptes-bancaires' }}" class="bg-white rounded-xl shadow-sm p-6 space-y-5">
+        <div>
+            <label for="nom" class="block text-sm font-medium text-slate-700 mb-1">Nom du compte <span class="text-red-500">*</span></label>
+            <input type="text" id="nom" name="nom" required
+                   value="{{ old.nom is defined ? old.nom : (compte ? compte.nom : '') }}"
+                   placeholder="Ex : Compte courant pro"
+                   class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+        </div>
+        <div>
+            <label for="banque" class="block text-sm font-medium text-slate-700 mb-1">Banque</label>
+            <input type="text" id="banque" name="banque"
+                   value="{{ old.banque is defined ? old.banque : (compte ? compte.banque : '') }}"
+                   placeholder="Ex : Crédit Agricole"
+                   class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+        </div>
+        <div>
+            <label for="iban" class="block text-sm font-medium text-slate-700 mb-1">IBAN</label>
+            <input type="text" id="iban" name="iban"
+                   value="{{ old.iban is defined ? old.iban : (compte ? compte.iban : '') }}"
+                   placeholder="Ex : FR76 1234 5678 9012 3456 7890 123"
+                   class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+        </div>
+        <div class="flex gap-3 pt-2">
+            <button type="submit" class="inline-flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-lg hover:bg-indigo-700 transition font-medium text-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                {{ compte ? 'Enregistrer' : 'Ajouter' }}
+            </button>
+            <a href="/app/parametres/comptes-bancaires" class="inline-flex items-center px-4 py-2.5 border border-slate-300 text-slate-600 rounded-lg hover:bg-slate-50 transition text-sm">
+                Annuler
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

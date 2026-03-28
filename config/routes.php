@@ -55,4 +55,12 @@ return [
     'GET /app/parametres' => ['App\\ParametreController', 'index'],
     'POST /app/parametres' => ['App\\ParametreController', 'update'],
 
+    // App - Paramètres > Comptes bancaires
+    'GET /app/parametres/comptes-bancaires' => ['App\\ParametreController', 'comptesBancaires'],
+    'GET /app/parametres/comptes-bancaires/create' => ['App\\ParametreController', 'createCompte'],
+    'POST /app/parametres/comptes-bancaires' => ['App\\ParametreController', 'storeCompte'],
+    'GET /app/parametres/comptes-bancaires/{id}/edit' => ['App\\ParametreController', 'editCompte'],
+    'POST /app/parametres/comptes-bancaires/{id}' => ['App\\ParametreController', 'updateCompte'],
+    'POST /app/parametres/comptes-bancaires/{id}/delete' => ['App\\ParametreController', 'deleteCompte'],
+
 ];
