@@ -55,6 +55,20 @@ return [
     'POST /app/tva/payer' => ['App\\TvaController', 'payer'],
     'POST /app/tva/date-paiement' => ['App\\TvaController', 'updateDatePaiement'],
 
+    // App - Clôture d'exercice (2035)
+    'GET /app/cloture' => ['App\\ClotureController', 'index'],
+    'GET /app/cloture/2035' => ['App\\ClotureController', 'tab2035'],
+    'GET /app/cloture/2035-suite' => ['App\\ClotureController', 'tab2035Suite'],
+    'GET /app/cloture/2035-a-p1' => ['App\\ClotureController', 'tab2035AP1'],
+    'GET /app/cloture/2035-a-p2' => ['App\\ClotureController', 'tab2035AP2'],
+    'GET /app/cloture/2035-b' => ['App\\ClotureController', 'tab2035B'],
+    'GET /app/cloture/2035-e' => ['App\\ClotureController', 'tab2035E'],
+    'GET /app/cloture/2035-g' => ['App\\ClotureController', 'tab2035G'],
+    'GET /app/cloture/2035-rci' => ['App\\ClotureController', 'tabRCI'],
+    'GET /app/cloture/2049' => ['App\\ClotureController', 'tab2049'],
+    'GET /app/cloture/annexe-libre' => ['App\\ClotureController', 'tabAnnexeLibre'],
+    'POST /app/cloture/save' => ['App\\ClotureController', 'save'],
+
     // App - Immobilisations
     'GET /app/immobilisations' => ['App\\ImmobilisationController', 'index'],
     'GET /app/immobilisations/create' => ['App\\ImmobilisationController', 'create'],

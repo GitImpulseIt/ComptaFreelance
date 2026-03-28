@@ -56,9 +56,11 @@ if ($authMiddleware->isAuthenticated()) {
     $entrepriseId = $authMiddleware->getEntrepriseId();
     $entrepriseData = ['id' => $entrepriseId, 'raison_sociale' => $_SESSION['user']['entreprise_nom'] ?? ''];
     if ($entrepriseId) {
-        $stmtE = $pdo->prepare("SELECT regime_tva FROM entreprises WHERE id = :id");
+        $stmtE = $pdo->prepare("SELECT regime_tva, regime_benefices FROM entreprises WHERE id = :id");
         $stmtE->execute(['id' => $entrepriseId]);
-        $entrepriseData['regime_tva'] = $stmtE->fetchColumn() ?: 'franchise';
+        $row = $stmtE->fetch();
+        $entrepriseData['regime_tva'] = $row['regime_tva'] ?? 'franchise';
+        $entrepriseData['regime_benefices'] = $row['regime_benefices'] ?? 'BNC';
     }
     $twig->addGlobal('entreprise', $entrepriseData);
 }
@@ -87,6 +89,7 @@ foreach ($routes as $pattern => $handler) {
             'App\\BanqueController' => new \App\Controller\App\BanqueController($twig, $pdo, $authMiddleware),
             'App\\TvaController' => new \App\Controller\App\TvaController($twig, $pdo, $authMiddleware),
             'App\\ImmobilisationController' => new \App\Controller\App\ImmobilisationController($twig, $pdo, $authMiddleware),
+            'App\\ClotureController' => new \App\Controller\App\ClotureController($twig, $pdo, $authMiddleware),
             'App\\ParametreController' => new \App\Controller\App\ParametreController($twig, $pdo, $authMiddleware),
         };
 
