@@ -52,8 +52,12 @@ class BanqueController
 
     public function showImport(): void
     {
+        $entrepriseId = $this->auth->getEntrepriseId();
+        $comptes = $this->compteRepo->findAllByEntreprise($entrepriseId);
+
         echo $this->twig->render('app/banque/import.html.twig', [
             'active_page' => 'banque',
+            'comptes' => $comptes,
         ]);
     }
 

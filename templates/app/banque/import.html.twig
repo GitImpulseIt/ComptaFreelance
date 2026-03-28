@@ -7,25 +7,32 @@
 
 {% block content %}
 <div class="max-w-2xl">
+    <div class="flex items-center gap-3 mb-6">
+        <a href="/app/banque" class="text-slate-400 hover:text-slate-600 transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        </a>
+        <h3 class="text-lg font-semibold text-slate-800">Importer un relevé bancaire</h3>
+    </div>
+
     <div class="bg-white rounded-xl shadow-sm p-6">
         <form method="POST" action="/app/banque/import" enctype="multipart/form-data" class="space-y-5">
             <div>
                 <label for="compte" class="block text-sm font-medium text-slate-700 mb-1">Compte bancaire</label>
-                <select id="compte" name="compte_id" required class="block w-full">
-                    {# Options des comptes #}
+                <select id="compte" name="compte_id" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+                    {% for compte in comptes %}
+                    <option value="{{ compte.id }}">{{ compte.nom }}</option>
+                    {% endfor %}
                 </select>
             </div>
             <div>
                 <label for="format" class="block text-sm font-medium text-slate-700 mb-1">Format du fichier</label>
-                <select id="format" name="format" required class="block w-full">
-                    <option value="csv">CSV</option>
-                    <option value="ofx">OFX</option>
-                    <option value="qif">QIF</option>
+                <select id="format" name="format" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+                    <option value="csv_shine">CSV [Shine]</option>
                 </select>
             </div>
             <div>
                 <label for="fichier" class="block text-sm font-medium text-slate-700 mb-1">Fichier</label>
-                <input type="file" id="fichier" name="fichier" required accept=".csv,.ofx,.qif"
+                <input type="file" id="fichier" name="fichier" required accept=".csv"
                        class="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:bg-indigo-50 file:text-indigo-700 file:font-medium hover:file:bg-indigo-100 file:transition file:cursor-pointer">
             </div>
             <div class="flex gap-3 pt-2">
