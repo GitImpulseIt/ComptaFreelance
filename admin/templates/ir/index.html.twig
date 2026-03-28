@@ -52,16 +52,14 @@
         <table class="w-full">
             <thead>
                 <tr class="bg-slate-50">
-                    <th class="text-left px-6 py-2 text-xs font-semibold text-slate-500 uppercase">De</th>
-                    <th class="text-left px-6 py-2 text-xs font-semibold text-slate-500 uppercase">À</th>
+                    <th class="text-left px-6 py-2 text-xs font-semibold text-slate-500 uppercase">Jusqu'à</th>
                     <th class="text-right px-6 py-2 text-xs font-semibold text-slate-500 uppercase">Taux</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
                 {% for t in tranches_par_annee[annee] %}
                 <tr>
-                    <td class="px-6 py-2.5 text-sm text-slate-700 tabular-nums">{{ t.tranche_min|number_format(0, ',', ' ') }} &euro;</td>
-                    <td class="px-6 py-2.5 text-sm text-slate-700 tabular-nums">{{ t.tranche_max ? t.tranche_max|number_format(0, ',', ' ') ~ ' €' : '∞' }}</td>
+                    <td class="px-6 py-2.5 text-sm text-slate-700 tabular-nums">{{ t.tranche_max ? t.tranche_max|number_format(0, ',', ' ') ~ ' €' : 'Au-delà' }}</td>
                     <td class="px-6 py-2.5 text-sm font-semibold text-slate-800 text-right tabular-nums">{{ t.taux|number_format(1, ',', ' ') }} %</td>
                 </tr>
                 {% endfor %}

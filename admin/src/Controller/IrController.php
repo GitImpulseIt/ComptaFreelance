@@ -64,27 +64,10 @@ class IrController
             exit;
         }
 
-        $mins = $_POST['tranche_min'] ?? [];
         $maxs = $_POST['tranche_max'] ?? [];
         $taux = $_POST['taux'] ?? [];
 
-        $stmt = $this->pdo->prepare(
-            "INSERT INTO ir_tranches (annee, tranche_min, tranche_max, taux)
-             VALUES (:annee, :min, :max, :taux)"
-        );
-
-        for ($i = 0; $i < count($taux); $i++) {
-            $min = (float) str_replace([' ', ','], ['', '.'], $mins[$i] ?? '0');
-            $max = trim($maxs[$i] ?? '');
-            $t = (float) str_replace(',', '.', $taux[$i] ?? '0');
-
-            $stmt->execute([
-                'annee' => $annee,
-                'min' => $min,
-                'max' => $max === '' ? null : (float) str_replace([' ', ','], ['', '.'], $max),
-                'taux' => $t,
-            ]);
-        }
+        $this->insertTranches($annee, $maxs, $taux);
 
         header('Location: /ir?success=created');
         exit;
@@ -112,30 +95,12 @@ class IrController
 
     public function update(int $annee): void
     {
-        // Supprimer les tranches existantes et les recréer
         $this->pdo->prepare("DELETE FROM ir_tranches WHERE annee = :annee")->execute(['annee' => $annee]);
 
-        $mins = $_POST['tranche_min'] ?? [];
         $maxs = $_POST['tranche_max'] ?? [];
         $taux = $_POST['taux'] ?? [];
 
-        $stmt = $this->pdo->prepare(
-            "INSERT INTO ir_tranches (annee, tranche_min, tranche_max, taux)
-             VALUES (:annee, :min, :max, :taux)"
-        );
-
-        for ($i = 0; $i < count($taux); $i++) {
-            $min = (float) str_replace([' ', ','], ['', '.'], $mins[$i] ?? '0');
-            $max = trim($maxs[$i] ?? '');
-            $t = (float) str_replace(',', '.', $taux[$i] ?? '0');
-
-            $stmt->execute([
-                'annee' => $annee,
-                'min' => $min,
-                'max' => $max === '' ? null : (float) str_replace([' ', ','], ['', '.'], $max),
-                'taux' => $t,
-            ]);
-        }
+        $this->insertTranches($annee, $maxs, $taux);
 
         header('Location: /ir?success=updated');
         exit;
@@ -168,5 +133,32 @@ class IrController
 
         header('Location: /ir/' . $newAnnee . '/edit?success=duplicated');
         exit;
+    }
+
+    private function insertTranches(int $annee, array $maxs, array $taux): void
+    {
+        $stmt = $this->pdo->prepare(
+            "INSERT INTO ir_tranches (annee, tranche_min, tranche_max, taux)
+             VALUES (:annee, :min, :max, :taux)"
+        );
+
+        $currentMin = 0;
+
+        for ($i = 0; $i < count($taux); $i++) {
+            $max = trim($maxs[$i] ?? '');
+            $t = (float) str_replace(',', '.', $taux[$i] ?? '0');
+            $maxVal = $max === '' ? null : (float) str_replace([' ', ','], ['', '.'], $max);
+
+            $stmt->execute([
+                'annee' => $annee,
+                'min' => $currentMin,
+                'max' => $maxVal,
+                'taux' => $t,
+            ]);
+
+            if ($maxVal !== null) {
+                $currentMin = $maxVal;
+            }
+        }
     }
 }
