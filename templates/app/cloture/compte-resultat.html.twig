@@ -532,61 +532,61 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // ── Mode lecture / édition ──
-    var fields = form.querySelectorAll('.cr-field');
     var btnEdit = document.getElementById('btnEdit');
     var btnSave = document.getElementById('btnSave');
     var btnReset = document.getElementById('btnReset');
+    var initialValues = {};
+    var dirty = false;
+
+    compute();
+
+    // Stocker les valeurs initiales après le premier compute
+    var allFields = Array.prototype.slice.call(form.querySelectorAll('.cr-field'));
+    for (var i = 0; i < allFields.length; i++) {
+        initialValues[allFields[i].id] = allFields[i].value;
+    }
 
     function setEditing(on) {
-        fields.forEach(function(f) {
+        for (var i = 0; i < allFields.length; i++) {
             if (on) {
-                f.removeAttribute('readonly');
-                f.removeAttribute('tabindex');
+                allFields[i].removeAttribute('readonly');
+                allFields[i].removeAttribute('tabindex');
             } else {
-                f.setAttribute('readonly', '');
-                f.setAttribute('tabindex', '-1');
+                allFields[i].setAttribute('readonly', '');
+                allFields[i].setAttribute('tabindex', '-1');
             }
-        });
+        }
         btnEdit.classList.toggle('hidden', on);
         btnSave.classList.toggle('hidden', !on);
     }
 
-    function checkModified() {
-        var modified = false;
-        fields.forEach(function(f) {
-            if (f.value !== (f.getAttribute('data-initial') || '')) modified = true;
-        });
-        btnReset.disabled = !modified;
-        btnReset.className = modified
-            ? 'px-5 py-2.5 border border-slate-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 transition shadow-sm'
-            : 'px-5 py-2.5 border border-slate-300 text-slate-400 text-sm font-medium rounded-lg transition shadow-sm cursor-not-allowed';
+    function enableReset(on) {
+        dirty = on;
+        btnReset.disabled = !on;
+        if (on) {
+            btnReset.className = 'px-5 py-2.5 border border-slate-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 transition shadow-sm';
+        } else {
+            btnReset.className = 'px-5 py-2.5 border border-slate-300 text-slate-400 text-sm font-medium rounded-lg transition shadow-sm cursor-not-allowed';
+        }
     }
-
-    compute();
-
-    // Stocker les valeurs initiales APRÈS le premier compute
-    // (les champs calculés ont pu être mis à jour)
-    fields.forEach(function(f) {
-        f.setAttribute('data-initial', f.value);
-    });
-
-    function onInput() {
-        compute();
-        checkModified();
-    }
-
-    fields.forEach(function(f) {
-        f.addEventListener('input', onInput);
-        f.addEventListener('keyup', onInput);
-    });
 
     btnEdit.addEventListener('click', function() { setEditing(true); });
 
     btnReset.addEventListener('click', function() {
-        fields.forEach(function(f) { f.value = f.getAttribute('data-initial') || ''; });
+        for (var i = 0; i < allFields.length; i++) {
+            allFields[i].value = initialValues[allFields[i].id] || '';
+        }
         compute();
-        checkModified();
+        enableReset(false);
         setEditing(false);
+    });
+
+    // Dès qu'un champ est modifié → activer Réinitialiser
+    form.addEventListener('input', function(e) {
+        compute();
+        if (e.target && e.target.classList && e.target.classList.contains('cr-field')) {
+            enableReset(true);
+        }
     });
 });
 </script>
