@@ -415,16 +415,17 @@ class ClotureController
                 $tauxDeg = (1 / $duree) * $coeff;
                 $anneeFin = $anneeAcq + $duree - 1;
                 $vnc = $valeur;
+                $dureeRestante = $duree;
 
                 for ($a = $anneeAcq; $a <= min($annee, $anneeFin) && $vnc > 0; $a++) {
-                    if ($a === $anneeFin) {
-                        $dot = $vnc;
-                    } else {
-                        $dot = round($vnc * $tauxDeg, 2);
-                        if ($a === $anneeAcq) {
-                            $dot = round($dot * $prorata1, 2);
-                        }
+                    $tauxLinRestant = $dureeRestante > 0 ? 1 / $dureeRestante : 1;
+                    $taux = max($tauxDeg, $tauxLinRestant);
+                    $dot = round($vnc * $taux, 2);
+
+                    if ($a === $anneeAcq) {
+                        $dot = round($vnc * $tauxDeg * $prorata1, 2);
                     }
+
                     $dot = min($dot, $vnc);
 
                     if ($a < $annee) {
@@ -433,6 +434,7 @@ class ClotureController
                         $dotationN = $dot;
                     }
                     $vnc = round($valeur - $cumulFinN1 - ($a >= $annee ? $dotationN : 0), 2);
+                    $dureeRestante--;
                 }
             } else {
                 // Linéaire

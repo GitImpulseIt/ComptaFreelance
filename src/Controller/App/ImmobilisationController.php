@@ -218,29 +218,29 @@ class ImmobilisationController
     {
         $tauxDegressif = (1 / $duree) * $coeff;
 
-        // Nombre max de lignes = durée (prorata 1ère année compte comme 1 ligne)
         $anneeFin = $anneeDebut + $duree - 1;
         $vnc = $valeur;
         $cumul = 0;
         $annuite = 0;
         $annuites = [];
+        $dureeRestante = $duree;
 
         for ($a = $anneeDebut; $a <= $anneeFin && $vnc > 0; $a++) {
-            if ($a === $anneeFin) {
-                // Dernière année : solder la VNC
-                $dotation = $vnc;
-            } else {
-                $dotation = round($vnc * $tauxDegressif, 2);
-                if ($a === $anneeDebut) {
-                    $prorata = (12 - $moisDebut + 1) / 12;
-                    $dotation = round($dotation * $prorata, 2);
-                }
+            // Annuité dégressive vs linéaire sur durée restante : on prend le max
+            $tauxLinRestant = $dureeRestante > 0 ? 1 / $dureeRestante : 1;
+            $taux = max($tauxDegressif, $tauxLinRestant);
+            $dotation = round($vnc * $taux, 2);
+
+            if ($a === $anneeDebut) {
+                $prorata = (12 - $moisDebut + 1) / 12;
+                $dotation = round($vnc * $tauxDegressif * $prorata, 2);
             }
 
             $dotation = min($dotation, $vnc);
             $cumul += $dotation;
             $vnc = round($valeur - $cumul, 2);
             $annuites[] = ['annee' => $a, 'dotation' => $dotation, 'cumul' => round($cumul, 2), 'vnc' => max(0, $vnc)];
+            $dureeRestante--;
 
             if ($a <= $anneeNow) {
                 $annuite = $dotation;
