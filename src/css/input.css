@@ -42,3 +42,34 @@ input[type="number"]::-webkit-inner-spin-button {
     -webkit-appearance: none;
     margin: 0;
 }
+
+/* Séparation discrète des colonnes dans les tableaux comptables */
+.compta-table td,
+.compta-table th {
+    border-left: 1px solid #e2e8f0;
+}
+.compta-table td:first-child,
+.compta-table th:first-child {
+    border-left: none;
+}
+
+/* Inputs fondus dans les cellules de tableau (bilan, etc.) */
+table input[type="text"],
+.renvois-grid input[type="text"] {
+    padding: 0.25rem 0.5rem;
+    border: none;
+    border-radius: 0;
+    background-color: transparent;
+    font-size: 0.75rem;
+    box-shadow: none;
+    transition: none;
+}
+table input[type="text"]:focus,
+.renvois-grid input[type="text"]:focus {
+    border: none;
+    box-shadow: none;
+    background-color: #eef2ff;
+}
+table input[type="text"][readonly] {
+    background-color: transparent;
+}

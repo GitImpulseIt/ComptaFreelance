@@ -14,30 +14,16 @@ class ClotureController
     private EntrepriseRepository $entrepriseRepo;
 
     private const TABS = [
-        ['slug' => '2035',       'label' => '2035'],
-        ['slug' => '2035-suite', 'label' => '2035-SUITE'],
-        ['slug' => '2035-a',     'label' => '2035-A'],
-        ['slug' => '2035-b',     'label' => '2035-B'],
-        ['slug' => '2035-e',     'label' => '2035-E'],
-        ['slug' => '2035-f',     'label' => '2035-F'],
-        ['slug' => '2035-g',     'label' => '2035-G'],
-        ['slug' => '2035-rci',   'label' => '2035-RCI'],
-        ['slug' => '2468',       'label' => '2468'],
-        ['slug' => 'annexlib01', 'label' => 'ANNEXE LIBRE'],
+        ['slug' => 'bilan',           'label' => 'Bilan'],
+        ['slug' => 'compte-resultat', 'label' => 'Compte de résultat'],
+        ['slug' => '2035',            'label' => '2035'],
     ];
 
     // Mapping slug onglet → colonne JSONB en base
     private const TAB_COLUMN = [
-        '2035'       => 'data_2035',
-        '2035-suite' => 'data_2035_suite',
-        '2035-a'     => 'data_2035_a_p1',
-        '2035-b'     => 'data_2035_b',
-        '2035-e'     => 'data_2035_e',
-        '2035-f'     => 'data_2035_a_p2',
-        '2035-g'     => 'data_2035_g',
-        '2035-rci'   => 'data_2035_rci',
-        '2468'       => 'data_2049',
-        'annexlib01' => 'data_annexe_libre',
+        'bilan'           => 'data_bilan',
+        'compte-resultat' => 'data_compte_resultat',
+        '2035'            => 'data_2035',
     ];
 
     public function __construct(
@@ -51,20 +37,42 @@ class ClotureController
     public function index(): void
     {
         $annee = isset($_GET['annee']) ? (int) $_GET['annee'] : (int) date('Y') - 1;
-        header('Location: /app/cloture/2035?annee=' . $annee);
+        header('Location: /app/cloture/bilan?annee=' . $annee);
         exit;
     }
 
-    public function tab2035(): void      { $this->renderTab('2035'); }
-    public function tab2035Suite(): void  { $this->renderTab('2035-suite'); }
-    public function tab2035A(): void      { $this->renderTab('2035-a'); }
-    public function tab2035B(): void      { $this->renderTab('2035-b'); }
-    public function tab2035E(): void      { $this->renderTab('2035-e'); }
-    public function tab2035F(): void      { $this->renderTab('2035-f'); }
-    public function tab2035G(): void      { $this->renderTab('2035-g'); }
-    public function tabRCI(): void        { $this->renderTab('2035-rci'); }
-    public function tab2468(): void       { $this->renderTab('2468'); }
-    public function tabAnnexeLibre(): void { $this->renderTab('annexlib01'); }
+    public function tabBilan(): void
+    {
+        $entrepriseId = $this->auth->getEntrepriseId();
+        $annee = isset($_GET['annee']) ? (int) $_GET['annee'] : (int) date('Y') - 1;
+
+        $raw = $this->computeBilanRaw($entrepriseId, $annee);
+        $rawN1 = $this->computeBilanRaw($entrepriseId, $annee - 1);
+
+        // Format computed values for N (brut & amort)
+        $computed = [];
+        foreach ($raw as $k => $v) {
+            $computed[$k] = $v != 0 ? (string)(int)round($v) : '';
+        }
+
+        // Compute N-1 net values for ACTIF lines (brut - amort)
+        $computedN1 = [];
+        $pairs = ['010' => '012', '014' => '016', '028' => '030', '040' => '042'];
+        foreach ($pairs as $brut => $amort) {
+            $net = round(($rawN1[$brut] ?? 0) - ($rawN1[$amort] ?? 0));
+            $computedN1[$brut] = $net != 0 ? (string)(int)$net : '';
+        }
+        if (($rawN1['084'] ?? 0) != 0) {
+            $computedN1['084'] = (string)(int)round($rawN1['084']);
+        }
+
+        $this->renderTab('bilan', [
+            'computed' => $computed,
+            'computed_n1' => $computedN1,
+        ]);
+    }
+    public function tabCompteResultat(): void  { $this->renderTab('compte-resultat'); }
+    public function tab2035(): void            { $this->renderTab('2035'); }
 
     public function save(): void
     {
@@ -131,6 +139,54 @@ class ClotureController
             'data' => $savedData,
             'success' => isset($_GET['success']),
         ], $extraData));
+    }
+
+    private function computeBilanRaw(int $entrepriseId, int $annee): array
+    {
+        $immos = $this->getImmobilisationsAvecAmortissement($entrepriseId, $annee);
+
+        $fc = ['brut' => 0.0, 'amort' => 0.0]; // Fonds commercial (207)
+        $ai = ['brut' => 0.0, 'amort' => 0.0]; // Autres incorporelles (20x sauf 207)
+        $co = ['brut' => 0.0, 'amort' => 0.0]; // Corporelles (21x)
+        $fi = ['brut' => 0.0, 'amort' => 0.0]; // Financières (26x, 27x)
+
+        foreach ($immos as $immo) {
+            $compte = $immo['compte'] ?? '218';
+            $p2 = substr($compte, 0, 2);
+            $p3 = substr($compte, 0, 3);
+
+            if ($p3 === '207') {
+                $g = &$fc;
+            } elseif ($p2 === '20') {
+                $g = &$ai;
+            } elseif (in_array($p2, ['26', '27'])) {
+                $g = &$fi;
+            } else {
+                $g = &$co;
+            }
+
+            $g['brut'] += $immo['valeur'];
+            $g['amort'] += $immo['cumul_total'];
+            unset($g);
+        }
+
+        // Disponibilités = solde bancaire au 31/12
+        $stmt = $this->pdo->prepare(
+            "SELECT COALESCE(SUM(CASE WHEN t.type = 'credit' THEN t.montant ELSE -t.montant END), 0)
+             FROM transactions_bancaires t
+             JOIN comptes_bancaires cb ON cb.id = t.compte_bancaire_id
+             WHERE cb.entreprise_id = :eid AND t.date <= :fin"
+        );
+        $stmt->execute(['eid' => $entrepriseId, 'fin' => $annee . '-12-31']);
+        $dispo = (float)$stmt->fetchColumn();
+
+        return [
+            '010' => $fc['brut'],  '012' => $fc['amort'],
+            '014' => $ai['brut'],  '016' => $ai['amort'],
+            '028' => $co['brut'],  '030' => $co['amort'],
+            '040' => $fi['brut'],  '042' => $fi['amort'],
+            '084' => $dispo,
+        ];
     }
 
     private function getImmobilisationsAvecAmortissement(int $entrepriseId, int $annee): array

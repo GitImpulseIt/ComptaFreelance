@@ -1,0 +1,480 @@
+{% extends 'app/cloture/_layout.html.twig' %}
+
+{% block tab_content %}
+
+{# ── Macros ── #}
+{% macro inp(name, data, comp, ck) %}
+{% set actual_ck = ck|default(name) %}
+{% set sv = data[name]|default('') %}
+{% set cv = comp[actual_ck]|default('') %}
+<input type="text" inputmode="numeric" name="fields[{{ name }}]" id="c{{ name }}"
+       value="{{ sv != '' ? sv : cv }}"
+       class="w-full text-right tabular-nums text-xs px-2 py-1 border-0 bg-transparent focus:bg-indigo-50 focus:outline-none"
+       autocomplete="off">
+{% endmacro %}
+
+{% macro ro(name) %}
+<input type="text" name="fields[{{ name }}]" id="c{{ name }}"
+       class="w-full text-right tabular-nums text-xs px-2 py-1 border-0 bg-transparent text-slate-600 font-semibold"
+       readonly tabindex="-1">
+{% endmacro %}
+
+<form method="post" action="/app/cloture/save" id="bilanForm">
+<input type="hidden" name="tab" value="bilan">
+<input type="hidden" name="annee" value="{{ annee }}">
+
+{# ═══════════════════════ ACTIF ═══════════════════════ #}
+<div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
+    <div class="px-4 py-2.5 bg-slate-800 text-white flex items-center justify-between">
+        <span class="font-bold text-sm tracking-wide">BILAN SIMPLIFIE — ACTIF</span>
+        <span class="text-xs text-slate-300">Formulaire 2033-A</span>
+    </div>
+    <div class="overflow-x-auto">
+    <table class="compta-table w-full border-collapse min-w-[720px]">
+        <thead>
+            <tr class="bg-slate-100 border-b border-slate-200">
+                <th class="text-left px-3 py-2 text-[11px] font-semibold text-slate-500 uppercase tracking-wider w-[40%]">Actif</th>
+                <th class="text-center px-1 py-2 text-[11px] font-semibold text-slate-500 w-[15%]">Brut <span class="font-normal">(1)</span></th>
+                <th class="text-center px-1 py-2 text-[11px] font-semibold text-slate-500 w-[15%]">Amort./Prov. <span class="font-normal">(2)</span></th>
+                <th class="text-center px-1 py-2 text-[11px] font-semibold text-slate-500 w-[15%]">Net <span class="font-normal">(3)</span></th>
+                <th class="text-center px-1 py-2 text-[11px] font-semibold text-slate-500 w-[15%]">Net N-1 <span class="font-normal">(4)</span></th>
+            </tr>
+        </thead>
+        <tbody>
+
+            {# ── ACTIF IMMOBILISE ── #}
+            <tr class="bg-indigo-50/60 border-t border-indigo-100">
+                <td colspan="5" class="px-3 py-1 text-[11px] font-bold text-indigo-700 uppercase tracking-wider">Actif immobilise</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600"><span class="text-slate-400">Immo. incorporelles &middot; </span>Fonds commercial <span class="text-slate-300 text-[10px]">010</span></td>
+                <td class="px-0.5">{{ _self.inp('010', data, computed) }}</td>
+                <td class="px-0.5">{{ _self.inp('012', data, computed) }}</td>
+                <td class="px-0.5">{{ _self.ro('net_010') }}</td>
+                <td class="px-0.5">{{ _self.inp('010_n1', data, computed_n1, '010') }}</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600"><span class="text-slate-400">Immo. incorporelles &middot; </span>Autres <span class="text-slate-300 text-[10px]">014</span></td>
+                <td class="px-0.5">{{ _self.inp('014', data, computed) }}</td>
+                <td class="px-0.5">{{ _self.inp('016', data, computed) }}</td>
+                <td class="px-0.5">{{ _self.ro('net_014') }}</td>
+                <td class="px-0.5">{{ _self.inp('014_n1', data, computed_n1, '014') }}</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Immobilisations corporelles <span class="text-slate-300 text-[10px]">028</span></td>
+                <td class="px-0.5">{{ _self.inp('028', data, computed) }}</td>
+                <td class="px-0.5">{{ _self.inp('030', data, computed) }}</td>
+                <td class="px-0.5">{{ _self.ro('net_028') }}</td>
+                <td class="px-0.5">{{ _self.inp('028_n1', data, computed_n1, '028') }}</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Immobilisations financieres <span class="text-slate-400 text-[10px]">(1)</span> <span class="text-slate-300 text-[10px]">040</span></td>
+                <td class="px-0.5">{{ _self.inp('040', data, computed) }}</td>
+                <td class="px-0.5">{{ _self.inp('042', data, computed) }}</td>
+                <td class="px-0.5">{{ _self.ro('net_040') }}</td>
+                <td class="px-0.5">{{ _self.inp('040_n1', data, computed_n1, '040') }}</td>
+            </tr>
+
+            {# Total I #}
+            <tr class="bg-slate-100 border-t-2 border-slate-300">
+                <td class="px-3 py-1.5 text-xs font-bold text-slate-700">Total I <span class="font-normal text-slate-400 text-[10px]">(5)</span> <span class="text-slate-300 text-[10px]">044</span></td>
+                <td class="px-0.5">{{ _self.ro('044') }}</td>
+                <td class="px-0.5">{{ _self.ro('048') }}</td>
+                <td class="px-0.5">{{ _self.ro('net_044') }}</td>
+                <td class="px-0.5">{{ _self.ro('044_n1') }}</td>
+            </tr>
+
+            {# ── ACTIF CIRCULANT ── #}
+            <tr class="bg-indigo-50/60 border-t border-indigo-100">
+                <td colspan="5" class="px-3 py-1 text-[11px] font-bold text-indigo-700 uppercase tracking-wider">Actif circulant</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600"><span class="text-slate-400">Stocks &middot; </span>Matieres premieres, approvisionnements <span class="text-slate-300 text-[10px]">050</span></td>
+                <td class="px-0.5">{{ _self.inp('050', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.inp('052', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.ro('net_050') }}</td>
+                <td class="px-0.5">{{ _self.inp('050_n1', data, {}) }}</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600"><span class="text-slate-400">Stocks &middot; </span>Marchandises <span class="text-slate-300 text-[10px]">060</span></td>
+                <td class="px-0.5">{{ _self.inp('060', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.inp('062', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.ro('net_060') }}</td>
+                <td class="px-0.5">{{ _self.inp('060_n1', data, {}) }}</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Avances et acomptes verses sur commandes <span class="text-slate-300 text-[10px]">064</span></td>
+                <td class="px-0.5">{{ _self.inp('064', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.inp('066', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.ro('net_064') }}</td>
+                <td class="px-0.5">{{ _self.inp('064_n1', data, {}) }}</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600"><span class="text-slate-400">Creances &middot; </span>Clients et comptes rattaches <span class="text-slate-400 text-[10px]">(2)</span> <span class="text-slate-300 text-[10px]">068</span></td>
+                <td class="px-0.5">{{ _self.inp('068', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.inp('070', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.ro('net_068') }}</td>
+                <td class="px-0.5">{{ _self.inp('068_n1', data, {}) }}</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600"><span class="text-slate-400">Creances &middot; </span>Autres <span class="text-slate-400 text-[10px]">(3)</span> <span class="text-slate-300 text-[10px]">072</span></td>
+                <td class="px-0.5">{{ _self.inp('072', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.inp('074', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.ro('net_072') }}</td>
+                <td class="px-0.5">{{ _self.inp('072_n1', data, {}) }}</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Valeurs mobilieres de placement <span class="text-slate-300 text-[10px]">080</span></td>
+                <td class="px-0.5">{{ _self.inp('080', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.inp('082', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.ro('net_080') }}</td>
+                <td class="px-0.5">{{ _self.inp('080_n1', data, {}) }}</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Disponibilites <span class="text-slate-300 text-[10px]">084</span></td>
+                <td class="px-0.5">{{ _self.inp('084', data, computed) }}</td>
+                <td class="px-0.5">{{ _self.inp('086', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.ro('net_084') }}</td>
+                <td class="px-0.5">{{ _self.inp('084_n1', data, computed_n1, '084') }}</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Charges constatees d'avance <span class="text-slate-300 text-[10px]">092</span></td>
+                <td class="px-0.5">{{ _self.inp('092', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.inp('094', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.ro('net_092') }}</td>
+                <td class="px-0.5">{{ _self.inp('092_n1', data, {}) }}</td>
+            </tr>
+
+            {# Total II #}
+            <tr class="bg-slate-100 border-t-2 border-slate-300">
+                <td class="px-3 py-1.5 text-xs font-bold text-slate-700">Total II <span class="text-slate-300 text-[10px]">096</span></td>
+                <td class="px-0.5">{{ _self.ro('096') }}</td>
+                <td class="px-0.5">{{ _self.ro('098') }}</td>
+                <td class="px-0.5">{{ _self.ro('net_096') }}</td>
+                <td class="px-0.5">{{ _self.ro('096_n1') }}</td>
+            </tr>
+
+            {# TOTAL GENERAL #}
+            <tr class="bg-slate-200 border-t-2 border-slate-400">
+                <td class="px-3 py-2 text-xs font-black text-slate-800">TOTAL GENERAL (I + II) <span class="text-slate-400 text-[10px]">110</span></td>
+                <td class="px-0.5">{{ _self.ro('110') }}</td>
+                <td class="px-0.5">{{ _self.ro('112') }}</td>
+                <td class="px-0.5">{{ _self.ro('net_110') }}</td>
+                <td class="px-0.5">{{ _self.ro('110_n1') }}</td>
+            </tr>
+
+        </tbody>
+    </table>
+    </div>
+</div>
+
+{# ═══════════════════════ PASSIF ═══════════════════════ #}
+<div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
+    <div class="px-4 py-2.5 bg-slate-800 text-white flex items-center justify-between">
+        <span class="font-bold text-sm tracking-wide">BILAN SIMPLIFIE — PASSIF</span>
+        <span class="text-xs text-slate-300">Formulaire 2033-A</span>
+    </div>
+    <div class="overflow-x-auto">
+    <table class="compta-table w-full border-collapse min-w-[600px]">
+        <thead>
+            <tr class="bg-slate-100 border-b border-slate-200">
+                <th class="text-left px-3 py-2 text-[11px] font-semibold text-slate-500 uppercase tracking-wider w-[55%]">Passif</th>
+                <th class="text-center px-1 py-2 text-[11px] font-semibold text-slate-500 w-[22%]">Exercice N <span class="font-normal">(1)</span></th>
+                <th class="text-center px-1 py-2 text-[11px] font-semibold text-slate-500 w-[22%]">Exercice N-1 <span class="font-normal">(2)</span></th>
+            </tr>
+        </thead>
+        <tbody>
+
+            {# ── CAPITAUX PROPRES ── #}
+            <tr class="bg-indigo-50/60 border-t border-indigo-100">
+                <td colspan="3" class="px-3 py-1 text-[11px] font-bold text-indigo-700 uppercase tracking-wider">Capitaux propres</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Capital social ou individuel <span class="text-slate-300 text-[10px]">120</span></td>
+                <td class="px-0.5">{{ _self.inp('120', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.inp('120_n1', data, {}) }}</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Ecarts de reevaluation <span class="text-slate-300 text-[10px]">124</span></td>
+                <td class="px-0.5">{{ _self.inp('124', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.inp('124_n1', data, {}) }}</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Reserve legale <span class="text-slate-300 text-[10px]">126</span></td>
+                <td class="px-0.5">{{ _self.inp('126', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.inp('126_n1', data, {}) }}</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Reserves reglementees <span class="text-slate-300 text-[10px]">130</span></td>
+                <td class="px-0.5">{{ _self.inp('130', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.inp('130_n1', data, {}) }}</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Autres reserves <span class="text-slate-300 text-[10px]">132</span></td>
+                <td class="px-0.5">{{ _self.inp('132', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.inp('132_n1', data, {}) }}</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Report a nouveau <span class="text-slate-300 text-[10px]">134</span></td>
+                <td class="px-0.5">{{ _self.inp('134', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.inp('134_n1', data, {}) }}</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Resultat de l'exercice <span class="text-slate-300 text-[10px]">136</span></td>
+                <td class="px-0.5">{{ _self.inp('136', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.inp('136_n1', data, {}) }}</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Provisions reglementees <span class="text-slate-300 text-[10px]">140</span></td>
+                <td class="px-0.5">{{ _self.inp('140', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.inp('140_n1', data, {}) }}</td>
+            </tr>
+
+            {# Total I capitaux propres #}
+            <tr class="bg-slate-100 border-t-2 border-slate-300">
+                <td class="px-3 py-1.5 text-xs font-bold text-slate-700">Total I <span class="text-slate-300 text-[10px]">142</span></td>
+                <td class="px-0.5">{{ _self.ro('142') }}</td>
+                <td class="px-0.5">{{ _self.ro('142_n1') }}</td>
+            </tr>
+
+            {# ── PROVISIONS POUR RISQUES ET CHARGES ── #}
+            <tr class="bg-indigo-50/60 border-t border-indigo-100">
+                <td colspan="3" class="px-3 py-1 text-[11px] font-bold text-indigo-700 uppercase tracking-wider">Provisions pour risques et charges</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Total II <span class="text-slate-300 text-[10px]">154</span></td>
+                <td class="px-0.5">{{ _self.inp('154', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.inp('154_n1', data, {}) }}</td>
+            </tr>
+
+            {# ── DETTES ── #}
+            <tr class="bg-indigo-50/60 border-t border-indigo-100">
+                <td colspan="3" class="px-3 py-1 text-[11px] font-bold text-indigo-700 uppercase tracking-wider">Dettes <span class="font-normal text-indigo-400 text-[10px]">(4)</span></td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Emprunts et dettes assimilees <span class="text-slate-300 text-[10px]">156</span></td>
+                <td class="px-0.5">{{ _self.inp('156', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.inp('156_n1', data, {}) }}</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Avances et acomptes recus sur commandes en cours <span class="text-slate-300 text-[10px]">164</span></td>
+                <td class="px-0.5">{{ _self.inp('164', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.inp('164_n1', data, {}) }}</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Fournisseurs et comptes rattaches <span class="text-slate-300 text-[10px]">166</span></td>
+                <td class="px-0.5">{{ _self.inp('166', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.inp('166_n1', data, {}) }}</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Autres dettes <span class="text-slate-300 text-[10px]">172</span></td>
+                <td class="px-0.5">{{ _self.inp('172', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.inp('172_n1', data, {}) }}</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Produits constates d'avance <span class="text-slate-300 text-[10px]">174</span></td>
+                <td class="px-0.5">{{ _self.inp('174', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.inp('174_n1', data, {}) }}</td>
+            </tr>
+
+            {# Total III dettes #}
+            <tr class="bg-slate-100 border-t-2 border-slate-300">
+                <td class="px-3 py-1.5 text-xs font-bold text-slate-700">Total III <span class="text-slate-300 text-[10px]">176</span></td>
+                <td class="px-0.5">{{ _self.ro('176') }}</td>
+                <td class="px-0.5">{{ _self.ro('176_n1') }}</td>
+            </tr>
+
+            {# TOTAL GENERAL PASSIF #}
+            <tr class="bg-slate-200 border-t-2 border-slate-400">
+                <td class="px-3 py-2 text-xs font-black text-slate-800">TOTAL GENERAL (I + II + III) <span class="text-slate-400 text-[10px]">180</span></td>
+                <td class="px-0.5">{{ _self.ro('180') }}</td>
+                <td class="px-0.5">{{ _self.ro('180_n1') }}</td>
+            </tr>
+
+        </tbody>
+    </table>
+    </div>
+</div>
+
+{# ═══════════════════════ RENVOIS ═══════════════════════ #}
+<div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6 px-5 py-4">
+    <h3 class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-3">Renvois</h3>
+    <div class="renvois-grid grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-xs">
+        <div class="flex items-center gap-2">
+            <span class="text-slate-400 font-medium w-6 shrink-0">(1)</span>
+            <span class="text-slate-600 flex-1">Dont immo. financieres a moins d'un an</span>
+            <span class="text-slate-300 text-[10px] shrink-0">193</span>
+            <div class="w-24 shrink-0">
+                <input type="text" inputmode="numeric" name="fields[193]" id="c193"
+                       value="{{ data['193']|default('') }}"
+                       class="w-full text-right tabular-nums text-xs px-2 py-1 border-0 bg-transparent focus:bg-indigo-50 focus:outline-none" autocomplete="off">
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="text-slate-400 font-medium w-6 shrink-0">(4)</span>
+            <span class="text-slate-600 flex-1">Dont dettes a plus d'un an</span>
+            <span class="text-slate-300 text-[10px] shrink-0">195</span>
+            <div class="w-24 shrink-0">
+                <input type="text" inputmode="numeric" name="fields[195]" id="c195"
+                       value="{{ data['195']|default('') }}"
+                       class="w-full text-right tabular-nums text-xs px-2 py-1 border-0 bg-transparent focus:bg-indigo-50 focus:outline-none" autocomplete="off">
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="text-slate-400 font-medium w-6 shrink-0">(2)</span>
+            <span class="text-slate-600 flex-1">Dont creances a plus d'un an</span>
+            <span class="text-slate-300 text-[10px] shrink-0">197</span>
+            <div class="w-24 shrink-0">
+                <input type="text" inputmode="numeric" name="fields[197]" id="c197"
+                       value="{{ data['197']|default('') }}"
+                       class="w-full text-right tabular-nums text-xs px-2 py-1 border-0 bg-transparent focus:bg-indigo-50 focus:outline-none" autocomplete="off">
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="text-slate-400 font-medium w-6 shrink-0">(5)</span>
+            <span class="text-slate-600 flex-1">Cout de revient des immo. acquises</span>
+            <span class="text-slate-300 text-[10px] shrink-0">182</span>
+            <div class="w-24 shrink-0">
+                <input type="text" inputmode="numeric" name="fields[182]" id="c182"
+                       value="{{ data['182']|default('') }}"
+                       class="w-full text-right tabular-nums text-xs px-2 py-1 border-0 bg-transparent focus:bg-indigo-50 focus:outline-none" autocomplete="off">
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="text-slate-400 font-medium w-6 shrink-0">(3)</span>
+            <span class="text-slate-600 flex-1">Dont comptes courants d'associes debiteurs</span>
+            <span class="text-slate-300 text-[10px] shrink-0">199</span>
+            <div class="w-24 shrink-0">
+                <input type="text" inputmode="numeric" name="fields[199]" id="c199"
+                       value="{{ data['199']|default('') }}"
+                       class="w-full text-right tabular-nums text-xs px-2 py-1 border-0 bg-transparent focus:bg-indigo-50 focus:outline-none" autocomplete="off">
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="text-slate-400 font-medium w-6 shrink-0"></span>
+            <span class="text-slate-600 flex-1">Prix de cession des immo. cedees</span>
+            <span class="text-slate-300 text-[10px] shrink-0">184</span>
+            <div class="w-24 shrink-0">
+                <input type="text" inputmode="numeric" name="fields[184]" id="c184"
+                       value="{{ data['184']|default('') }}"
+                       class="w-full text-right tabular-nums text-xs px-2 py-1 border-0 bg-transparent focus:bg-indigo-50 focus:outline-none" autocomplete="off">
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Bouton enregistrer #}
+<div class="flex justify-end">
+    <button type="submit"
+            class="px-6 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition shadow-sm">
+        Enregistrer le bilan
+    </button>
+</div>
+
+</form>
+
+{# ═══════════════════════ JAVASCRIPT ═══════════════════════ #}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var form = document.getElementById('bilanForm');
+
+    function v(id) {
+        var el = document.getElementById('c' + id);
+        return el ? (parseFloat(el.value.replace(/\s/g, '').replace(',', '.')) || 0) : 0;
+    }
+
+    function s(id, val) {
+        var el = document.getElementById('c' + id);
+        if (el) el.value = val !== 0 ? Math.round(val).toString() : '';
+    }
+
+    function sum(keys) {
+        var total = 0;
+        for (var i = 0; i < keys.length; i++) total += v(keys[i]);
+        return total;
+    }
+
+    function compute() {
+        // ACTIF : Net = Brut - Amort pour chaque ligne
+        var pairs = [
+            ['010','012'], ['014','016'], ['028','030'], ['040','042'],
+            ['050','052'], ['060','062'], ['064','066'], ['068','070'],
+            ['072','074'], ['080','082'], ['084','086'], ['092','094']
+        ];
+        for (var i = 0; i < pairs.length; i++) {
+            s('net_' + pairs[i][0], v(pairs[i][0]) - v(pairs[i][1]));
+        }
+
+        // Total I (actif immobilise)
+        var immoBrut  = ['010','014','028','040'];
+        var immoAmort = ['012','016','030','042'];
+        s('044', sum(immoBrut));
+        s('048', sum(immoAmort));
+        s('net_044', v('044') - v('048'));
+
+        // Total II (actif circulant)
+        var circBrut  = ['050','060','064','068','072','080','084','092'];
+        var circAmort = ['052','062','066','070','074','082','086','094'];
+        s('096', sum(circBrut));
+        s('098', sum(circAmort));
+        s('net_096', v('096') - v('098'));
+
+        // Total general actif
+        s('110', v('044') + v('096'));
+        s('112', v('048') + v('098'));
+        s('net_110', v('110') - v('112'));
+
+        // N-1 totaux actif
+        var immoN1 = immoBrut.map(function(k) { return k + '_n1'; });
+        var circN1 = circBrut.map(function(k) { return k + '_n1'; });
+        s('044_n1', sum(immoN1));
+        s('096_n1', sum(circN1));
+        s('110_n1', v('044_n1') + v('096_n1'));
+
+        // PASSIF : Total I (capitaux propres)
+        var cp = ['120','124','126','130','132','134','136','140'];
+        s('142', sum(cp));
+        s('142_n1', sum(cp.map(function(k) { return k + '_n1'; })));
+
+        // Total III (dettes)
+        var dettes = ['156','164','166','172','174'];
+        s('176', sum(dettes));
+        s('176_n1', sum(dettes.map(function(k) { return k + '_n1'; })));
+
+        // Total general passif
+        s('180', v('142') + v('154') + v('176'));
+        s('180_n1', v('142_n1') + v('154_n1') + v('176_n1'));
+    }
+
+    compute();
+    form.addEventListener('input', compute);
+});
+</script>
+
+{% endblock %}
