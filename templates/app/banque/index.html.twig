@@ -47,13 +47,13 @@
                     <label class="block text-sm font-medium text-slate-600 mb-1">Date de début</label>
                     <input type="date" name="date_debut" required
                            class="w-full text-sm"
-                           value="{{ filtres.date_debut ?? (\"now\"|date('Y') ~ '-01-01') }}">
+                           value="{{ filtres.date_debut ?? ('now'|date('Y') ~ '-01-01') }}">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-slate-600 mb-1">Date de fin</label>
                     <input type="date" name="date_fin" required
                            class="w-full text-sm"
-                           value="{{ filtres.date_fin ?? (\"now\"|date('Y-m-d')) }}">
+                           value="{{ filtres.date_fin ?? ('now'|date('Y-m-d')) }}">
                 </div>
             </div>
             <div class="flex justify-end gap-3 mt-5">
