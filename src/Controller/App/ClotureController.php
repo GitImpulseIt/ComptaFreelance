@@ -241,6 +241,7 @@ class ClotureController
         $ai = ['brut' => 0.0, 'amort' => 0.0]; // Autres incorporelles (20x sauf 207)
         $co = ['brut' => 0.0, 'amort' => 0.0]; // Corporelles (21x)
         $fi = ['brut' => 0.0, 'amort' => 0.0]; // Financières (26x, 27x)
+        $dotationAnnee = 0.0;
 
         foreach ($immos as $immo) {
             $compte = $immo['compte'] ?? '218';
@@ -259,6 +260,7 @@ class ClotureController
 
             $g['brut'] += $immo['valeur'];
             $g['amort'] += $immo['cumul_total'];
+            $dotationAnnee += $immo['dotation'];
             unset($g);
         }
 
@@ -358,6 +360,9 @@ class ClotureController
             'fin' => $annee . '-12-31',
         ]);
         $resultat = (float)$stmt->fetchColumn();
+
+        // Soustraire la dotation aux amortissements (charge non enregistrée en ligne comptable)
+        $resultat -= $dotationAnnee;
 
         return [
             '010' => $fc['brut'],  '012' => $fc['amort'],
