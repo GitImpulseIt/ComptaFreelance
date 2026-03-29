@@ -9,8 +9,8 @@
 {% set cv = comp[actual_ck]|default('') %}
 <input type="text" inputmode="numeric" name="fields[{{ name }}]" id="c{{ name }}"
        value="{{ sv != '' ? sv : cv }}"
-       class="w-full text-right tabular-nums text-xs px-2 py-1 border-0 bg-transparent focus:bg-indigo-50 focus:outline-none"
-       autocomplete="off">
+       class="bilan-field w-full text-right tabular-nums text-xs px-2 py-1 border-0 bg-transparent focus:bg-indigo-50 focus:outline-none"
+       autocomplete="off" readonly tabindex="-1">
 {% endmacro %}
 
 {% macro ro(name) %}
@@ -360,11 +360,20 @@
     </div>
 </div>
 
-{# Bouton enregistrer #}
-<div class="flex justify-end">
-    <button type="submit"
-            class="px-6 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition shadow-sm">
-        Enregistrer le bilan
+{# Boutons d'action #}
+<div class="flex justify-end gap-3 mt-4">
+    <a href="/app/cloture/bilan?annee={{ annee }}&reset=1" id="btnReset"
+       class="px-5 py-2.5 border border-slate-300 text-sm font-medium rounded-lg transition shadow-sm
+       {% if data|length > 0 %}text-amber-700 border-amber-300 bg-amber-50 hover:bg-amber-100 cursor-pointer{% else %}text-slate-400 pointer-events-none{% endif %}">
+        Réinitialiser
+    </a>
+    <button type="button" onclick="window._bilanEdit()" id="btnEdit"
+            class="px-5 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition shadow-sm">
+        Modifier
+    </button>
+    <button type="submit" id="btnSave"
+            class="hidden px-5 py-2.5 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition shadow-sm">
+        Enregistrer
     </button>
 </div>
 

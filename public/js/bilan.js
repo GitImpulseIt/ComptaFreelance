@@ -69,6 +69,31 @@ document.addEventListener('DOMContentLoaded', function() {
         s('180_n1', v('142_n1') + v('154_n1') + v('176_n1'));
     }
 
+    // Mode lecture / édition
+    var btnEdit = document.getElementById('btnEdit');
+    var btnSave = document.getElementById('btnSave');
+    var btnReset = document.getElementById('btnReset');
+
     compute();
-    form.addEventListener('input', compute);
+
+    var allFields = Array.prototype.slice.call(form.querySelectorAll('.bilan-field'));
+    var resetActivated = false;
+
+    window._bilanEdit = function() {
+        for (var i = 0; i < allFields.length; i++) {
+            allFields[i].removeAttribute('readonly');
+            allFields[i].removeAttribute('tabindex');
+        }
+        btnEdit.classList.add('hidden');
+        btnSave.classList.remove('hidden');
+    };
+
+    form.addEventListener('input', function(e) {
+        compute();
+        if (!resetActivated && e.target && e.target.classList.contains('bilan-field')) {
+            resetActivated = true;
+            btnReset.classList.remove('pointer-events-none', 'text-slate-400', 'border-slate-300');
+            btnReset.classList.add('text-amber-700', 'border-amber-300', 'bg-amber-50', 'hover:bg-amber-100', 'cursor-pointer');
+        }
+    });
 });
