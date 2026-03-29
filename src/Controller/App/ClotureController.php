@@ -66,6 +66,11 @@ class ClotureController
             $computedN1['084'] = (string)(int)round($rawN1['084']);
         }
 
+        // Capital social N-1
+        if (($rawN1['120'] ?? 0) != 0) {
+            $computedN1['120'] = (string)(int)round($rawN1['120']);
+        }
+
         $this->renderTab('bilan', [
             'computed' => $computed,
             'computed_n1' => $computedN1,
@@ -211,12 +216,43 @@ class ClotureController
         $stmt->execute(['eid' => $entrepriseId, 'fin' => $annee . '-12-31']);
         $dispo = (float)$stmt->fetchColumn();
 
+        // Capital social = capital N-1 + augmentations de capital (compte 4561) de l'année N
+        $capitalN1 = 0.0;
+        $stmtDecl = $this->pdo->prepare(
+            "SELECT data_bilan FROM declarations_2035
+             WHERE entreprise_id = :eid AND annee = :annee"
+        );
+        $stmtDecl->execute(['eid' => $entrepriseId, 'annee' => $annee - 1]);
+        $declN1 = $stmtDecl->fetch();
+        if ($declN1 && !empty($declN1['data_bilan'])) {
+            $bilanN1 = json_decode($declN1['data_bilan'], true) ?: [];
+            $capitalN1 = (float)($bilanN1['120'] ?? 0);
+        }
+
+        $stmt = $this->pdo->prepare(
+            "SELECT COALESCE(SUM(lc.montant_ht), 0)
+             FROM lignes_comptables lc
+             JOIN transactions_bancaires t ON t.id = lc.transaction_bancaire_id
+             JOIN comptes_bancaires cb ON cb.id = t.compte_bancaire_id
+             WHERE cb.entreprise_id = :eid
+               AND lc.compte LIKE '4561%'
+               AND t.date >= :debut AND t.date <= :fin"
+        );
+        $stmt->execute([
+            'eid' => $entrepriseId,
+            'debut' => $annee . '-01-01',
+            'fin' => $annee . '-12-31',
+        ]);
+        $augmentationCapital = (float)$stmt->fetchColumn();
+        $capitalSocial = $capitalN1 + $augmentationCapital;
+
         return [
             '010' => $fc['brut'],  '012' => $fc['amort'],
             '014' => $ai['brut'],  '016' => $ai['amort'],
             '028' => $co['brut'],  '030' => $co['amort'],
             '040' => $fi['brut'],  '042' => $fi['amort'],
             '084' => $dispo,
+            '120' => $capitalSocial,
         ];
     }
 
