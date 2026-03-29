@@ -564,10 +564,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
     compute();
 
-    form.addEventListener('input', function() {
+    // Stocker les valeurs initiales APRÈS le premier compute
+    // (les champs calculés ont pu être mis à jour)
+    fields.forEach(function(f) {
+        f.setAttribute('data-initial', f.value);
+    });
+
+    function onInput() {
         compute();
         checkModified();
-    });
+    }
+
+    form.addEventListener('input', onInput);
+    form.addEventListener('keyup', onInput);
+    form.addEventListener('change', onInput);
 
     btnEdit.addEventListener('click', function() { setEditing(true); });
 
