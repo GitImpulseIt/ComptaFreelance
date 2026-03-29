@@ -575,9 +575,10 @@ document.addEventListener('DOMContentLoaded', function() {
         checkModified();
     }
 
-    form.addEventListener('input', onInput);
-    form.addEventListener('keyup', onInput);
-    form.addEventListener('change', onInput);
+    fields.forEach(function(f) {
+        f.addEventListener('input', onInput);
+        f.addEventListener('keyup', onInput);
+    });
 
     btnEdit.addEventListener('click', function() { setEditing(true); });
 
