@@ -437,7 +437,8 @@
 {# Boutons d'action #}
 <div class="flex justify-end gap-3 mt-4">
     <a href="/app/cloture/compte-resultat?annee={{ annee }}&reset=1" id="btnReset"
-       class="px-5 py-2.5 border border-slate-300 text-slate-400 text-sm font-medium rounded-lg transition shadow-sm pointer-events-none">
+       class="px-5 py-2.5 border border-slate-300 text-sm font-medium rounded-lg transition shadow-sm
+       {% if data|length > 0 %}text-slate-700 hover:bg-slate-50 cursor-pointer{% else %}text-slate-400 pointer-events-none{% endif %}">
         Réinitialiser
     </a>
     <button type="button" onclick="window._crEdit()" id="btnEdit"
