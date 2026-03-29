@@ -9,8 +9,9 @@
 {% set cv = comp[actual_ck]|default('') %}
 <input type="text" inputmode="numeric" name="fields[{{ name }}]" id="c{{ name }}"
        value="{{ sv != '' ? sv : cv }}"
-       class="w-full text-right tabular-nums text-xs px-2 py-1 border-0 bg-transparent focus:bg-indigo-50 focus:outline-none"
-       autocomplete="off">
+       data-initial="{{ sv != '' ? sv : cv }}"
+       class="cr-field w-full text-right tabular-nums text-xs px-2 py-1 border-0 bg-transparent focus:bg-indigo-50 focus:outline-none"
+       autocomplete="off" readonly tabindex="-1">
 {% endmacro %}
 
 {% macro ro(name) %}
@@ -433,11 +434,20 @@
     </div>
 </div>
 
-{# Bouton enregistrer #}
-<div class="flex justify-end">
-    <button type="submit"
-            class="px-6 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition shadow-sm">
-        Enregistrer le compte de résultat
+{# Boutons d'action #}
+<div class="flex justify-end gap-3">
+    <button type="button" id="btnReset"
+            class="px-5 py-2.5 border border-slate-300 text-slate-400 text-sm font-medium rounded-lg transition shadow-sm cursor-not-allowed"
+            disabled>
+        Réinitialiser
+    </button>
+    <button type="button" id="btnEdit"
+            class="px-5 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition shadow-sm">
+        Modifier
+    </button>
+    <button type="submit" id="btnSave"
+            class="hidden px-5 py-2.5 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition shadow-sm">
+        Enregistrer
     </button>
 </div>
 
@@ -523,6 +533,55 @@ document.addEventListener('DOMContentLoaded', function() {
 
     compute();
     form.addEventListener('input', compute);
+
+    // ── Mode lecture / édition ──
+    var fields = form.querySelectorAll('.cr-field');
+    var btnEdit = document.getElementById('btnEdit');
+    var btnSave = document.getElementById('btnSave');
+    var btnReset = document.getElementById('btnReset');
+    var editing = false;
+    var modified = false;
+
+    function setEditing(on) {
+        editing = on;
+        fields.forEach(function(f) {
+            if (on) {
+                f.removeAttribute('readonly');
+                f.removeAttribute('tabindex');
+            } else {
+                f.setAttribute('readonly', '');
+                f.setAttribute('tabindex', '-1');
+            }
+        });
+        btnEdit.classList.toggle('hidden', on);
+        btnSave.classList.toggle('hidden', !on);
+    }
+
+    function checkModified() {
+        modified = false;
+        fields.forEach(function(f) {
+            if (f.value !== (f.dataset.initial || '')) modified = true;
+        });
+        btnReset.disabled = !modified;
+        if (modified) {
+            btnReset.classList.remove('text-slate-400', 'cursor-not-allowed');
+            btnReset.classList.add('text-slate-700', 'hover:bg-slate-50');
+        } else {
+            btnReset.classList.add('text-slate-400', 'cursor-not-allowed');
+            btnReset.classList.remove('text-slate-700', 'hover:bg-slate-50');
+        }
+    }
+
+    btnEdit.addEventListener('click', function() { setEditing(true); });
+
+    btnReset.addEventListener('click', function() {
+        fields.forEach(function(f) { f.value = f.dataset.initial || ''; });
+        compute();
+        checkModified();
+        setEditing(false);
+    });
+
+    form.addEventListener('input', function() { checkModified(); });
 });
 </script>
 
