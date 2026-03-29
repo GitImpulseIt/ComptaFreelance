@@ -59,6 +59,10 @@ ComptaV2/
 - **App admin** : `http://localhost:8081` (admin-nginx + admin-php)
 - **PostgreSQL** : `localhost:5432` (partagé)
 
+## Règles fiscales
+
+- **Arrondis** : les bases des impositions de toute nature sont arrondies à l'euro le plus proche. La fraction d'euro égale à 0,50 est comptée pour 1. En PHP, utiliser `ceil()` quand la partie décimale est exactement 0.50, sinon `round()` avec le mode `PHP_ROUND_HALF_UP`.
+
 ## Auth admin
 
 - Mot de passe stocké en SHA256 dans la table `admin_settings` (clé `password_hash`)

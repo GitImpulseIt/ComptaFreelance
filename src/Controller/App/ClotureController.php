@@ -13,6 +13,14 @@ class ClotureController
 {
     private EntrepriseRepository $entrepriseRepo;
 
+    /**
+     * Arrondi fiscal : à l'euro le plus proche, 0.50 compté pour 1.
+     */
+    private function arrondisFiscal(float $val): int
+    {
+        return (int)round($val, 0, PHP_ROUND_HALF_UP);
+    }
+
     private const TABS = [
         ['slug' => 'bilan',           'label' => 'Bilan'],
         ['slug' => 'compte-resultat', 'label' => 'Compte de résultat'],
@@ -52,7 +60,7 @@ class ClotureController
         // Format computed values for N (brut & amort)
         $computed = [];
         foreach ($raw as $k => $v) {
-            $computed[$k] = $v != 0 ? (string)(int)round($v) : '';
+            $computed[$k] = $v != 0 ? (string)$this->arrondisFiscal($v) : '';
         }
 
         // Compute N-1 net values for ACTIF lines (brut - amort)
@@ -63,13 +71,13 @@ class ClotureController
             $computedN1[$brut] = $net != 0 ? (string)(int)$net : '';
         }
         if (($rawN1['084'] ?? 0) != 0) {
-            $computedN1['084'] = (string)(int)round($rawN1['084']);
+            $computedN1['084'] = (string)$this->arrondisFiscal($rawN1['084']);
         }
 
         // Passif et créances N-1
         foreach (['072', '120', '136', '156', '172', '199'] as $case) {
             if (($rawN1[$case] ?? 0) != 0) {
-                $computedN1[$case] = (string)(int)round($rawN1[$case]);
+                $computedN1[$case] = (string)$this->arrondisFiscal($rawN1[$case]);
             }
         }
 
@@ -110,6 +118,10 @@ class ClotureController
             '218' => ['label' => 'Production vendue — Services', 'comptes' => ['706%','707%','708%']],
             '242' => ['label' => 'Autres charges externes', 'comptes' => ['61%','62%']],
             '254' => ['label' => 'Dotations aux amortissements', 'source' => 'immobilisations'],
+            '280' => ['label' => 'Produits financiers', 'comptes' => ['76%']],
+            '290' => ['label' => 'Produits exceptionnels', 'comptes' => ['77%']],
+            '294' => ['label' => 'Charges financières', 'comptes' => ['66%']],
+            '300' => ['label' => 'Charges exceptionnelles', 'comptes' => ['67%']],
         ];
 
         $debut = $annee . '-01-01';
@@ -278,7 +290,7 @@ class ClotureController
             $dotation += $immo['dotation'];
         }
         if ($dotation != 0) {
-            $result['254'] = (string)(int)round($dotation);
+            $result['254'] = (string)$this->arrondisFiscal($dotation);
         }
 
         // Production vendue depuis les lignes comptables
@@ -311,10 +323,10 @@ class ClotureController
         }
 
         if ($biens != 0) {
-            $result['214'] = (string)(int)round($biens);
+            $result['214'] = (string)$this->arrondisFiscal($biens);
         }
         if ($services != 0) {
-            $result['218'] = (string)(int)round($services);
+            $result['218'] = (string)$this->arrondisFiscal($services);
         }
 
         // Autres charges externes (comptes 61 et 62)
@@ -334,7 +346,40 @@ class ClotureController
         ]);
         $chargesExternes = (float)$stmt->fetchColumn();
         if ($chargesExternes != 0) {
-            $result['242'] = (string)(int)round($chargesExternes);
+            $result['242'] = (string)$this->arrondisFiscal($chargesExternes);
+        }
+
+        // Produits financiers (comptes 76), Produits exceptionnels (comptes 77)
+        // Charges financières (comptes 66), Charges exceptionnelles (comptes 67)
+        $mappingDivers = [
+            '280' => ['76%'],  // Produits financiers
+            '290' => ['77%'],  // Produits exceptionnels
+            '294' => ['66%'],  // Charges financières
+            '300' => ['67%'],  // Charges exceptionnelles
+        ];
+        foreach ($mappingDivers as $case => $patterns) {
+            $conditions = [];
+            foreach ($patterns as $i => $p) {
+                $conditions[] = "lc.compte LIKE :pd{$case}_{$i}";
+            }
+            $stmt = $this->pdo->prepare(
+                "SELECT COALESCE(SUM(lc.montant_ht), 0)
+                 FROM lignes_comptables lc
+                 JOIN transactions_bancaires t ON t.id = lc.transaction_bancaire_id
+                 JOIN comptes_bancaires cb ON cb.id = t.compte_bancaire_id
+                 WHERE cb.entreprise_id = :eid
+                   AND t.date >= :debut AND t.date <= :fin
+                   AND (" . implode(' OR ', $conditions) . ")"
+            );
+            $params = ['eid' => $entrepriseId, 'debut' => $annee . '-01-01', 'fin' => $annee . '-12-31'];
+            foreach ($patterns as $i => $p) {
+                $params["pd{$case}_{$i}"] = $p;
+            }
+            $stmt->execute($params);
+            $val = (float)$stmt->fetchColumn();
+            if ($val != 0) {
+                $result[$case] = (string)$this->arrondisFiscal($val);
+            }
         }
 
         return $result;
@@ -469,7 +514,7 @@ class ClotureController
         $resultat = (float)$stmt->fetchColumn();
 
         // Soustraire la dotation aux amortissements (charge non enregistrée en ligne comptable)
-        $resultat -= round($dotationAnnee);
+        $resultat -= $this->arrondisFiscal($dotationAnnee);
 
         return [
             '010' => $fc['brut'],  '012' => $fc['amort'],
