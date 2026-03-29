@@ -200,10 +200,11 @@ class ImmobilisationController
             $termine = true;
         }
 
-        // Compléter les annuités futures
-        if (!$termine && $a <= $anneeDebut + $duree + 1) {
+        // Compléter les annuités futures (plafonné à durée + 1 pour le prorata)
+        $anneeFin = $anneeDebut + $duree;
+        if (!$termine) {
             $tmpCumul = $cumul;
-            for ($af = $a + 1; $tmpCumul < $valeur; $af++) {
+            for ($af = $a + 1; $af <= $anneeFin && $tmpCumul < $valeur; $af++) {
                 $dot = min($annuiteBase, round($valeur - $tmpCumul, 2));
                 $tmpCumul += $dot;
                 $annuites[] = ['annee' => $af, 'dotation' => $dot, 'cumul' => round($tmpCumul, 2), 'vnc' => max(0, round($valeur - $tmpCumul, 2))];
@@ -217,49 +218,50 @@ class ImmobilisationController
     {
         $tauxDegressif = (1 / $duree) * $coeff;
 
+        // Nombre max de lignes = durée (prorata 1ère année compte comme 1 ligne)
+        $anneeFin = $anneeDebut + $duree - 1;
         $vnc = $valeur;
         $cumul = 0;
         $annuite = 0;
         $annuites = [];
 
-        for ($a = $anneeDebut; $vnc > 0.01; $a++) {
-            $dotation = round($vnc * $tauxDegressif, 2);
-
-            if ($a === $anneeDebut) {
-                $prorata = (12 - $moisDebut + 1) / 12;
-                $dotation = round($dotation * $prorata, 2);
+        for ($a = $anneeDebut; $a <= $anneeFin && $vnc > 0; $a++) {
+            if ($a === $anneeFin) {
+                // Dernière année : solder la VNC
+                $dotation = $vnc;
+            } else {
+                $dotation = round($vnc * $tauxDegressif, 2);
+                if ($a === $anneeDebut) {
+                    $prorata = (12 - $moisDebut + 1) / 12;
+                    $dotation = round($dotation * $prorata, 2);
+                }
             }
 
             $dotation = min($dotation, $vnc);
             $cumul += $dotation;
             $vnc = round($valeur - $cumul, 2);
-            $annuite = $dotation;
             $annuites[] = ['annee' => $a, 'dotation' => $dotation, 'cumul' => round($cumul, 2), 'vnc' => max(0, $vnc)];
 
-            if ($a >= $anneeNow) {
-                break;
+            if ($a <= $anneeNow) {
+                $annuite = $dotation;
             }
         }
 
-        $termine = $vnc <= 0.01;
+        $cumulNow = 0;
+        $vncNow = $valeur;
+        foreach ($annuites as $row) {
+            if ($row['annee'] <= $anneeNow) {
+                $cumulNow = $row['cumul'];
+                $vncNow = $row['vnc'];
+            }
+        }
+
+        $termine = $vncNow <= 0;
         if ($immo['cession_date']) {
             $termine = true;
         }
 
-        // Compléter les annuités futures
-        if (!$termine) {
-            $tmpVnc = $vnc;
-            $tmpCumul = $cumul;
-            for ($af = $a + 1; $tmpVnc > 0.01; $af++) {
-                $dot = round($tmpVnc * $tauxDegressif, 2);
-                $dot = min($dot, $tmpVnc);
-                $tmpCumul += $dot;
-                $tmpVnc = round($valeur - $tmpCumul, 2);
-                $annuites[] = ['annee' => $af, 'dotation' => $dot, 'cumul' => round($tmpCumul, 2), 'vnc' => max(0, $tmpVnc)];
-            }
-        }
-
-        return ['annuite' => $annuite, 'cumul' => round($cumul, 2), 'vnc' => max(0, $vnc), 'termine' => $termine, 'annuites' => $annuites];
+        return ['annuite' => $annuite, 'cumul' => round($cumulNow, 2), 'vnc' => max(0, $vncNow), 'termine' => $termine, 'annuites' => $annuites];
     }
 
 }

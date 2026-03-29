@@ -413,12 +413,17 @@ class ClotureController
             if ($immo['type_amortissement'] === 'degressif') {
                 $coeff = (float) ($immo['coeff_degressif'] ?? 1.25);
                 $tauxDeg = (1 / $duree) * $coeff;
+                $anneeFin = $anneeAcq + $duree - 1;
                 $vnc = $valeur;
 
-                for ($a = $anneeAcq; $a <= $annee && $vnc > 0.01; $a++) {
-                    $dot = round($vnc * $tauxDeg, 2);
-                    if ($a === $anneeAcq) {
-                        $dot = round($dot * $prorata1, 2);
+                for ($a = $anneeAcq; $a <= min($annee, $anneeFin) && $vnc > 0; $a++) {
+                    if ($a === $anneeFin) {
+                        $dot = $vnc;
+                    } else {
+                        $dot = round($vnc * $tauxDeg, 2);
+                        if ($a === $anneeAcq) {
+                            $dot = round($dot * $prorata1, 2);
+                        }
                     }
                     $dot = min($dot, $vnc);
 
