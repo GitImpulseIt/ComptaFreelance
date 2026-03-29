@@ -60,6 +60,7 @@ return [
     'GET /app/cloture' => ['App\\ClotureController', 'index'],
     'GET /app/cloture/bilan' => ['App\\ClotureController', 'tabBilan'],
     'GET /app/cloture/compte-resultat' => ['App\\ClotureController', 'tabCompteResultat'],
+    'GET /app/cloture/compte-resultat/detail' => ['App\\ClotureController', 'detailCompteResultat'],
     'GET /app/cloture/2035' => ['App\\ClotureController', 'tab2035'],
     'POST /app/cloture/save' => ['App\\ClotureController', 'save'],
 

@@ -93,6 +93,102 @@ class ClotureController
     }
     public function tab2035(): void            { $this->renderTab('2035'); }
 
+    public function detailCompteResultat(): void
+    {
+        $entrepriseId = $this->auth->getEntrepriseId();
+        $entreprise = $this->entrepriseRepo->findById($entrepriseId);
+        $annee = isset($_GET['annee']) ? (int) $_GET['annee'] : (int) date('Y') - 1;
+
+        if (($entreprise['regime_benefices'] ?? '') !== 'BNC') {
+            header('Location: /app');
+            exit;
+        }
+
+        // Mapping case → label + filtres SQL sur lignes_comptables
+        $cases = [
+            '214' => ['label' => 'Production vendue — Biens', 'comptes' => ['701%','702%','703%','704%','705%','709%']],
+            '218' => ['label' => 'Production vendue — Services', 'comptes' => ['706%','707%','708%']],
+            '242' => ['label' => 'Autres charges externes', 'comptes' => ['61%','62%']],
+            '254' => ['label' => 'Dotations aux amortissements', 'source' => 'immobilisations'],
+        ];
+
+        $debut = $annee . '-01-01';
+        $fin = $annee . '-12-31';
+        $sections = [];
+
+        foreach ($cases as $caseNum => $def) {
+            if (isset($def['source']) && $def['source'] === 'immobilisations') {
+                $immos = $this->getImmobilisationsAvecAmortissement($entrepriseId, $annee);
+                $lignes = [];
+                foreach ($immos as $immo) {
+                    if ($immo['dotation'] > 0) {
+                        $lignes[] = [
+                            'date' => $immo['date_acquisition'],
+                            'libelle' => $immo['designation'],
+                            'compte' => $immo['compte'],
+                            'montant' => $immo['dotation'],
+                        ];
+                    }
+                }
+                if (!empty($lignes)) {
+                    $total = 0;
+                    foreach ($lignes as $l) { $total += $l['montant']; }
+                    $sections[] = [
+                        'case' => $caseNum,
+                        'label' => $def['label'],
+                        'lignes' => $lignes,
+                        'total' => round($total, 2),
+                    ];
+                }
+                continue;
+            }
+
+            // Construire le WHERE pour les comptes
+            $conditions = [];
+            foreach ($def['comptes'] as $i => $pattern) {
+                $conditions[] = "lc.compte LIKE :p{$caseNum}_{$i}";
+            }
+            $where = '(' . implode(' OR ', $conditions) . ')';
+
+            $stmt = $this->pdo->prepare(
+                "SELECT t.date, t.libelle, lc.compte, lc.montant_ht AS montant
+                 FROM lignes_comptables lc
+                 JOIN transactions_bancaires t ON t.id = lc.transaction_bancaire_id
+                 JOIN comptes_bancaires cb ON cb.id = t.compte_bancaire_id
+                 WHERE cb.entreprise_id = :eid
+                   AND t.date >= :debut AND t.date <= :fin
+                   AND {$where}
+                 ORDER BY t.date, t.id"
+            );
+            $params = ['eid' => $entrepriseId, 'debut' => $debut, 'fin' => $fin];
+            foreach ($def['comptes'] as $i => $pattern) {
+                $params["p{$caseNum}_{$i}"] = $pattern;
+            }
+            $stmt->execute($params);
+            $lignes = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+            if (!empty($lignes)) {
+                $total = 0;
+                foreach ($lignes as $l) { $total += (float)$l['montant']; }
+                $sections[] = [
+                    'case' => $caseNum,
+                    'label' => $def['label'],
+                    'lignes' => $lignes,
+                    'total' => round($total, 2),
+                ];
+            }
+        }
+
+        echo $this->twig->render('app/cloture/compte-resultat-detail.html.twig', [
+            'active_page' => 'cloture',
+            'active_tab' => 'compte-resultat',
+            'tabs' => self::TABS,
+            'annee' => $annee,
+            'annees' => [(int) date('Y') - 1],
+            'sections' => $sections,
+        ]);
+    }
+
     public function save(): void
     {
         $entrepriseId = $this->auth->getEntrepriseId();

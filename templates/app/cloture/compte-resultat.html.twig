@@ -436,6 +436,11 @@
 
 {# Boutons d'action #}
 <div class="flex justify-end gap-3 mt-4">
+    <a href="/app/cloture/compte-resultat/detail?annee={{ annee }}"
+       class="px-5 py-2.5 border border-slate-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 transition shadow-sm mr-auto">
+        <svg class="w-4 h-4 inline -mt-0.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+        Consulter le détail
+    </a>
     <a href="/app/cloture/compte-resultat?annee={{ annee }}&reset=1" id="btnReset"
        class="px-5 py-2.5 border border-slate-300 text-sm font-medium rounded-lg transition shadow-sm
        {% if data|length > 0 %}text-amber-700 border-amber-300 bg-amber-50 hover:bg-amber-100 cursor-pointer{% else %}text-slate-400 pointer-events-none{% endif %}">
