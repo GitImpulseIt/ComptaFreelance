@@ -362,7 +362,7 @@ class ClotureController
         $resultat = (float)$stmt->fetchColumn();
 
         // Soustraire la dotation aux amortissements (charge non enregistrée en ligne comptable)
-        $resultat -= $dotationAnnee;
+        $resultat -= round($dotationAnnee);
 
         return [
             '010' => $fc['brut'],  '012' => $fc['amort'],
