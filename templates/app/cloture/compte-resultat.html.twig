@@ -438,7 +438,7 @@
 <div class="flex justify-end gap-3 mt-4">
     <a href="/app/cloture/compte-resultat?annee={{ annee }}&reset=1" id="btnReset"
        class="px-5 py-2.5 border border-slate-300 text-sm font-medium rounded-lg transition shadow-sm
-       {% if data|length > 0 %}text-slate-700 hover:bg-slate-50 cursor-pointer{% else %}text-slate-400 pointer-events-none{% endif %}">
+       {% if data|length > 0 %}text-amber-700 border-amber-300 bg-amber-50 hover:bg-amber-100 cursor-pointer{% else %}text-slate-400 pointer-events-none{% endif %}">
         Réinitialiser
     </a>
     <button type="button" onclick="window._crEdit()" id="btnEdit"
@@ -555,8 +555,8 @@ document.addEventListener('DOMContentLoaded', function() {
         compute();
         if (!resetActivated && e.target && e.target.classList.contains('cr-field')) {
             resetActivated = true;
-            btnReset.classList.remove('pointer-events-none', 'text-slate-400');
-            btnReset.classList.add('text-slate-700', 'hover:bg-slate-50', 'cursor-pointer');
+            btnReset.classList.remove('pointer-events-none', 'text-slate-400', 'border-slate-300');
+            btnReset.classList.add('text-amber-700', 'border-amber-300', 'bg-amber-50', 'hover:bg-amber-100', 'cursor-pointer');
         }
     });
 });
