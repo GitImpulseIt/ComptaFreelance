@@ -145,7 +145,18 @@ class ClotureController
 
         $dataColumn = self::TAB_COLUMN[$slug];
         $declaration = $this->getOrCreateDeclaration($entrepriseId, $annee);
-        $savedData = json_decode($declaration[$dataColumn] ?? '{}', true) ?: [];
+
+        // Réinitialiser : vider les données sauvegardées pour recalculer
+        if (isset($_GET['reset'])) {
+            $stmt = $this->pdo->prepare(
+                "UPDATE declarations_2035 SET {$dataColumn} = '{}', updated_at = NOW()
+                 WHERE entreprise_id = :eid AND annee = :annee"
+            );
+            $stmt->execute(['eid' => $entrepriseId, 'annee' => $annee]);
+            $savedData = [];
+        } else {
+            $savedData = json_decode($declaration[$dataColumn] ?? '{}', true) ?: [];
+        }
 
         echo $this->twig->render('app/cloture/' . $slug . '.html.twig', array_merge([
             'active_page' => 'cloture',
