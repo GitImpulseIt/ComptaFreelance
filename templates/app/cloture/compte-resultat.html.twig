@@ -436,11 +436,11 @@
 
 {# Boutons d'action #}
 <div class="flex justify-end gap-3">
-    <button type="button" id="btnReset"
+    <button type="button" onclick="window._crReset()" id="btnReset"
             class="px-5 py-2.5 border border-slate-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 transition shadow-sm">
         Réinitialiser
     </button>
-    <button type="button" id="btnEdit"
+    <button type="button" onclick="window._crEdit()" id="btnEdit"
             class="px-5 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition shadow-sm">
         Modifier
     </button>
@@ -559,15 +559,15 @@ document.addEventListener('DOMContentLoaded', function() {
         btnSave.classList.toggle('hidden', !on);
     }
 
-    btnEdit.addEventListener('click', function() { setEditing(true); });
+    window._crEdit = function() { setEditing(true); };
 
-    btnReset.addEventListener('click', function() {
+    window._crReset = function() {
         for (var i = 0; i < allFields.length; i++) {
             allFields[i].value = initialValues[allFields[i].id] || '';
         }
         compute();
         setEditing(false);
-    });
+    };
 
     form.addEventListener('input', function() { compute(); });
 });
