@@ -435,11 +435,11 @@
 </div>
 
 {# Boutons d'action #}
-<div class="flex justify-end gap-3">
-    <button type="button" onclick="window._crReset()" id="btnReset"
-            class="px-5 py-2.5 border border-slate-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 transition shadow-sm">
+<div class="flex justify-end gap-3 mt-4">
+    <a href="/app/cloture/compte-resultat?annee={{ annee }}"
+       class="px-5 py-2.5 border border-slate-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 transition shadow-sm cursor-pointer">
         Réinitialiser
-    </button>
+    </a>
     <button type="button" onclick="window._crEdit()" id="btnEdit"
             class="px-5 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition shadow-sm">
         Modifier
@@ -533,40 +533,18 @@ document.addEventListener('DOMContentLoaded', function() {
     // ── Mode lecture / édition ──
     var btnEdit = document.getElementById('btnEdit');
     var btnSave = document.getElementById('btnSave');
-    var btnReset = document.getElementById('btnReset');
-    var initialValues = {};
-    var dirty = false;
 
     compute();
 
-    // Stocker les valeurs initiales après le premier compute
     var allFields = Array.prototype.slice.call(form.querySelectorAll('.cr-field'));
-    for (var i = 0; i < allFields.length; i++) {
-        initialValues[allFields[i].id] = allFields[i].value;
-    }
 
-    function setEditing(on) {
+    window._crEdit = function() {
         for (var i = 0; i < allFields.length; i++) {
-            if (on) {
-                allFields[i].removeAttribute('readonly');
-                allFields[i].removeAttribute('tabindex');
-            } else {
-                allFields[i].setAttribute('readonly', '');
-                allFields[i].setAttribute('tabindex', '-1');
-            }
+            allFields[i].removeAttribute('readonly');
+            allFields[i].removeAttribute('tabindex');
         }
-        btnEdit.classList.toggle('hidden', on);
-        btnSave.classList.toggle('hidden', !on);
-    }
-
-    window._crEdit = function() { setEditing(true); };
-
-    window._crReset = function() {
-        for (var i = 0; i < allFields.length; i++) {
-            allFields[i].value = initialValues[allFields[i].id] || '';
-        }
-        compute();
-        setEditing(false);
+        btnEdit.classList.add('hidden');
+        btnSave.classList.remove('hidden');
     };
 
     form.addEventListener('input', function() { compute(); });
