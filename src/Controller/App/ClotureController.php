@@ -218,15 +218,19 @@ class ClotureController
 
         // Capital social = capital N-1 + augmentations de capital (compte 4561) de l'année N
         $capitalN1 = 0.0;
-        $stmtDecl = $this->pdo->prepare(
-            "SELECT data_bilan FROM declarations_2035
-             WHERE entreprise_id = :eid AND annee = :annee"
-        );
-        $stmtDecl->execute(['eid' => $entrepriseId, 'annee' => $annee - 1]);
-        $declN1 = $stmtDecl->fetch();
-        if ($declN1 && !empty($declN1['data_bilan'])) {
-            $bilanN1 = json_decode($declN1['data_bilan'], true) ?: [];
-            $capitalN1 = (float)($bilanN1['120'] ?? 0);
+        try {
+            $stmtDecl = $this->pdo->prepare(
+                "SELECT data_bilan FROM declarations_2035
+                 WHERE entreprise_id = :eid AND annee = :annee"
+            );
+            $stmtDecl->execute(['eid' => $entrepriseId, 'annee' => $annee - 1]);
+            $declN1 = $stmtDecl->fetch();
+            if ($declN1 && !empty($declN1['data_bilan'])) {
+                $bilanN1 = json_decode($declN1['data_bilan'], true) ?: [];
+                $capitalN1 = (float)($bilanN1['120'] ?? 0);
+            }
+        } catch (\PDOException $e) {
+            // Colonne data_bilan absente si migration 0013 non exécutée
         }
 
         $stmt = $this->pdo->prepare(
