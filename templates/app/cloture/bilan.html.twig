@@ -323,69 +323,40 @@
 </div>
 
 {# ═══════════════════════ RENVOIS ═══════════════════════ #}
-<div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6 px-5 py-4">
-    <h3 class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-3">Renvois</h3>
-    <div class="renvois-grid grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-xs">
-        <div class="flex items-center gap-2">
-            <span class="text-slate-400 font-medium w-6 shrink-0">(1)</span>
-            <span class="text-slate-600 flex-1">Dont immo. financières à moins d'un an</span>
-            <span class="text-slate-300 text-[10px] shrink-0">193</span>
-            <div class="w-24 shrink-0">
-                <input type="text" inputmode="numeric" name="fields[193]" id="c193"
-                       value="{{ data['193']|default('') }}"
-                       class="w-full text-right tabular-nums text-xs px-2 py-1 border-0 bg-transparent focus:bg-indigo-50 focus:outline-none" autocomplete="off">
-            </div>
-        </div>
-        <div class="flex items-center gap-2">
-            <span class="text-slate-400 font-medium w-6 shrink-0">(4)</span>
-            <span class="text-slate-600 flex-1">Dont dettes à plus d'un an</span>
-            <span class="text-slate-300 text-[10px] shrink-0">195</span>
-            <div class="w-24 shrink-0">
-                <input type="text" inputmode="numeric" name="fields[195]" id="c195"
-                       value="{{ data['195']|default('') }}"
-                       class="w-full text-right tabular-nums text-xs px-2 py-1 border-0 bg-transparent focus:bg-indigo-50 focus:outline-none" autocomplete="off">
-            </div>
-        </div>
-        <div class="flex items-center gap-2">
-            <span class="text-slate-400 font-medium w-6 shrink-0">(2)</span>
-            <span class="text-slate-600 flex-1">Dont créances à plus d'un an</span>
-            <span class="text-slate-300 text-[10px] shrink-0">197</span>
-            <div class="w-24 shrink-0">
-                <input type="text" inputmode="numeric" name="fields[197]" id="c197"
-                       value="{{ data['197']|default('') }}"
-                       class="w-full text-right tabular-nums text-xs px-2 py-1 border-0 bg-transparent focus:bg-indigo-50 focus:outline-none" autocomplete="off">
-            </div>
-        </div>
-        <div class="flex items-center gap-2">
-            <span class="text-slate-400 font-medium w-6 shrink-0">(5)</span>
-            <span class="text-slate-600 flex-1">Coût de revient des immo. acquises</span>
-            <span class="text-slate-300 text-[10px] shrink-0">182</span>
-            <div class="w-24 shrink-0">
-                <input type="text" inputmode="numeric" name="fields[182]" id="c182"
-                       value="{{ data['182']|default('') }}"
-                       class="w-full text-right tabular-nums text-xs px-2 py-1 border-0 bg-transparent focus:bg-indigo-50 focus:outline-none" autocomplete="off">
-            </div>
-        </div>
-        <div class="flex items-center gap-2">
-            <span class="text-slate-400 font-medium w-6 shrink-0">(3)</span>
-            <span class="text-slate-600 flex-1">Dont comptes courants d'associés débiteurs</span>
-            <span class="text-slate-300 text-[10px] shrink-0">199</span>
-            <div class="w-24 shrink-0">
-                <input type="text" inputmode="numeric" name="fields[199]" id="c199"
-                       value="{{ data['199']|default('') }}"
-                       class="w-full text-right tabular-nums text-xs px-2 py-1 border-0 bg-transparent focus:bg-indigo-50 focus:outline-none" autocomplete="off">
-            </div>
-        </div>
-        <div class="flex items-center gap-2">
-            <span class="text-slate-400 font-medium w-6 shrink-0"></span>
-            <span class="text-slate-600 flex-1">Prix de cession des immo. cédées</span>
-            <span class="text-slate-300 text-[10px] shrink-0">184</span>
-            <div class="w-24 shrink-0">
-                <input type="text" inputmode="numeric" name="fields[184]" id="c184"
-                       value="{{ data['184']|default('') }}"
-                       class="w-full text-right tabular-nums text-xs px-2 py-1 border-0 bg-transparent focus:bg-indigo-50 focus:outline-none" autocomplete="off">
-            </div>
-        </div>
+<div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
+    <div class="overflow-x-auto">
+    <table class="compta-table w-full border-collapse min-w-[640px]">
+        <tbody>
+            <tr class="bg-indigo-50/60 border-t border-indigo-100">
+                <td colspan="2" class="px-3 py-1 text-[11px] font-bold text-indigo-700 uppercase tracking-wider">Renvois</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600"><span class="text-slate-400">(1)</span> Dont immo. financières à moins d'un an <span class="text-slate-300 text-[10px]">193</span></td>
+                <td class="px-0.5 w-[20%]">{{ _self.inp('193', data, {}) }}</td>
+            </tr>
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600"><span class="text-slate-400">(2)</span> Dont créances à plus d'un an <span class="text-slate-300 text-[10px]">197</span></td>
+                <td class="px-0.5">{{ _self.inp('197', data, {}) }}</td>
+            </tr>
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600"><span class="text-slate-400">(3)</span> Dont comptes courants d'associés débiteurs <span class="text-slate-300 text-[10px]">199</span></td>
+                <td class="px-0.5">{{ _self.inp('199', data, {}) }}</td>
+            </tr>
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600"><span class="text-slate-400">(4)</span> Dont dettes à plus d'un an <span class="text-slate-300 text-[10px]">195</span></td>
+                <td class="px-0.5">{{ _self.inp('195', data, {}) }}</td>
+            </tr>
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600"><span class="text-slate-400">(5)</span> Coût de revient des immo. acquises ou créées au cours de l'exercice <span class="text-slate-300 text-[10px]">182</span></td>
+                <td class="px-0.5">{{ _self.inp('182', data, {}) }}</td>
+            </tr>
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Prix de cession hors TVA des immo. cédées au cours de l'exercice <span class="text-slate-300 text-[10px]">184</span></td>
+                <td class="px-0.5">{{ _self.inp('184', data, {}) }}</td>
+            </tr>
+        </tbody>
+    </table>
     </div>
 </div>
 
