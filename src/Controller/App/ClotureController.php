@@ -71,7 +71,38 @@ class ClotureController
             'computed_n1' => $computedN1,
         ]);
     }
-    public function tabCompteResultat(): void  { $this->renderTab('compte-resultat'); }
+    public function tabCompteResultat(): void
+    {
+        $entrepriseId = $this->auth->getEntrepriseId();
+        $annee = isset($_GET['annee']) ? (int) $_GET['annee'] : (int) date('Y') - 1;
+
+        // Dotations aux amortissements depuis les immobilisations
+        $computed = [];
+        $computedN1 = [];
+
+        $immos = $this->getImmobilisationsAvecAmortissement($entrepriseId, $annee);
+        $dotation = 0.0;
+        foreach ($immos as $immo) {
+            $dotation += $immo['dotation'];
+        }
+        if ($dotation != 0) {
+            $computed['254'] = (string)(int)round($dotation);
+        }
+
+        $immosN1 = $this->getImmobilisationsAvecAmortissement($entrepriseId, $annee - 1);
+        $dotationN1 = 0.0;
+        foreach ($immosN1 as $immo) {
+            $dotationN1 += $immo['dotation'];
+        }
+        if ($dotationN1 != 0) {
+            $computedN1['254'] = (string)(int)round($dotationN1);
+        }
+
+        $this->renderTab('compte-resultat', [
+            'computed' => $computed,
+            'computed_n1' => $computedN1,
+        ]);
+    }
     public function tab2035(): void            { $this->renderTab('2035'); }
 
     public function save(): void

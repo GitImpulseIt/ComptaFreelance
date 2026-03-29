@@ -1,8 +1,563 @@
 {% extends 'app/cloture/_layout.html.twig' %}
 
 {% block tab_content %}
-<div class="bg-white rounded-xl shadow-sm px-8 py-16 text-center">
-    <h3 class="text-lg font-medium text-slate-600 mb-1">Compte de résultat</h3>
-    <p class="text-sm text-slate-400">Formulaire en cours de développement.</p>
+
+{# ── Macros ── #}
+{% macro inp(name, data, comp, ck) %}
+{% set actual_ck = ck|default(name) %}
+{% set sv = data[name]|default('') %}
+{% set cv = comp[actual_ck]|default('') %}
+<input type="text" inputmode="numeric" name="fields[{{ name }}]" id="c{{ name }}"
+       value="{{ sv != '' ? sv : cv }}"
+       class="w-full text-right tabular-nums text-xs px-2 py-1 border-0 bg-transparent focus:bg-indigo-50 focus:outline-none"
+       autocomplete="off">
+{% endmacro %}
+
+{% macro ro(name) %}
+<input type="text" name="fields[{{ name }}]" id="c{{ name }}"
+       class="w-full text-right tabular-nums text-xs px-2 py-1 border-0 bg-transparent text-slate-600 font-semibold"
+       readonly tabindex="-1">
+{% endmacro %}
+
+<form method="post" action="/app/cloture/save" id="crForm">
+<input type="hidden" name="tab" value="compte-resultat">
+<input type="hidden" name="annee" value="{{ annee }}">
+
+{# ═══════════════════ A – RESULTAT COMPTABLE ═══════════════════ #}
+<div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
+    <div class="px-4 py-2.5 bg-slate-800 text-white flex items-center justify-between">
+        <span class="font-bold text-sm tracking-wide">COMPTE DE RESULTAT SIMPLIFIE</span>
+        <span class="text-xs text-slate-300">Formulaire 2033-B</span>
+    </div>
+
+    <div class="px-4 py-2 bg-slate-50 border-b border-slate-200">
+        <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">A &ndash; Resultat comptable</span>
+    </div>
+
+    <div class="overflow-x-auto">
+    <table class="compta-table w-full border-collapse min-w-[640px]">
+        <thead>
+            <tr class="bg-slate-100 border-b border-slate-200">
+                <th class="text-left px-3 py-2 text-[11px] font-semibold text-slate-500 uppercase tracking-wider w-[55%]"></th>
+                <th class="text-center px-1 py-2 text-[11px] font-semibold text-slate-500 w-[22%]">Exercice N <span class="font-normal">(1)</span></th>
+                <th class="text-center px-1 py-2 text-[11px] font-semibold text-slate-500 w-[22%]">Exercice N-1 <span class="font-normal">(2)</span></th>
+            </tr>
+        </thead>
+        <tbody>
+
+            {# ── PRODUITS D'EXPLOITATION ── #}
+            <tr class="bg-indigo-50/60 border-t border-indigo-100">
+                <td colspan="3" class="px-3 py-1 text-[11px] font-bold text-indigo-700 uppercase tracking-wider">Produits d'exploitation</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Ventes de marchandises <span class="text-slate-300 text-[10px]">210</span></td>
+                <td class="px-0.5">{{ _self.inp('210', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.inp('210_n1', data, {}) }}</td>
+            </tr>
+            <tr class="border-t border-slate-50">
+                <td class="px-3 py-0.5 text-[10px] text-slate-400 pl-6">dont export et livraisons intracommunautaires <span class="text-slate-300">209</span></td>
+                <td class="px-0.5">{{ _self.inp('209', data, {}) }}</td>
+                <td></td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600"><span class="text-slate-400">Production vendue &middot; </span>Biens <span class="text-slate-300 text-[10px]">214</span></td>
+                <td class="px-0.5">{{ _self.inp('214', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.inp('214_n1', data, {}) }}</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600"><span class="text-slate-400">Production vendue &middot; </span>Services <span class="text-slate-300 text-[10px]">218</span></td>
+                <td class="px-0.5">{{ _self.inp('218', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.inp('218_n1', data, {}) }}</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Production stockee <span class="text-slate-300 text-[10px]">222</span></td>
+                <td class="px-0.5">{{ _self.inp('222', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.inp('222_n1', data, {}) }}</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Production immobilisee <span class="text-slate-300 text-[10px]">224</span></td>
+                <td class="px-0.5">{{ _self.inp('224', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.inp('224_n1', data, {}) }}</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Subventions d'exploitation recues <span class="text-slate-300 text-[10px]">226</span></td>
+                <td class="px-0.5">{{ _self.inp('226', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.inp('226_n1', data, {}) }}</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Autres produits <span class="text-slate-300 text-[10px]">230</span></td>
+                <td class="px-0.5">{{ _self.inp('230', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.inp('230_n1', data, {}) }}</td>
+            </tr>
+
+            {# Total produits (I) #}
+            <tr class="bg-slate-100 border-t-2 border-slate-300">
+                <td class="px-3 py-1.5 text-xs font-bold text-slate-700">Total des produits d'exploitation hors TVA (I) <span class="text-slate-300 text-[10px]">232</span></td>
+                <td class="px-0.5">{{ _self.ro('232') }}</td>
+                <td class="px-0.5">{{ _self.ro('232_n1') }}</td>
+            </tr>
+
+            {# ── CHARGES D'EXPLOITATION ── #}
+            <tr class="bg-indigo-50/60 border-t border-indigo-100">
+                <td colspan="3" class="px-3 py-1 text-[11px] font-bold text-indigo-700 uppercase tracking-wider">Charges d'exploitation</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Achats de marchandises <span class="text-slate-300 text-[10px]">234</span></td>
+                <td class="px-0.5">{{ _self.inp('234', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.inp('234_n1', data, {}) }}</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Variation de stock (marchandises) <span class="text-slate-300 text-[10px]">236</span></td>
+                <td class="px-0.5">{{ _self.inp('236', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.inp('236_n1', data, {}) }}</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Achats de matieres premieres et autres approvisionnements <span class="text-slate-300 text-[10px]">238</span></td>
+                <td class="px-0.5">{{ _self.inp('238', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.inp('238_n1', data, {}) }}</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Variation de stock (matieres premieres et approvisionnements) <span class="text-slate-300 text-[10px]">240</span></td>
+                <td class="px-0.5">{{ _self.inp('240', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.inp('240_n1', data, {}) }}</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Autres charges externes <span class="text-slate-300 text-[10px]">242</span></td>
+                <td class="px-0.5">{{ _self.inp('242', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.inp('242_n1', data, {}) }}</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Impots, taxes et versements assimiles <span class="text-slate-300 text-[10px]">244</span></td>
+                <td class="px-0.5">{{ _self.inp('244', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.inp('244_n1', data, {}) }}</td>
+            </tr>
+            <tr class="border-t border-slate-50">
+                <td class="px-3 py-0.5 text-[10px] text-slate-400 pl-6">dont taxe professionnelle <span class="text-slate-300">243</span></td>
+                <td class="px-0.5">{{ _self.inp('243', data, {}) }}</td>
+                <td></td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Remuneration du personnel <span class="text-slate-300 text-[10px]">250</span></td>
+                <td class="px-0.5">{{ _self.inp('250', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.inp('250_n1', data, {}) }}</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Charges sociales <span class="text-slate-400 text-[10px]">(cf. renvoi 380)</span> <span class="text-slate-300 text-[10px]">252</span></td>
+                <td class="px-0.5">{{ _self.inp('252', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.inp('252_n1', data, {}) }}</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Dotations aux amortissements <span class="text-slate-300 text-[10px]">254</span></td>
+                <td class="px-0.5">{{ _self.inp('254', data, computed) }}</td>
+                <td class="px-0.5">{{ _self.inp('254_n1', data, computed_n1, '254') }}</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Dotations aux provisions <span class="text-slate-300 text-[10px]">256</span></td>
+                <td class="px-0.5">{{ _self.inp('256', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.inp('256_n1', data, {}) }}</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Autres charges <span class="text-slate-300 text-[10px]">262</span></td>
+                <td class="px-0.5">{{ _self.inp('262', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.inp('262_n1', data, {}) }}</td>
+            </tr>
+            <tr class="border-t border-slate-50">
+                <td class="px-3 py-0.5 text-[10px] text-slate-400 pl-6">dont provisions fiscales pour implantations commerciales a l'etranger <span class="text-slate-300">259</span></td>
+                <td class="px-0.5">{{ _self.inp('259', data, {}) }}</td>
+                <td></td>
+            </tr>
+
+            {# Total charges (II) #}
+            <tr class="bg-slate-100 border-t-2 border-slate-300">
+                <td class="px-3 py-1.5 text-xs font-bold text-slate-700">Total des charges d'exploitation (II) <span class="text-slate-300 text-[10px]">264</span></td>
+                <td class="px-0.5">{{ _self.ro('264') }}</td>
+                <td class="px-0.5">{{ _self.ro('264_n1') }}</td>
+            </tr>
+
+            {# 1 – Résultat d'exploitation #}
+            <tr class="bg-amber-50 border-t-2 border-amber-200">
+                <td class="px-3 py-1.5 text-xs font-black text-amber-800">1 &ndash; RESULTAT D'EXPLOITATION (I &ndash; II) <span class="text-slate-400 text-[10px]">270</span></td>
+                <td class="px-0.5">{{ _self.ro('270') }}</td>
+                <td class="px-0.5">{{ _self.ro('270_n1') }}</td>
+            </tr>
+
+            {# ── PRODUITS ET CHARGES DIVERS ── #}
+            <tr class="bg-indigo-50/60 border-t border-indigo-100">
+                <td colspan="3" class="px-3 py-1 text-[11px] font-bold text-indigo-700 uppercase tracking-wider">Produits et charges divers</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Produits financiers <span class="text-slate-400 text-[10px]">(III)</span> <span class="text-slate-300 text-[10px]">280</span></td>
+                <td class="px-0.5">{{ _self.inp('280', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.inp('280_n1', data, {}) }}</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Produits exceptionnels <span class="text-slate-400 text-[10px]">(IV)</span> <span class="text-slate-300 text-[10px]">290</span></td>
+                <td class="px-0.5">{{ _self.inp('290', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.inp('290_n1', data, {}) }}</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Charges financieres <span class="text-slate-400 text-[10px]">(V)</span> <span class="text-slate-300 text-[10px]">294</span></td>
+                <td class="px-0.5">{{ _self.inp('294', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.inp('294_n1', data, {}) }}</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Charges exceptionnelles <span class="text-slate-400 text-[10px]">(VI)</span> <span class="text-slate-300 text-[10px]">300</span></td>
+                <td class="px-0.5">{{ _self.inp('300', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.inp('300_n1', data, {}) }}</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Impots sur les benefices <span class="text-slate-400 text-[10px]">(VII)</span> <span class="text-slate-300 text-[10px]">306</span></td>
+                <td class="px-0.5">{{ _self.inp('306', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.inp('306_n1', data, {}) }}</td>
+            </tr>
+
+            {# 2 – Bénéfice ou perte #}
+            <tr class="bg-emerald-50 border-t-2 border-emerald-200">
+                <td class="px-3 py-2 text-xs font-black text-emerald-800">2 &ndash; BENEFICE OU PERTE (I+III+IV) &ndash; (II+V+VI+VII) <span class="text-slate-400 text-[10px]">310</span></td>
+                <td class="px-0.5">{{ _self.ro('310') }}</td>
+                <td class="px-0.5">{{ _self.ro('310_n1') }}</td>
+            </tr>
+
+        </tbody>
+    </table>
+    </div>
 </div>
+
+{# ═══════════════════ B – RESULTAT FISCAL ═══════════════════ #}
+<div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
+    <div class="px-4 py-2 bg-slate-50 border-b border-slate-200">
+        <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">B &ndash; Resultat fiscal</span>
+    </div>
+
+    <div class="overflow-x-auto">
+    <table class="compta-table w-full border-collapse min-w-[640px]">
+        <thead>
+            <tr class="bg-slate-100 border-b border-slate-200">
+                <th class="text-left px-3 py-2 text-[11px] font-semibold text-slate-500 uppercase tracking-wider w-[55%]"></th>
+                <th class="text-center px-1 py-2 text-[11px] font-semibold text-slate-500 w-[22%]">Col. 1</th>
+                <th class="text-center px-1 py-2 text-[11px] font-semibold text-slate-500 w-[22%]">Col. 2</th>
+            </tr>
+        </thead>
+        <tbody>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Reporter le benefice comptable col. 1, le deficit comptable col. 2 <span class="text-slate-300 text-[10px]">312/314</span></td>
+                <td class="px-0.5">{{ _self.ro('312') }}</td>
+                <td class="px-0.5">{{ _self.ro('314') }}</td>
+            </tr>
+
+            {# ── Réintégrations ── #}
+            <tr class="bg-indigo-50/60 border-t border-indigo-100">
+                <td colspan="3" class="px-3 py-1 text-[11px] font-bold text-indigo-700 uppercase tracking-wider">Reintegrations</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Remunerations et avantages personnels non deductibles <span class="text-slate-300 text-[10px]">316</span></td>
+                <td class="px-0.5">{{ _self.inp('316', data, {}) }}</td>
+                <td></td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Amortissements excedentaires et autres amort. non deductibles <span class="text-slate-300 text-[10px]">318</span></td>
+                <td class="px-0.5">{{ _self.inp('318', data, {}) }}</td>
+                <td></td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Provisions non deductibles <span class="text-slate-300 text-[10px]">322</span></td>
+                <td class="px-0.5">{{ _self.inp('322', data, {}) }}</td>
+                <td></td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Impots et taxes non deductibles <span class="text-slate-300 text-[10px]">324</span></td>
+                <td class="px-0.5">{{ _self.inp('324', data, {}) }}</td>
+                <td></td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Divers <span class="text-slate-300 text-[10px]">330</span></td>
+                <td class="px-0.5">{{ _self.inp('330', data, {}) }}</td>
+                <td></td>
+            </tr>
+            <tr class="border-t border-slate-50">
+                <td class="px-3 py-0.5 text-[10px] text-slate-400 pl-6">dont interets excedentaires des comptes courants d'associes <span class="text-slate-300">247</span></td>
+                <td class="px-0.5">{{ _self.inp('247', data, {}) }}</td>
+                <td></td>
+            </tr>
+            <tr class="border-t border-slate-50">
+                <td class="px-3 py-0.5 text-[10px] text-slate-400 pl-6">dont ecarts de valeurs liquidatives sur OPCVM <span class="text-slate-300">248</span></td>
+                <td class="px-0.5">{{ _self.inp('248', data, {}) }}</td>
+                <td></td>
+            </tr>
+
+            {# ── Déductions ── #}
+            <tr class="bg-indigo-50/60 border-t border-indigo-100">
+                <td colspan="3" class="px-3 py-1 text-[11px] font-bold text-indigo-700 uppercase tracking-wider">Deductions</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Exonerations ou abattements sur le benefice <span class="text-slate-300 text-[10px]">342</span></td>
+                <td></td>
+                <td class="px-0.5">{{ _self.inp('342', data, {}) }}</td>
+            </tr>
+            <tr class="border-t border-slate-50">
+                <td class="px-3 py-0.5 text-[10px] text-slate-400 pl-6">dont reprise d'entreprises en difficultes <span class="text-slate-300">981</span></td>
+                <td></td>
+                <td class="px-0.5">{{ _self.inp('981', data, {}) }}</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Divers <span class="text-slate-300 text-[10px]">350</span></td>
+                <td></td>
+                <td class="px-0.5">{{ _self.inp('350', data, {}) }}</td>
+            </tr>
+            <tr class="border-t border-slate-50">
+                <td class="px-3 py-0.5 text-[10px] text-slate-400 pl-6">dont investissements outre-mer <span class="text-slate-300">344</span></td>
+                <td></td>
+                <td class="px-0.5">{{ _self.inp('344', data, {}) }}</td>
+            </tr>
+            <tr class="border-t border-slate-50">
+                <td class="px-3 py-0.5 text-[10px] text-slate-400 pl-6">dont creance due au report en arriere du deficit <span class="text-slate-300">346</span></td>
+                <td></td>
+                <td class="px-0.5">{{ _self.inp('346', data, {}) }}</td>
+            </tr>
+
+            {# Résultat fiscal avant imputation #}
+            <tr class="bg-amber-50 border-t-2 border-amber-200">
+                <td class="px-3 py-1.5 text-xs font-bold text-amber-800">RESULTAT FISCAL AVANT IMPUTATION DES DEFICITS ANTERIEURS <span class="text-slate-400 text-[10px]">352/354</span></td>
+                <td class="px-0.5">{{ _self.ro('352') }}</td>
+                <td class="px-0.5">{{ _self.ro('354') }}</td>
+            </tr>
+
+            {# ── Déficits ── #}
+            <tr class="bg-indigo-50/60 border-t border-indigo-100">
+                <td colspan="3" class="px-3 py-1 text-[11px] font-bold text-indigo-700 uppercase tracking-wider">Deficits</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Deficit de l'exercice reporte en arriere (IS seulement) <span class="text-slate-300 text-[10px]">356</span></td>
+                <td class="px-0.5">{{ _self.inp('356', data, {}) }}</td>
+                <td></td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Deficits anterieurs reportables (IS seulement) <span class="text-slate-300 text-[10px]">360</span></td>
+                <td></td>
+                <td class="px-0.5">{{ _self.inp('360', data, {}) }}</td>
+            </tr>
+
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-1 text-xs text-slate-600">Amortissements reputes differes crees (col. 1) ou imputes (col. 2) <span class="text-slate-300 text-[10px]">366/368</span></td>
+                <td class="px-0.5">{{ _self.inp('366', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.inp('368', data, {}) }}</td>
+            </tr>
+
+            {# Résultat fiscal après imputation #}
+            <tr class="bg-emerald-50 border-t-2 border-emerald-200">
+                <td class="px-3 py-2 text-xs font-black text-emerald-800">RESULTAT FISCAL APRES IMPUTATION DES DEFICITS <span class="text-slate-400 text-[10px]">370/372</span></td>
+                <td class="px-0.5">{{ _self.ro('370') }}</td>
+                <td class="px-0.5">{{ _self.ro('372') }}</td>
+            </tr>
+
+        </tbody>
+    </table>
+    </div>
+</div>
+
+{# ═══════════════════ INFORMATIONS COMPLEMENTAIRES ═══════════════════ #}
+<div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6 px-5 py-4">
+    <h3 class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-3">Informations complementaires</h3>
+    <div class="renvois-grid grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-xs">
+        <div class="flex items-center gap-2">
+            <span class="text-slate-600 flex-1">Primes et cotisations complementaires facultatives</span>
+            <span class="text-slate-300 text-[10px] shrink-0">381</span>
+            <div class="w-24 shrink-0">
+                <input type="text" inputmode="numeric" name="fields[381]" id="c381"
+                       value="{{ data['381']|default('') }}"
+                       class="w-full text-right tabular-nums text-xs px-2 py-1 border-0 bg-transparent focus:bg-indigo-50 focus:outline-none" autocomplete="off">
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="text-slate-600 flex-1">Exonerations ou abattements entreprises nouvelles ou ZFU</span>
+            <span class="text-slate-300 text-[10px] shrink-0">382</span>
+            <div class="w-24 shrink-0">
+                <input type="text" inputmode="numeric" name="fields[382]" id="c382"
+                       value="{{ data['382']|default('') }}"
+                       class="w-full text-right tabular-nums text-xs px-2 py-1 border-0 bg-transparent focus:bg-indigo-50 focus:outline-none" autocomplete="off">
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="text-slate-600 flex-1">Montant de la TVA collectee</span>
+            <span class="text-slate-300 text-[10px] shrink-0">374</span>
+            <div class="w-24 shrink-0">
+                <input type="text" inputmode="numeric" name="fields[374]" id="c374"
+                       value="{{ data['374']|default('') }}"
+                       class="w-full text-right tabular-nums text-xs px-2 py-1 border-0 bg-transparent focus:bg-indigo-50 focus:outline-none" autocomplete="off">
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="text-slate-600 flex-1">Effectif moyen du personnel</span>
+            <span class="text-slate-300 text-[10px] shrink-0">376</span>
+            <div class="w-24 shrink-0">
+                <input type="text" inputmode="numeric" name="fields[376]" id="c376"
+                       value="{{ data['376']|default('') }}"
+                       class="w-full text-right tabular-nums text-xs px-2 py-1 border-0 bg-transparent focus:bg-indigo-50 focus:outline-none" autocomplete="off">
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="text-slate-600 flex-1">Montant de la TVA deductible sur biens et services</span>
+            <span class="text-slate-300 text-[10px] shrink-0">378</span>
+            <div class="w-24 shrink-0">
+                <input type="text" inputmode="numeric" name="fields[378]" id="c378"
+                       value="{{ data['378']|default('') }}"
+                       class="w-full text-right tabular-nums text-xs px-2 py-1 border-0 bg-transparent focus:bg-indigo-50 focus:outline-none" autocomplete="off">
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="text-slate-600 flex-1">Cotisations personnelles obligatoires de l'exploitant</span>
+            <span class="text-slate-300 text-[10px] shrink-0">380</span>
+            <div class="w-24 shrink-0">
+                <input type="text" inputmode="numeric" name="fields[380]" id="c380"
+                       value="{{ data['380']|default('') }}"
+                       class="w-full text-right tabular-nums text-xs px-2 py-1 border-0 bg-transparent focus:bg-indigo-50 focus:outline-none" autocomplete="off">
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="text-slate-600 flex-1">N&deg; du centre de gestion agree</span>
+            <span class="text-slate-300 text-[10px] shrink-0">388</span>
+            <div class="w-24 shrink-0">
+                <input type="text" name="fields[388]" id="c388"
+                       value="{{ data['388']|default('') }}"
+                       class="w-full text-right tabular-nums text-xs px-2 py-1 border-0 bg-transparent focus:bg-indigo-50 focus:outline-none" autocomplete="off">
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="text-slate-600 flex-1">Prelevements personnels de marchandises</span>
+            <span class="text-slate-300 text-[10px] shrink-0">399</span>
+            <div class="w-24 shrink-0">
+                <input type="text" inputmode="numeric" name="fields[399]" id="c399"
+                       value="{{ data['399']|default('') }}"
+                       class="w-full text-right tabular-nums text-xs px-2 py-1 border-0 bg-transparent focus:bg-indigo-50 focus:outline-none" autocomplete="off">
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Bouton enregistrer #}
+<div class="flex justify-end">
+    <button type="submit"
+            class="px-6 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition shadow-sm">
+        Enregistrer le compte de resultat
+    </button>
+</div>
+
+</form>
+
+{# ═══════════════════ JAVASCRIPT ═══════════════════ #}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var form = document.getElementById('crForm');
+
+    function v(id) {
+        var el = document.getElementById('c' + id);
+        return el ? (parseFloat(el.value.replace(/\s/g, '').replace(',', '.')) || 0) : 0;
+    }
+
+    function s(id, val) {
+        var el = document.getElementById('c' + id);
+        if (el) el.value = val !== 0 ? Math.round(val).toString() : '';
+    }
+
+    function sum(keys) {
+        var total = 0;
+        for (var i = 0; i < keys.length; i++) total += v(keys[i]);
+        return total;
+    }
+
+    function compute() {
+        // ── A – Résultat comptable ──
+
+        // Total produits exploitation (I)
+        var produits = ['210','214','218','222','224','226','230'];
+        s('232', sum(produits));
+        s('232_n1', sum(produits.map(function(k) { return k + '_n1'; })));
+
+        // Total charges exploitation (II)
+        var charges = ['234','236','238','240','242','244','250','252','254','256','262'];
+        s('264', sum(charges));
+        s('264_n1', sum(charges.map(function(k) { return k + '_n1'; })));
+
+        // 1 – Résultat exploitation (I – II)
+        s('270', v('232') - v('264'));
+        s('270_n1', v('232_n1') - v('264_n1'));
+
+        // 2 – Bénéfice ou perte = (I + III + IV) – (II + V + VI + VII)
+        var benefice = (v('232') + v('280') + v('290')) - (v('264') + v('294') + v('300') + v('306'));
+        s('310', benefice);
+        var beneficeN1 = (v('232_n1') + v('280_n1') + v('290_n1')) - (v('264_n1') + v('294_n1') + v('300_n1') + v('306_n1'));
+        s('310_n1', beneficeN1);
+
+        // ── B – Résultat fiscal ──
+
+        // Reporter bénéfice/déficit comptable
+        if (benefice >= 0) {
+            s('312', benefice);
+            s('314', 0);
+        } else {
+            s('312', 0);
+            s('314', -benefice);
+        }
+
+        // Résultat fiscal avant imputation
+        var reintegrations = sum(['316','318','322','324','330']);
+        var deductions = sum(['342','350']);
+        var rfAvant = v('312') - v('314') + reintegrations - deductions;
+        if (rfAvant >= 0) {
+            s('352', rfAvant);
+            s('354', 0);
+        } else {
+            s('352', 0);
+            s('354', -rfAvant);
+        }
+
+        // Résultat fiscal après imputation
+        var rfApres = (v('352') - v('354')) - v('356') - v('360') + v('366') - v('368');
+        if (rfApres >= 0) {
+            s('370', rfApres);
+            s('372', 0);
+        } else {
+            s('370', 0);
+            s('372', -rfApres);
+        }
+    }
+
+    compute();
+    form.addEventListener('input', compute);
+});
+</script>
+
 {% endblock %}
