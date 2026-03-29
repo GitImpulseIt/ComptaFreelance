@@ -208,6 +208,26 @@ class ClotureController
             $result['218'] = (string)(int)round($services);
         }
 
+        // Autres charges externes (comptes 61 et 62)
+        $stmt = $this->pdo->prepare(
+            "SELECT COALESCE(SUM(lc.montant_ht), 0)
+             FROM lignes_comptables lc
+             JOIN transactions_bancaires t ON t.id = lc.transaction_bancaire_id
+             JOIN comptes_bancaires cb ON cb.id = t.compte_bancaire_id
+             WHERE cb.entreprise_id = :eid
+               AND t.date >= :debut AND t.date <= :fin
+               AND (lc.compte LIKE '61%' OR lc.compte LIKE '62%')"
+        );
+        $stmt->execute([
+            'eid' => $entrepriseId,
+            'debut' => $annee . '-01-01',
+            'fin' => $annee . '-12-31',
+        ]);
+        $chargesExternes = (float)$stmt->fetchColumn();
+        if ($chargesExternes != 0) {
+            $result['242'] = (string)(int)round($chargesExternes);
+        }
+
         return $result;
     }
 
