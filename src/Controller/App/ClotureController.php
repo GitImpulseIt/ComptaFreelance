@@ -414,12 +414,9 @@ class ClotureController
                 $coeff = (float) ($immo['coeff_degressif'] ?? 1.25);
                 $tauxDeg = (1 / $duree) * $coeff;
                 $vnc = $valeur;
-                $dureeRestante = $duree;
 
-                for ($a = $anneeAcq; $a <= $annee && $vnc > 0; $a++) {
-                    $tauxLinRestant = $dureeRestante > 0 ? 1 / $dureeRestante : 1;
-                    $taux = max($tauxDeg, $tauxLinRestant);
-                    $dot = round($vnc * $taux, 2);
+                for ($a = $anneeAcq; $a <= $annee && $vnc > 0.01; $a++) {
+                    $dot = round($vnc * $tauxDeg, 2);
                     if ($a === $anneeAcq) {
                         $dot = round($dot * $prorata1, 2);
                     }
@@ -431,7 +428,6 @@ class ClotureController
                         $dotationN = $dot;
                     }
                     $vnc = round($valeur - $cumulFinN1 - ($a >= $annee ? $dotationN : 0), 2);
-                    $dureeRestante--;
                 }
             } else {
                 // Linéaire

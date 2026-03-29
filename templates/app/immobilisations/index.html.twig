@@ -48,7 +48,17 @@
         <tbody class="divide-y divide-slate-100">
             {% for immo in immobilisations %}
             <tr class="hover:bg-slate-50 transition">
-                <td class="py-3 px-4 font-medium text-slate-800">{{ immo.designation }}</td>
+                <td class="py-3 px-4 font-medium text-slate-800">
+                    {% if immo.amortissement.annuites|default([])|length > 0 %}
+                    <button type="button" onclick="this.closest('tr').nextElementSibling.classList.toggle('hidden')"
+                            class="inline-flex items-center gap-1.5 group">
+                        <svg class="w-3.5 h-3.5 text-slate-400 group-hover:text-indigo-500 transition transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        {{ immo.designation }}
+                    </button>
+                    {% else %}
+                    {{ immo.designation }}
+                    {% endif %}
+                </td>
                 <td class="py-3 px-3 text-slate-500 font-mono text-xs">{{ immo.compte }}</td>
                 <td class="py-3 px-3 text-slate-600">{{ immo.date_acquisition|date('d/m/Y') }}</td>
                 <td class="py-3 px-3 text-right tabular-nums">{{ immo.valeur_acquisition|number_format(2, ',', ' ') }} &euro;</td>
@@ -71,6 +81,33 @@
                     </a>
                 </td>
             </tr>
+            {# Détail des annuités (dépliable) #}
+            {% if immo.amortissement.annuites|default([])|length > 0 %}
+            <tr class="hidden">
+                <td colspan="10" class="px-4 py-3 bg-slate-50/80">
+                    <table class="w-full text-xs">
+                        <thead>
+                            <tr class="text-slate-400 uppercase tracking-wider">
+                                <th class="text-left py-1 px-2 font-medium">Année</th>
+                                <th class="text-right py-1 px-2 font-medium">Dotation</th>
+                                <th class="text-right py-1 px-2 font-medium">Cumul</th>
+                                <th class="text-right py-1 px-2 font-medium">VNC</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            {% for a in immo.amortissement.annuites %}
+                            <tr class="{{ a.annee == 'now'|date('Y') ? 'font-semibold text-indigo-700' : 'text-slate-600' }}">
+                                <td class="py-1 px-2">{{ a.annee }}</td>
+                                <td class="py-1 px-2 text-right tabular-nums">{{ a.dotation|number_format(2, ',', ' ') }} &euro;</td>
+                                <td class="py-1 px-2 text-right tabular-nums">{{ a.cumul|number_format(2, ',', ' ') }} &euro;</td>
+                                <td class="py-1 px-2 text-right tabular-nums">{{ a.vnc|number_format(2, ',', ' ') }} &euro;</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+            {% endif %}
             {% endfor %}
         </tbody>
     </table>

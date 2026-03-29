@@ -170,17 +170,25 @@ class ImmobilisationController
         }
 
         // Amortissement linéaire
-        $annuite = round($valeur / $duree, 2);
+        $annuiteBase = round($valeur / $duree, 2);
         $prorata1 = (12 - $moisDebut + 1) / 12;
         $cumul = 0;
+        $annuite = 0;
+        $annuites = [];
 
-        if ($anneeNow >= $anneeDebut) {
-            $cumul = round($annuite * $prorata1, 2);
-            $anneesCompletes = max(0, $anneeNow - $anneeDebut - 1);
-            $cumul += $annuite * $anneesCompletes;
-            if ($anneeNow > $anneeDebut) {
-                $moisNow = (int) $now->format('n');
-                $cumul += round($annuite * $moisNow / 12, 2);
+        for ($a = $anneeDebut; $cumul < $valeur; $a++) {
+            $dot = $annuiteBase;
+            if ($a === $anneeDebut) {
+                $dot = round($annuiteBase * $prorata1, 2);
+            }
+            $dot = min($dot, round($valeur - $cumul, 2));
+            $cumul += $dot;
+            $vnc = round($valeur - $cumul, 2);
+            $annuite = $dot;
+            $annuites[] = ['annee' => $a, 'dotation' => $dot, 'cumul' => round($cumul, 2), 'vnc' => max(0, $vnc)];
+
+            if ($a >= $anneeNow) {
+                break;
             }
         }
 
@@ -192,28 +200,31 @@ class ImmobilisationController
             $termine = true;
         }
 
-        return ['annuite' => $annuite, 'cumul' => round($cumul, 2), 'vnc' => $vnc, 'termine' => $termine];
+        // Compléter les annuités futures
+        if (!$termine && $a <= $anneeDebut + $duree + 1) {
+            $tmpCumul = $cumul;
+            for ($af = $a + 1; $tmpCumul < $valeur; $af++) {
+                $dot = min($annuiteBase, round($valeur - $tmpCumul, 2));
+                $tmpCumul += $dot;
+                $annuites[] = ['annee' => $af, 'dotation' => $dot, 'cumul' => round($tmpCumul, 2), 'vnc' => max(0, round($valeur - $tmpCumul, 2))];
+            }
+        }
+
+        return ['annuite' => $annuite, 'cumul' => round($cumul, 2), 'vnc' => max(0, $vnc), 'termine' => $termine, 'annuites' => $annuites];
     }
 
     private function calculerDegressif(float $valeur, int $duree, float $coeff, int $moisDebut, int $anneeDebut, int $anneeNow, array $immo): array
     {
-        $tauxLineaire = 1 / $duree;
-        $tauxDegressif = $tauxLineaire * $coeff;
+        $tauxDegressif = (1 / $duree) * $coeff;
 
         $vnc = $valeur;
         $cumul = 0;
         $annuite = 0;
-        $dureeRestante = $duree;
+        $annuites = [];
 
-        for ($a = $anneeDebut; $a <= $anneeDebut + $duree && $vnc > 0; $a++) {
-            // Taux linéaire sur durée restante
-            $tauxLinRestant = $dureeRestante > 0 ? 1 / $dureeRestante : 1;
+        for ($a = $anneeDebut; $vnc > 0.01; $a++) {
+            $dotation = round($vnc * $tauxDegressif, 2);
 
-            // On bascule en linéaire quand c'est plus avantageux
-            $taux = max($tauxDegressif, $tauxLinRestant);
-            $dotation = round($vnc * $taux, 2);
-
-            // Prorata la première année (mois de mise en service)
             if ($a === $anneeDebut) {
                 $prorata = (12 - $moisDebut + 1) / 12;
                 $dotation = round($dotation * $prorata, 2);
@@ -223,19 +234,32 @@ class ImmobilisationController
             $cumul += $dotation;
             $vnc = round($valeur - $cumul, 2);
             $annuite = $dotation;
-            $dureeRestante--;
+            $annuites[] = ['annee' => $a, 'dotation' => $dotation, 'cumul' => round($cumul, 2), 'vnc' => max(0, $vnc)];
 
             if ($a >= $anneeNow) {
                 break;
             }
         }
 
-        $termine = $vnc <= 0;
+        $termine = $vnc <= 0.01;
         if ($immo['cession_date']) {
             $termine = true;
         }
 
-        return ['annuite' => $annuite, 'cumul' => round($cumul, 2), 'vnc' => max(0, $vnc), 'termine' => $termine];
+        // Compléter les annuités futures
+        if (!$termine) {
+            $tmpVnc = $vnc;
+            $tmpCumul = $cumul;
+            for ($af = $a + 1; $tmpVnc > 0.01; $af++) {
+                $dot = round($tmpVnc * $tauxDegressif, 2);
+                $dot = min($dot, $tmpVnc);
+                $tmpCumul += $dot;
+                $tmpVnc = round($valeur - $tmpCumul, 2);
+                $annuites[] = ['annee' => $af, 'dotation' => $dot, 'cumul' => round($tmpCumul, 2), 'vnc' => max(0, $tmpVnc)];
+            }
+        }
+
+        return ['annuite' => $annuite, 'cumul' => round($cumul, 2), 'vnc' => max(0, $vnc), 'termine' => $termine, 'annuites' => $annuites];
     }
 
 }
