@@ -437,8 +437,7 @@
 {# Boutons d'action #}
 <div class="flex justify-end gap-3">
     <button type="button" id="btnReset"
-            class="px-5 py-2.5 border border-slate-300 text-slate-400 text-sm font-medium rounded-lg transition shadow-sm cursor-not-allowed"
-            disabled>
+            class="px-5 py-2.5 border border-slate-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 transition shadow-sm">
         Réinitialiser
     </button>
     <button type="button" id="btnEdit"
@@ -560,16 +559,6 @@ document.addEventListener('DOMContentLoaded', function() {
         btnSave.classList.toggle('hidden', !on);
     }
 
-    function enableReset(on) {
-        dirty = on;
-        btnReset.disabled = !on;
-        if (on) {
-            btnReset.className = 'px-5 py-2.5 border border-slate-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 transition shadow-sm';
-        } else {
-            btnReset.className = 'px-5 py-2.5 border border-slate-300 text-slate-400 text-sm font-medium rounded-lg transition shadow-sm cursor-not-allowed';
-        }
-    }
-
     btnEdit.addEventListener('click', function() { setEditing(true); });
 
     btnReset.addEventListener('click', function() {
@@ -577,17 +566,10 @@ document.addEventListener('DOMContentLoaded', function() {
             allFields[i].value = initialValues[allFields[i].id] || '';
         }
         compute();
-        enableReset(false);
         setEditing(false);
     });
 
-    // Dès qu'un champ est modifié → activer Réinitialiser
-    form.addEventListener('input', function(e) {
-        compute();
-        if (e.target && e.target.classList && e.target.classList.contains('cr-field')) {
-            enableReset(true);
-        }
-    });
+    form.addEventListener('input', function() { compute(); });
 });
 </script>
 
