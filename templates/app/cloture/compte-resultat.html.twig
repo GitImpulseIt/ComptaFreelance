@@ -531,19 +531,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    compute();
-    form.addEventListener('input', compute);
-
     // ── Mode lecture / édition ──
     var fields = form.querySelectorAll('.cr-field');
     var btnEdit = document.getElementById('btnEdit');
     var btnSave = document.getElementById('btnSave');
     var btnReset = document.getElementById('btnReset');
-    var editing = false;
-    var modified = false;
 
     function setEditing(on) {
-        editing = on;
         fields.forEach(function(f) {
             if (on) {
                 f.removeAttribute('readonly');
@@ -558,30 +552,31 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function checkModified() {
-        modified = false;
+        var modified = false;
         fields.forEach(function(f) {
-            if (f.value !== (f.dataset.initial || '')) modified = true;
+            if (f.value !== (f.getAttribute('data-initial') || '')) modified = true;
         });
         btnReset.disabled = !modified;
-        if (modified) {
-            btnReset.classList.remove('text-slate-400', 'cursor-not-allowed');
-            btnReset.classList.add('text-slate-700', 'hover:bg-slate-50');
-        } else {
-            btnReset.classList.add('text-slate-400', 'cursor-not-allowed');
-            btnReset.classList.remove('text-slate-700', 'hover:bg-slate-50');
-        }
+        btnReset.className = modified
+            ? 'px-5 py-2.5 border border-slate-300 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 transition shadow-sm'
+            : 'px-5 py-2.5 border border-slate-300 text-slate-400 text-sm font-medium rounded-lg transition shadow-sm cursor-not-allowed';
     }
+
+    compute();
+
+    form.addEventListener('input', function() {
+        compute();
+        checkModified();
+    });
 
     btnEdit.addEventListener('click', function() { setEditing(true); });
 
     btnReset.addEventListener('click', function() {
-        fields.forEach(function(f) { f.value = f.dataset.initial || ''; });
+        fields.forEach(function(f) { f.value = f.getAttribute('data-initial') || ''; });
         compute();
         checkModified();
         setEditing(false);
     });
-
-    form.addEventListener('input', function() { checkModified(); });
 });
 </script>
 
