@@ -96,7 +96,7 @@ class BanqueController
             fputcsv($out, [
                 $row['date'],
                 $row['libelle'],
-                $row['montant'],
+                $row['type'] === 'debit' ? '-' . $row['montant'] : $row['montant'],
                 $row['type'],
                 $row['compte_bancaire'],
                 $row['code_comptable'] ?? '',
