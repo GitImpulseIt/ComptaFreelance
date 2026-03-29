@@ -66,8 +66,8 @@ class ClotureController
             $computedN1['084'] = (string)(int)round($rawN1['084']);
         }
 
-        // Passif N-1 (capital social, emprunts)
-        foreach (['120', '156'] as $case) {
+        // Passif N-1
+        foreach (['120', '136', '156', '172'] as $case) {
             if (($rawN1[$case] ?? 0) != 0) {
                 $computedN1[$case] = (string)(int)round($rawN1[$case]);
             }
@@ -320,6 +320,39 @@ class ClotureController
         $stmt->execute(['eid' => $entrepriseId, 'fin' => $annee . '-12-31']);
         $emprunts = (float)$stmt->fetchColumn();
 
+        // Autres dettes (compte 44 = TVA à décaisser, etc.)
+        $stmt = $this->pdo->prepare(
+            "SELECT COALESCE(SUM(lc.montant_ht), 0)
+             FROM lignes_comptables lc
+             JOIN transactions_bancaires t ON t.id = lc.transaction_bancaire_id
+             JOIN comptes_bancaires cb ON cb.id = t.compte_bancaire_id
+             WHERE cb.entreprise_id = :eid
+               AND lc.compte LIKE '44%'
+               AND lc.type = 'CRD'
+               AND t.date <= :fin"
+        );
+        $stmt->execute(['eid' => $entrepriseId, 'fin' => $annee . '-12-31']);
+        $autresDettes = (float)$stmt->fetchColumn();
+
+        // Résultat de l'exercice = produits (comptes 7x CRD) - charges (comptes 6x DBT)
+        $stmt = $this->pdo->prepare(
+            "SELECT
+               COALESCE(SUM(CASE WHEN lc.compte LIKE '7%' AND lc.type = 'CRD' THEN lc.montant_ht ELSE 0 END), 0)
+             - COALESCE(SUM(CASE WHEN lc.compte LIKE '6%' AND lc.type = 'DBT' THEN lc.montant_ht ELSE 0 END), 0)
+             AS resultat
+             FROM lignes_comptables lc
+             JOIN transactions_bancaires t ON t.id = lc.transaction_bancaire_id
+             JOIN comptes_bancaires cb ON cb.id = t.compte_bancaire_id
+             WHERE cb.entreprise_id = :eid
+               AND t.date >= :debut AND t.date <= :fin"
+        );
+        $stmt->execute([
+            'eid' => $entrepriseId,
+            'debut' => $annee . '-01-01',
+            'fin' => $annee . '-12-31',
+        ]);
+        $resultat = (float)$stmt->fetchColumn();
+
         return [
             '010' => $fc['brut'],  '012' => $fc['amort'],
             '014' => $ai['brut'],  '016' => $ai['amort'],
@@ -327,7 +360,9 @@ class ClotureController
             '040' => $fi['brut'],  '042' => $fi['amort'],
             '084' => $dispo,
             '120' => $capitalSocial,
+            '136' => $resultat,
             '156' => $emprunts,
+            '172' => $autresDettes,
         ];
     }
 
