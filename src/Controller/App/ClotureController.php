@@ -66,8 +66,8 @@ class ClotureController
             $computedN1['084'] = (string)(int)round($rawN1['084']);
         }
 
-        // Passif N-1
-        foreach (['120', '136', '156', '172'] as $case) {
+        // Passif et créances N-1
+        foreach (['072', '120', '136', '156', '172', '199'] as $case) {
             if (($rawN1[$case] ?? 0) != 0) {
                 $computedN1[$case] = (string)(int)round($rawN1[$case]);
             }
@@ -306,19 +306,25 @@ class ClotureController
         $augmentationCapital = (float)$stmt->fetchColumn();
         $capitalSocial = $capitalN1 + $augmentationCapital;
 
-        // Emprunts et dettes assimilées (compte 455 au débit)
+        // Compte courant d'associé (455) : solde = débits - crédits
         $stmt = $this->pdo->prepare(
-            "SELECT COALESCE(SUM(lc.montant_ht), 0)
+            "SELECT
+               COALESCE(SUM(CASE WHEN lc.type = 'DBT' THEN lc.montant_ht ELSE 0 END), 0)
+             - COALESCE(SUM(CASE WHEN lc.type = 'CRD' THEN lc.montant_ht ELSE 0 END), 0)
              FROM lignes_comptables lc
              JOIN transactions_bancaires t ON t.id = lc.transaction_bancaire_id
              JOIN comptes_bancaires cb ON cb.id = t.compte_bancaire_id
              WHERE cb.entreprise_id = :eid
                AND lc.compte LIKE '455%'
-               AND lc.type = 'DBT'
                AND t.date <= :fin"
         );
         $stmt->execute(['eid' => $entrepriseId, 'fin' => $annee . '-12-31']);
-        $emprunts = (float)$stmt->fetchColumn();
+        $solde455 = (float)$stmt->fetchColumn();
+
+        // Solde débiteur → autres créances (072) + renvoi comptes courants débiteurs (199)
+        // Solde créditeur → emprunts et dettes assimilées (156)
+        $autresCreances = $solde455 > 0 ? $solde455 : 0.0;
+        $emprunts = $solde455 < 0 ? -$solde455 : 0.0;
 
         // Autres dettes (compte 44 = TVA à décaisser, etc.)
         $stmt = $this->pdo->prepare(
@@ -358,11 +364,13 @@ class ClotureController
             '014' => $ai['brut'],  '016' => $ai['amort'],
             '028' => $co['brut'],  '030' => $co['amort'],
             '040' => $fi['brut'],  '042' => $fi['amort'],
+            '072' => $autresCreances,
             '084' => $dispo,
             '120' => $capitalSocial,
             '136' => $resultat,
             '156' => $emprunts,
             '172' => $autresDettes,
+            '199' => $autresCreances,
         ];
     }
 

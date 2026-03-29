@@ -127,10 +127,10 @@
 
             <tr class="border-t border-slate-100 hover:bg-slate-50/50">
                 <td class="px-3 py-1 text-xs text-slate-600"><span class="text-slate-400">Créances &middot; </span>Autres <span class="text-slate-400 text-[10px]">(3)</span> <span class="text-slate-300 text-[10px]">072</span></td>
-                <td class="px-0.5">{{ _self.inp('072', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.inp('072', data, computed) }}</td>
                 <td class="px-0.5">{{ _self.inp('074', data, {}) }}</td>
                 <td class="px-0.5">{{ _self.ro('net_072') }}</td>
-                <td class="px-0.5">{{ _self.inp('072_n1', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.inp('072_n1', data, computed_n1, '072') }}</td>
             </tr>
 
             <tr class="border-t border-slate-100 hover:bg-slate-50/50">
@@ -341,7 +341,7 @@
             </tr>
             <tr class="border-t border-slate-100 hover:bg-slate-50/50">
                 <td class="px-3 py-1 text-xs text-slate-600"><span class="text-slate-400">(3)</span> Dont comptes courants d'associés débiteurs <span class="text-slate-300 text-[10px]">199</span></td>
-                <td class="px-0.5">{{ _self.inp('199', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.inp('199', data, computed) }}</td>
             </tr>
             <tr class="border-t border-slate-100 hover:bg-slate-50/50">
                 <td class="px-3 py-1 text-xs text-slate-600"><span class="text-slate-400">(4)</span> Dont dettes à plus d'un an <span class="text-slate-300 text-[10px]">195</span></td>
