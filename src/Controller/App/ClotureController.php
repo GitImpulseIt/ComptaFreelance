@@ -81,27 +81,8 @@ class ClotureController
         $entrepriseId = $this->auth->getEntrepriseId();
         $annee = isset($_GET['annee']) ? (int) $_GET['annee'] : (int) date('Y') - 1;
 
-        // Dotations aux amortissements depuis les immobilisations
-        $computed = [];
-        $computedN1 = [];
-
-        $immos = $this->getImmobilisationsAvecAmortissement($entrepriseId, $annee);
-        $dotation = 0.0;
-        foreach ($immos as $immo) {
-            $dotation += $immo['dotation'];
-        }
-        if ($dotation != 0) {
-            $computed['254'] = (string)(int)round($dotation);
-        }
-
-        $immosN1 = $this->getImmobilisationsAvecAmortissement($entrepriseId, $annee - 1);
-        $dotationN1 = 0.0;
-        foreach ($immosN1 as $immo) {
-            $dotationN1 += $immo['dotation'];
-        }
-        if ($dotationN1 != 0) {
-            $computedN1['254'] = (string)(int)round($dotationN1);
-        }
+        $computed = $this->computeCompteResultatRaw($entrepriseId, $annee);
+        $computedN1 = $this->computeCompteResultatRaw($entrepriseId, $annee - 1);
 
         $this->renderTab('compte-resultat', [
             'computed' => $computed,
@@ -175,6 +156,59 @@ class ClotureController
             'data' => $savedData,
             'success' => isset($_GET['success']),
         ], $extraData));
+    }
+
+    private function computeCompteResultatRaw(int $entrepriseId, int $annee): array
+    {
+        $result = [];
+
+        // Dotations aux amortissements depuis les immobilisations
+        $immos = $this->getImmobilisationsAvecAmortissement($entrepriseId, $annee);
+        $dotation = 0.0;
+        foreach ($immos as $immo) {
+            $dotation += $immo['dotation'];
+        }
+        if ($dotation != 0) {
+            $result['254'] = (string)(int)round($dotation);
+        }
+
+        // Production vendue depuis les lignes comptables
+        $stmt = $this->pdo->prepare(
+            "SELECT lc.compte, SUM(lc.montant_ht) AS total
+             FROM lignes_comptables lc
+             JOIN transactions_bancaires t ON t.id = lc.transaction_bancaire_id
+             JOIN comptes_bancaires cb ON cb.id = t.compte_bancaire_id
+             WHERE cb.entreprise_id = :eid
+               AND t.date >= :debut AND t.date <= :fin
+               AND lc.compte LIKE '70%'
+             GROUP BY lc.compte"
+        );
+        $stmt->execute([
+            'eid' => $entrepriseId,
+            'debut' => $annee . '-01-01',
+            'fin' => $annee . '-12-31',
+        ]);
+        $comptes70 = $stmt->fetchAll(\PDO::FETCH_KEY_PAIR);
+
+        $biens = 0.0;    // 701-705, 709
+        $services = 0.0;  // 706-708
+        foreach ($comptes70 as $compte => $montant) {
+            $p3 = substr($compte, 0, 3);
+            if (in_array($p3, ['706', '707', '708'])) {
+                $services += (float)$montant;
+            } elseif ($p3 >= '701' && $p3 <= '705' || $p3 === '709') {
+                $biens += (float)$montant;
+            }
+        }
+
+        if ($biens != 0) {
+            $result['214'] = (string)(int)round($biens);
+        }
+        if ($services != 0) {
+            $result['218'] = (string)(int)round($services);
+        }
+
+        return $result;
     }
 
     private function computeBilanRaw(int $entrepriseId, int $annee): array

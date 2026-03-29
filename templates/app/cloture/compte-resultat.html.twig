@@ -62,14 +62,14 @@
                 <td rowspan="2" class="px-3 py-1 text-xs text-slate-400 align-middle">Production vendue</td>
                 <td class="py-1 text-xs text-slate-600">biens <span class="text-slate-300 text-[10px]">214</span></td>
                 <td class="px-0.5"><span class="text-slate-300 text-[10px] float-left ml-1">215</span>{{ _self.inp('215', data, {}) }}</td>
-                <td class="px-0.5">{{ _self.inp('214', data, {}) }}</td>
-                <td class="px-0.5">{{ _self.inp('214_n1', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.inp('214', data, computed) }}</td>
+                <td class="px-0.5">{{ _self.inp('214_n1', data, computed_n1, '214') }}</td>
             </tr>
             <tr class="border-t border-slate-100 hover:bg-slate-50/50">
                 <td class="py-1 text-xs text-slate-600">services <span class="text-slate-300 text-[10px]">218</span></td>
                 <td class="px-0.5"><span class="text-slate-300 text-[10px] float-left ml-1">217</span>{{ _self.inp('217', data, {}) }}</td>
-                <td class="px-0.5">{{ _self.inp('218', data, {}) }}</td>
-                <td class="px-0.5">{{ _self.inp('218_n1', data, {}) }}</td>
+                <td class="px-0.5">{{ _self.inp('218', data, computed) }}</td>
+                <td class="px-0.5">{{ _self.inp('218_n1', data, computed_n1, '218') }}</td>
             </tr>
 
             <tr class="border-t border-slate-100 hover:bg-slate-50/50">
