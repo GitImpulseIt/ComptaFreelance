@@ -60,6 +60,56 @@ class BanqueController
         ]);
     }
 
+    public function exportCsv(): void
+    {
+        $entrepriseId = $this->auth->getEntrepriseId();
+        $dateDebut = $_GET['date_debut'] ?? date('Y') . '-01-01';
+        $dateFin = $_GET['date_fin'] ?? date('Y-m-d');
+
+        $stmt = $this->pdo->prepare(
+            "SELECT t.date, t.libelle, t.montant, t.type,
+                    cb.nom AS compte_bancaire,
+                    lc.compte AS code_comptable, lc.montant_ht, lc.tva, lc.type AS sens
+             FROM transactions_bancaires t
+             JOIN comptes_bancaires cb ON cb.id = t.compte_bancaire_id
+             LEFT JOIN lignes_comptables lc ON lc.transaction_bancaire_id = t.id
+             WHERE cb.entreprise_id = :eid
+               AND t.date >= :debut AND t.date <= :fin
+             ORDER BY t.date, t.id, lc.id"
+        );
+        $stmt->execute([
+            'eid' => $entrepriseId,
+            'debut' => $dateDebut,
+            'fin' => $dateFin,
+        ]);
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $filename = 'operations_' . $dateDebut . '_' . $dateFin . '.csv';
+        header('Content-Type: text/csv; charset=UTF-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+
+        $out = fopen('php://output', 'w');
+        fwrite($out, "\xEF\xBB\xBF"); // BOM UTF-8 pour Excel
+        fputcsv($out, ['Date', 'Libellé', 'Montant', 'Type', 'Compte bancaire', 'Code comptable', 'Montant HT', 'TVA', 'Sens'], ';');
+
+        foreach ($rows as $row) {
+            fputcsv($out, [
+                $row['date'],
+                $row['libelle'],
+                $row['montant'],
+                $row['type'],
+                $row['compte_bancaire'],
+                $row['code_comptable'] ?? '',
+                $row['montant_ht'] ?? '',
+                $row['tva'] ?? '',
+                $row['sens'] ?? '',
+            ], ';');
+        }
+
+        fclose($out);
+        exit;
+    }
+
     public function showImport(): void
     {
         $entrepriseId = $this->auth->getEntrepriseId();

@@ -42,6 +42,7 @@ return [
 
     // App - Banque
     'GET /app/banque' => ['App\\BanqueController', 'transactions'],
+    'GET /app/banque/export-csv' => ['App\\BanqueController', 'exportCsv'],
     'GET /app/banque/import' => ['App\\BanqueController', 'showImport'],
     'POST /app/banque/import' => ['App\\BanqueController', 'import'],
     'GET /app/banque/{id}' => ['App\\BanqueController', 'show'],
