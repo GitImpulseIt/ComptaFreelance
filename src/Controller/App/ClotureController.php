@@ -193,7 +193,7 @@ class ClotureController
         $biens = 0.0;    // 701-705, 709
         $services = 0.0;  // 706-708
         foreach ($comptes70 as $compte => $montant) {
-            $p3 = substr($compte, 0, 3);
+            $p3 = substr((string)$compte, 0, 3);
             if (in_array($p3, ['706', '707', '708'])) {
                 $services += (float)$montant;
             } elseif ($p3 >= '701' && $p3 <= '705' || $p3 === '709') {
