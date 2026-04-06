@@ -13,6 +13,8 @@ use App\Repository\TransactionBancaireRepository;
 use App\Service\Banque\ImportService;
 use App\Service\Banque\ParserFactory;
 use PDO;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Twig\Environment;
 
 class BanqueController
@@ -346,6 +348,77 @@ class BanqueController
 
         header('Content-Type: application/json');
         echo json_encode(['success' => true]);
+    }
+
+    public function exportTeledec(): void
+    {
+        $entrepriseId = $this->auth->getEntrepriseId();
+        $dateDebut = $_GET['date_debut'] ?? date('Y') . '-01-01';
+        $dateFin = $_GET['date_fin'] ?? date('Y-m-d');
+
+        // Agréger les montants par compte comptable sur la période
+        $stmt = $this->pdo->prepare(
+            "SELECT lc.compte,
+                    COALESCE(SUM(CASE WHEN lc.type = 'DBT' THEN lc.montant_ht + lc.tva ELSE 0 END), 0) AS total_debit,
+                    COALESCE(SUM(CASE WHEN lc.type = 'CRD' THEN lc.montant_ht + lc.tva ELSE 0 END), 0) AS total_credit
+             FROM lignes_comptables lc
+             JOIN transactions_bancaires t ON t.id = lc.transaction_bancaire_id
+             JOIN comptes_bancaires cb ON cb.id = t.compte_bancaire_id
+             WHERE cb.entreprise_id = :eid
+               AND t.date >= :debut AND t.date <= :fin
+             GROUP BY lc.compte
+             ORDER BY lc.compte"
+        );
+        $stmt->execute([
+            'eid' => $entrepriseId,
+            'debut' => $dateDebut,
+            'fin' => $dateFin,
+        ]);
+        $balances = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Balance');
+
+        // En-tête
+        $sheet->setCellValue('A1', 'Numéro de compte');
+        $sheet->setCellValue('B1', 'Intitulé de compte (peut rester vide)');
+        $sheet->setCellValue('C1', 'Débit');
+        $sheet->setCellValue('D1', 'Crédit');
+        $sheet->setCellValue('E1', 'Solde débiteur');
+        $sheet->setCellValue('F1', 'Solde créditeur');
+
+        // Format texte pour la colonne A (numéros de compte)
+        $sheet->getStyle('A:A')->getNumberFormat()->setFormatCode('@');
+
+        // Format monétaire pour C, D, E, F
+        $euroFormat = '_-* #,##0.00\ "€"_-;\-* #,##0.00\ "€"_-;_-* "-"??\ "€"_-;_-@_-';
+
+        $row = 2;
+        foreach ($balances as $b) {
+            $debit = (float) $b['total_debit'];
+            $credit = (float) $b['total_credit'];
+
+            $sheet->setCellValueExplicit('A' . $row, $b['compte'], \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->setCellValue('B' . $row, '');
+            $sheet->setCellValue('C' . $row, $debit);
+            $sheet->setCellValue('D' . $row, $credit);
+            $sheet->setCellValue('E' . $row, "=IF(C{$row}>D{$row},C{$row}-D{$row},\"\")");
+            $sheet->setCellValue('F' . $row, "=IF(D{$row}>C{$row},D{$row}-C{$row},\"\")");
+
+            $sheet->getStyle("C{$row}:F{$row}")->getNumberFormat()->setFormatCode($euroFormat);
+
+            $row++;
+        }
+
+        $filename = 'balance-teledec_' . $dateDebut . '_' . $dateFin . '.xlsx';
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+
+        $writer = new Xlsx($spreadsheet);
+        $writer->save('php://output');
+        exit;
     }
 
     public function rapprocher(int $id): void {}
