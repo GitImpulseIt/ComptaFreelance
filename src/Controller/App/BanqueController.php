@@ -13,8 +13,6 @@ use App\Repository\TransactionBancaireRepository;
 use App\Service\Banque\ImportService;
 use App\Service\Banque\ParserFactory;
 use PDO;
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Twig\Environment;
 
 class BanqueController
@@ -356,68 +354,119 @@ class BanqueController
         $dateDebut = $_GET['date_debut'] ?? date('Y') . '-01-01';
         $dateFin = $_GET['date_fin'] ?? date('Y-m-d');
 
-        // Agréger les montants par compte comptable sur la période
+        // Récupérer toutes les lignes comptables individuelles
         $stmt = $this->pdo->prepare(
-            "SELECT lc.compte,
-                    COALESCE(SUM(CASE WHEN lc.type = 'DBT' THEN lc.montant_ht + lc.tva ELSE 0 END), 0) AS total_debit,
-                    COALESCE(SUM(CASE WHEN lc.type = 'CRD' THEN lc.montant_ht + lc.tva ELSE 0 END), 0) AS total_credit
+            "SELECT lc.compte, lc.montant_ht, lc.tva, lc.type
              FROM lignes_comptables lc
              JOIN transactions_bancaires t ON t.id = lc.transaction_bancaire_id
              JOIN comptes_bancaires cb ON cb.id = t.compte_bancaire_id
              WHERE cb.entreprise_id = :eid
                AND t.date >= :debut AND t.date <= :fin
-             GROUP BY lc.compte
-             ORDER BY lc.compte"
+             ORDER BY lc.compte, t.date, t.id"
         );
         $stmt->execute([
             'eid' => $entrepriseId,
             'debut' => $dateDebut,
             'fin' => $dateFin,
         ]);
-        $balances = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        $lignes = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
-        $spreadsheet = new Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
-        $sheet->setTitle('Balance');
+        // Copier le template dans un fichier temporaire
+        $templatePath = dirname(__DIR__, 3) . '/storage/templates/balance-teledec.xlsx';
+        $tmpFile = tempnam(sys_get_temp_dir(), 'teledec_') . '.xlsx';
+        copy($templatePath, $tmpFile);
 
-        // En-tête
-        $sheet->setCellValue('A1', 'Numéro de compte');
-        $sheet->setCellValue('B1', 'Intitulé de compte (peut rester vide)');
-        $sheet->setCellValue('C1', 'Débit');
-        $sheet->setCellValue('D1', 'Crédit');
-        $sheet->setCellValue('E1', 'Solde débiteur');
-        $sheet->setCellValue('F1', 'Solde créditeur');
+        $zip = new \ZipArchive();
+        $zip->open($tmpFile);
 
-        // Format texte pour la colonne A (numéros de compte)
-        $sheet->getStyle('A:A')->getNumberFormat()->setFormatCode('@');
-
-        // Format monétaire pour C, D, E, F
-        $euroFormat = '_-* #,##0.00\ "€"_-;\-* #,##0.00\ "€"_-;_-* "-"??\ "€"_-;_-@_-';
-
-        $row = 2;
-        foreach ($balances as $b) {
-            $debit = (float) $b['total_debit'];
-            $credit = (float) $b['total_credit'];
-
-            $sheet->setCellValueExplicit('A' . $row, $b['compte'], \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
-            $sheet->setCellValue('B' . $row, '');
-            $sheet->setCellValue('C' . $row, $debit);
-            $sheet->setCellValue('D' . $row, $credit);
-            $sheet->setCellValue('E' . $row, "=IF(C{$row}>D{$row},C{$row}-D{$row},\"\")");
-            $sheet->setCellValue('F' . $row, "=IF(D{$row}>C{$row},D{$row}-C{$row},\"\")");
-
-            $sheet->getStyle("C{$row}:F{$row}")->getNumberFormat()->setFormatCode($euroFormat);
-
-            $row++;
+        // Construire le sharedStrings.xml avec les en-têtes d'origine
+        $sharedStrings = [
+            'Numéro de compte',
+            'Débit',
+            'Crédit',
+            'Solde débiteur',
+            'Solde créditeur',
+            'Intitulé de compte (peut rester vide)',
+        ];
+        // Ajouter les numéros de compte comme shared strings
+        $compteIndexes = [];
+        foreach ($lignes as $l) {
+            if (!isset($compteIndexes[$l['compte']])) {
+                $compteIndexes[$l['compte']] = count($sharedStrings);
+                $sharedStrings[] = $l['compte'];
+            }
         }
+        $ssCount = count($sharedStrings);
+        $ssXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' . "\n";
+        $ssXml .= '<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="' . $ssCount . '" uniqueCount="' . $ssCount . '">';
+        foreach ($sharedStrings as $s) {
+            $ssXml .= '<si><t>' . htmlspecialchars($s, ENT_XML1, 'UTF-8') . '</t></si>';
+        }
+        $ssXml .= '</sst>';
+
+        // Construire le sheet1.xml
+        $rowCount = count($lignes) + 1;
+        $lastRow = $rowCount;
+        $sheetXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' . "\n";
+        $sheetXml .= '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">';
+        $sheetXml .= '<dimension ref="A1:F' . $lastRow . '"/>';
+        $sheetXml .= '<sheetViews><sheetView tabSelected="1" workbookViewId="0"/></sheetViews>';
+        $sheetXml .= '<sheetFormatPr baseColWidth="10" defaultRowHeight="15"/>';
+        $sheetXml .= '<cols>';
+        $sheetXml .= '<col min="1" max="1" width="22.6640625" style="16" customWidth="1"/>';
+        $sheetXml .= '<col min="2" max="2" width="37.5" style="1" customWidth="1"/>';
+        $sheetXml .= '<col min="3" max="6" width="20" style="5" customWidth="1"/>';
+        $sheetXml .= '</cols>';
+        $sheetXml .= '<sheetData>';
+
+        // Ligne d'en-tête (row 1) - indices shared strings : 0=NumCompte, 5=Intitulé, 1=Débit, 2=Crédit, 3=SoldeDébiteur, 4=SoldeCréditeur
+        $sheetXml .= '<row r="1" s="4" customFormat="1" ht="18">';
+        $sheetXml .= '<c r="A1" s="15" t="s"><v>0</v></c>';
+        $sheetXml .= '<c r="B1" s="2" t="s"><v>5</v></c>';
+        $sheetXml .= '<c r="C1" s="2" t="s"><v>1</v></c>';
+        $sheetXml .= '<c r="D1" s="2" t="s"><v>2</v></c>';
+        $sheetXml .= '<c r="E1" s="2" t="s"><v>3</v></c>';
+        $sheetXml .= '<c r="F1" s="2" t="s"><v>4</v></c>';
+        $sheetXml .= '</row>';
+
+        // Lignes de données
+        $r = 2;
+        foreach ($lignes as $l) {
+            $montant = (float) $l['montant_ht'] + (float) $l['tva'];
+            $debit = $l['type'] === 'DBT' ? $montant : 0;
+            $credit = $l['type'] === 'CRD' ? $montant : 0;
+            $ssIndex = $compteIndexes[$l['compte']];
+
+            $sheetXml .= '<row r="' . $r . '">';
+            $sheetXml .= '<c r="A' . $r . '" s="16" t="s"><v>' . $ssIndex . '</v></c>';
+            $sheetXml .= '<c r="B' . $r . '" s="1"/>';
+            $sheetXml .= '<c r="C' . $r . '" s="5"><v>' . $debit . '</v></c>';
+            $sheetXml .= '<c r="D' . $r . '" s="5"><v>' . $credit . '</v></c>';
+            $sheetXml .= '<c r="E' . $r . '" s="5"><f>IF(C' . $r . '&gt;D' . $r . ',C' . $r . '-D' . $r . ',"")</f></c>';
+            $sheetXml .= '<c r="F' . $r . '" s="5"><f>IF(D' . $r . '&gt;C' . $r . ',D' . $r . '-C' . $r . ',"")</f></c>';
+            $sheetXml .= '</row>';
+            $r++;
+        }
+
+        $sheetXml .= '</sheetData>';
+        $sheetXml .= '<pageMargins left="0.7" right="0.7" top="0.75" bottom="0.75" header="0.3" footer="0.3"/>';
+        $sheetXml .= '</worksheet>';
+
+        // Remplacer les fichiers dans le ZIP
+        $zip->addFromString('xl/worksheets/sheet1.xml', $sheetXml);
+        $zip->addFromString('xl/sharedStrings.xml', $ssXml);
+        // Supprimer calcChain (Excel le recalcule à l'ouverture)
+        $zip->deleteName('xl/calcChain.xml');
+
+        $zip->close();
 
         $filename = 'balance-teledec_' . $dateDebut . '_' . $dateFin . '.xlsx';
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment; filename="' . $filename . '"');
         header('Cache-Control: max-age=0');
 
-        $writer = new Xlsx($spreadsheet);
-        $writer->save('php://output');
+        readfile($tmpFile);
+        unlink($tmpFile);
         exit;
     }
 

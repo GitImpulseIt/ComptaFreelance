@@ -9,7 +9,6 @@
         "ext-mbstring": "*",
         "ext-pdo": "*",
         "ext-pdo_pgsql": "*",
-        "phpoffice/phpspreadsheet": "^5.5",
         "twig/twig": "^3.0"
     },
     "require-dev": {
