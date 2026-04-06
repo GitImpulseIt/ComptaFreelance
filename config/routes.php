@@ -43,6 +43,8 @@ return [
     // App - Banque
     'GET /app/banque' => ['App\\BanqueController', 'transactions'],
     'GET /app/banque/export-csv' => ['App\\BanqueController', 'exportCsv'],
+    'GET /app/banque/export-csv-qualifie' => ['App\\BanqueController', 'exportCsvQualifie'],
+    'GET /app/banque/export-fec' => ['App\\BanqueController', 'exportFec'],
     'GET /app/banque/import' => ['App\\BanqueController', 'showImport'],
     'POST /app/banque/import' => ['App\\BanqueController', 'import'],
     'GET /app/banque/{id}' => ['App\\BanqueController', 'show'],
@@ -61,6 +63,9 @@ return [
     'GET /app/cloture/bilan' => ['App\\ClotureController', 'tabBilan'],
     'GET /app/cloture/compte-resultat' => ['App\\ClotureController', 'tabCompteResultat'],
     'GET /app/cloture/compte-resultat/detail' => ['App\\ClotureController', 'detailCompteResultat'],
+    'GET /app/cloture/bilan/detail' => ['App\\ClotureController', 'detailBilan'],
+    'GET /app/cloture/bilan/detail/csv' => ['App\\ClotureController', 'exportCsvBilan'],
+    'GET /app/cloture/compte-resultat/detail/csv' => ['App\\ClotureController', 'exportCsvCompteResultat'],
     'GET /app/cloture/2035' => ['App\\ClotureController', 'tab2035'],
     'POST /app/cloture/save' => ['App\\ClotureController', 'save'],
 
