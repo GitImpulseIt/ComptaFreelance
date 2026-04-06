@@ -65,10 +65,16 @@
                         class="w-full px-4 py-2.5 text-sm bg-slate-700 text-white rounded-lg hover:bg-slate-800 transition font-medium">
                     Opérations qualifiées
                 </button>
-                <button type="submit" onclick="document.getElementById('exportForm').action='/app/banque/export-teledec'"
-                        class="w-full px-4 py-2.5 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition font-medium">
-                    Balance TELEDEC (Excel)
-                </button>
+                <div class="flex items-center gap-2">
+                    <button type="submit" onclick="document.getElementById('exportForm').action='/app/banque/export-teledec'"
+                            class="flex-1 px-4 py-2.5 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition font-medium">
+                        Balance TELEDEC (Excel)
+                    </button>
+                    <label class="inline-flex items-center gap-1.5 text-sm text-slate-600 cursor-pointer select-none whitespace-nowrap">
+                        <input type="checkbox" name="ttc" value="1" class="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500">
+                        TTC
+                    </label>
+                </div>
                 <button type="button" onclick="document.getElementById('exportModal').classList.add('hidden')"
                         class="w-full px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg transition">
                     Annuler

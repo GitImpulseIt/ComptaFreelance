@@ -353,6 +353,7 @@ class BanqueController
         $entrepriseId = $this->auth->getEntrepriseId();
         $dateDebut = $_GET['date_debut'] ?? date('Y') . '-01-01';
         $dateFin = $_GET['date_fin'] ?? date('Y-m-d');
+        $ttc = isset($_GET['ttc']);
 
         // Récupérer toutes les lignes comptables individuelles
         $stmt = $this->pdo->prepare(
@@ -432,7 +433,7 @@ class BanqueController
         // Lignes de données
         $r = 2;
         foreach ($lignes as $l) {
-            $montant = (float) $l['montant_ht'] + (float) $l['tva'];
+            $montant = $ttc ? (float) $l['montant_ht'] + (float) $l['tva'] : (float) $l['montant_ht'];
             $debit = $l['type'] === 'DBT' ? $montant : 0;
             $credit = $l['type'] === 'CRD' ? $montant : 0;
             $ssIndex = $compteIndexes[$l['compte']];
