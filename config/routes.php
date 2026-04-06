@@ -44,7 +44,6 @@ return [
     'GET /app/banque' => ['App\\BanqueController', 'transactions'],
     'GET /app/banque/export-csv' => ['App\\BanqueController', 'exportCsv'],
     'GET /app/banque/export-csv-qualifie' => ['App\\BanqueController', 'exportCsvQualifie'],
-    'GET /app/banque/export-fec' => ['App\\BanqueController', 'exportFec'],
     'GET /app/banque/import' => ['App\\BanqueController', 'showImport'],
     'POST /app/banque/import' => ['App\\BanqueController', 'import'],
     'GET /app/banque/{id}' => ['App\\BanqueController', 'show'],
