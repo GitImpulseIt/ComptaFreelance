@@ -190,6 +190,7 @@ class ImmobilisationController
             $row = ['annee' => $a, 'dotation' => $dot, 'cumul' => round($cumul, 2), 'vnc' => max(0, $vnc)];
             if ($a === $anneeDebut) {
                 $row['jours'] = $joursProrata1;
+                $row['taux'] = round($prorata1 * (100 / $duree), 4);
             }
             $annuites[] = $row;
 
@@ -249,6 +250,7 @@ class ImmobilisationController
             $row = ['annee' => $a, 'dotation' => $dotation, 'cumul' => round($cumul, 2), 'vnc' => max(0, $vnc)];
             if ($a === $anneeDebut) {
                 $row['jours'] = $joursProrata;
+                $row['taux'] = round($prorata1 * (100 / $duree) * $coeff, 4);
             }
             $annuites[] = $row;
             $dureeRestante--;
