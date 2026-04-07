@@ -162,16 +162,18 @@ class ImmobilisationController
         $debut = new \DateTime($dateAcq);
         $now = new \DateTime($today);
         $moisDebut = (int) $debut->format('n');
+        $jourDebut = min((int) $debut->format('j'), 30);
         $anneeDebut = (int) $debut->format('Y');
         $anneeNow = (int) $now->format('Y');
 
         if ($type === 'degressif') {
-            return $this->calculerDegressif($valeur, $duree, (float) ($immo['coeff_degressif'] ?? 1.25), $moisDebut, $anneeDebut, $anneeNow, $immo);
+            return $this->calculerDegressif($valeur, $duree, (float) ($immo['coeff_degressif'] ?? 1.25), $moisDebut, $jourDebut, $anneeDebut, $anneeNow, $immo);
         }
 
         // Amortissement linéaire
         $annuiteBase = round($valeur / $duree, 2);
-        $prorata1 = (12 - $moisDebut + 1) / 12;
+        $joursProrata1 = (12 - $moisDebut) * 30 + (30 - $jourDebut);
+        $prorata1 = $joursProrata1 / 360;
         $cumul = 0;
         $annuite = 0;
         $annuites = [];
@@ -185,7 +187,11 @@ class ImmobilisationController
             $cumul += $dot;
             $vnc = round($valeur - $cumul, 2);
             $annuite = $dot;
-            $annuites[] = ['annee' => $a, 'dotation' => $dot, 'cumul' => round($cumul, 2), 'vnc' => max(0, $vnc)];
+            $row = ['annee' => $a, 'dotation' => $dot, 'cumul' => round($cumul, 2), 'vnc' => max(0, $vnc)];
+            if ($a === $anneeDebut) {
+                $row['jours'] = $joursProrata1;
+            }
+            $annuites[] = $row;
 
             if ($a >= $anneeNow) {
                 break;
@@ -214,9 +220,11 @@ class ImmobilisationController
         return ['annuite' => $annuite, 'cumul' => round($cumul, 2), 'vnc' => max(0, $vnc), 'termine' => $termine, 'annuites' => $annuites];
     }
 
-    private function calculerDegressif(float $valeur, int $duree, float $coeff, int $moisDebut, int $anneeDebut, int $anneeNow, array $immo): array
+    private function calculerDegressif(float $valeur, int $duree, float $coeff, int $moisDebut, int $jourDebut, int $anneeDebut, int $anneeNow, array $immo): array
     {
         $tauxDegressif = (1 / $duree) * $coeff;
+        $joursProrata = (12 - $moisDebut) * 30 + (30 - $jourDebut);
+        $prorata1 = $joursProrata / 360;
 
         $anneeFin = $anneeDebut + $duree - 1;
         $vnc = $valeur;
@@ -232,14 +240,17 @@ class ImmobilisationController
             $dotation = round($vnc * $taux, 2);
 
             if ($a === $anneeDebut) {
-                $prorata = (12 - $moisDebut + 1) / 12;
-                $dotation = round($vnc * $tauxDegressif * $prorata, 2);
+                $dotation = round($vnc * $tauxDegressif * $prorata1, 2);
             }
 
             $dotation = min($dotation, $vnc);
             $cumul += $dotation;
             $vnc = round($valeur - $cumul, 2);
-            $annuites[] = ['annee' => $a, 'dotation' => $dotation, 'cumul' => round($cumul, 2), 'vnc' => max(0, $vnc)];
+            $row = ['annee' => $a, 'dotation' => $dotation, 'cumul' => round($cumul, 2), 'vnc' => max(0, $vnc)];
+            if ($a === $anneeDebut) {
+                $row['jours'] = $joursProrata;
+            }
+            $annuites[] = $row;
             $dureeRestante--;
 
             if ($a <= $anneeNow) {
