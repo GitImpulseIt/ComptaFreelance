@@ -75,7 +75,7 @@
                 <td class="text-right px-2 py-1.5 text-xs tabular-nums text-slate-500">{{ immo.tva_deduite|number_format(0, ',', ' ') }}</td>
                 <td class="text-right px-2 py-1.5 text-xs tabular-nums text-slate-700">{{ immo.base_amortissable|number_format(0, ',', ' ') }}</td>
                 <td class="text-center px-2 py-1.5 text-xs text-slate-600 font-medium">{{ immo.mode }}</td>
-                <td class="text-right px-2 py-1.5 text-xs tabular-nums text-slate-600">{{ immo.taux|number_format(0, ',', ' ') }} %</td>
+                <td class="text-right px-2 py-1.5 text-xs tabular-nums text-slate-600">{{ immo.taux|number_format(2, ',', ' ') }} %</td>
                 <td class="text-right px-2 py-1.5 text-xs tabular-nums text-slate-700">{{ immo.amort_anterieurs|number_format(0, ',', ' ') }}</td>
                 <td class="text-right px-2 py-1.5 text-xs tabular-nums text-slate-700 font-medium">{{ immo.annuite|number_format(0, ',', ' ') }}</td>
             </tr>
