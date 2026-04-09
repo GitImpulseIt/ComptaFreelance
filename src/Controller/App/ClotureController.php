@@ -138,7 +138,9 @@ class ClotureController
             header('Location: /app/cloture/bilan');
             exit;
         }
-        $this->renderTab('2035');
+        $annee = isset($_GET['annee']) ? (int) $_GET['annee'] : (int) date('Y') - 1;
+        $immobilisations = $this->computeImmobilisations2035($entrepriseId, $annee);
+        $this->renderTab('2035', ['immobilisations' => $immobilisations]);
     }
 
     public function tab2035A(): void
@@ -1249,6 +1251,108 @@ class ClotureController
         }
         if ($tvaDeductible != 0) {
             $result['378'] = (string)$this->arrondisFiscal($tvaDeductible);
+        }
+
+        return $result;
+    }
+
+    private function computeImmobilisations2035(int $entrepriseId, int $annee): array
+    {
+        $stmt = $this->pdo->prepare(
+            "SELECT * FROM immobilisations WHERE entreprise_id = :eid ORDER BY date_acquisition ASC"
+        );
+        $stmt->execute(['eid' => $entrepriseId]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $result = [];
+        foreach ($rows as $immo) {
+            $valeur = (float) $immo['valeur_acquisition'];
+            $duree = (int) $immo['duree_amortissement'];
+            $type = $immo['type_amortissement'];
+            $dateRef = $immo['date_mise_en_service'] ?? $immo['date_acquisition'];
+            $coeff = (float) ($immo['coeff_degressif'] ?? 1.25);
+
+            if ($duree <= 0 || $valeur <= 0) {
+                continue;
+            }
+
+            // Cession avant ou pendant l'année → exclure si avant
+            if ($immo['cession_date'] && substr($immo['cession_date'], 0, 4) < (string) $annee) {
+                continue;
+            }
+
+            $debut = new \DateTime($dateRef);
+            $moisDebut = (int) $debut->format('n');
+            $jourDebut = min((int) $debut->format('j'), 30);
+            $anneeDebut = (int) $debut->format('Y');
+
+            $tauxAnnuel = round(100 / $duree, 2);
+            $tauxEffectif = $tauxAnnuel;
+            $mode = 'L';
+
+            if ($type === 'degressif') {
+                $tauxEffectif = round($tauxAnnuel * $coeff, 2);
+                $mode = 'D';
+            }
+
+            // Calcul annuité par annuité jusqu'à $annee
+            $cumul = 0;
+            $annuiteAnnee = 0;
+            $vnc = $valeur;
+
+            if ($type === 'degressif') {
+                $tauxDeg = (1 / $duree) * $coeff;
+                $joursProrata = (12 - $moisDebut) * 30 + (30 - $jourDebut);
+                $prorata1 = $joursProrata / 360;
+                $dureeRestante = $duree;
+
+                for ($a = $anneeDebut; $a <= $annee && $vnc > 0; $a++) {
+                    $tauxLinRestant = $dureeRestante > 0 ? 1 / $dureeRestante : 1;
+                    $taux = max($tauxDeg, $tauxLinRestant);
+                    $dot = round($vnc * $taux, 2);
+                    if ($a === $anneeDebut) {
+                        $dot = round($vnc * $tauxDeg * $prorata1, 2);
+                    }
+                    $dot = min($dot, $vnc);
+                    if ($a === $annee) {
+                        $annuiteAnnee = $dot;
+                    }
+                    $cumul += $dot;
+                    $vnc = round($valeur - $cumul, 2);
+                    $dureeRestante--;
+                }
+            } else {
+                $annuiteBase = round($valeur / $duree, 2);
+                $joursProrata = (12 - $moisDebut) * 30 + (30 - $jourDebut);
+                $prorata1 = $joursProrata / 360;
+
+                for ($a = $anneeDebut; $a <= $annee && $cumul < $valeur; $a++) {
+                    $dot = $annuiteBase;
+                    if ($a === $anneeDebut) {
+                        $dot = round($annuiteBase * $prorata1, 2);
+                    }
+                    $dot = min($dot, round($valeur - $cumul, 2));
+                    if ($a === $annee) {
+                        $annuiteAnnee = $dot;
+                    }
+                    $cumul += $dot;
+                }
+            }
+
+            $cumulAnterieurs = round($cumul - $annuiteAnnee, 2);
+
+            $result[] = [
+                'nature' => $immo['nature'] ?? $immo['designation'],
+                'designation' => $immo['designation'],
+                'date_acquisition' => $immo['date_acquisition'],
+                'prix_ttc' => $valeur,
+                'tva_deduite' => 0,
+                'base_amortissable' => $valeur,
+                'mode' => $mode,
+                'taux' => $tauxEffectif,
+                'amort_anterieurs' => $cumulAnterieurs,
+                'annuite' => $annuiteAnnee,
+            ];
         }
 
         return $result;

@@ -1,8 +1,176 @@
 {% extends 'app/cloture/_layout.html.twig' %}
 
 {% block tab_content %}
-<div class="bg-white rounded-xl shadow-sm px-8 py-16 text-center">
-    <h3 class="text-lg font-medium text-slate-600 mb-1">2035</h3>
-    <p class="text-sm text-slate-400">Formulaire en cours de développement.</p>
+
+<form method="post" action="/app/cloture/save" id="form2035">
+<input type="hidden" name="tab" value="2035">
+<input type="hidden" name="annee" value="{{ annee }}">
+
+{# ═══════════════════════ TABLEAU 1 — LISTE DES IMMOBILISATIONS ═══════════════════════ #}
+<div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
+    <div class="px-4 py-2.5 bg-slate-800 text-white flex items-center justify-between">
+        <span class="font-bold text-sm tracking-wide">TABLEAU DES IMMOBILISATIONS</span>
+        <span class="text-xs text-slate-300">Formulaire 2035</span>
+    </div>
+    <div class="overflow-x-auto">
+    <table class="w-full border-collapse min-w-[600px]">
+        <thead>
+            <tr class="bg-slate-100 border-b border-slate-200">
+                <th class="text-center px-3 py-2 text-[11px] font-semibold text-slate-500 uppercase tracking-wider w-[60px]">N°</th>
+                <th class="text-left px-3 py-2 text-[11px] font-semibold text-slate-500 uppercase tracking-wider" colspan="2">Nature des immobilisations</th>
+                <th class="text-center px-3 py-2 text-[11px] font-semibold text-slate-500 uppercase tracking-wider w-[140px]">Date d'acquisition</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for immo in immobilisations %}
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="text-center px-3 py-1.5 text-xs text-slate-500 font-medium">{{ loop.index }}</td>
+                <td class="px-3 py-1.5 text-xs text-slate-700" colspan="2">{{ immo.nature }}</td>
+                <td class="text-center px-3 py-1.5 text-xs text-slate-600 tabular-nums">{{ immo.date_acquisition|date('d/m/Y') }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="4" class="px-3 py-4 text-center text-xs text-slate-400">Aucune immobilisation enregistrée</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
 </div>
+
+{# ═══════════════════════ TABLEAU 2 — AMORTISSEMENTS ═══════════════════════ #}
+<div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
+    <div class="px-4 py-2.5 bg-slate-800 text-white flex items-center justify-between">
+        <span class="font-bold text-sm tracking-wide">TABLEAU DES AMORTISSEMENTS</span>
+        <span class="text-xs text-slate-300">Formulaire 2035</span>
+    </div>
+    <div class="overflow-x-auto">
+    <table class="w-full border-collapse min-w-[900px]">
+        <thead>
+            <tr class="bg-slate-100 border-b border-slate-200">
+                <th class="text-center px-2 py-2 text-[11px] font-semibold text-slate-500 uppercase tracking-wider w-[60px]">Immo.</th>
+                <th class="text-right px-2 py-2 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Prix total payé TTC</th>
+                <th class="text-right px-2 py-2 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">TVA déduite</th>
+                <th class="text-right px-2 py-2 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Base amortissable</th>
+                <th class="text-center px-2 py-2 text-[11px] font-semibold text-slate-500 uppercase tracking-wider w-[60px]">Mode</th>
+                <th class="text-right px-2 py-2 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Taux</th>
+                <th class="text-right px-2 py-2 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Amort. antérieurs</th>
+                <th class="text-right px-2 py-2 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Annuité {{ annee }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% set totalTTC = 0 %}
+            {% set totalBase = 0 %}
+            {% set totalAnterieurs = 0 %}
+            {% set totalAnnuite = 0 %}
+
+            {% for immo in immobilisations %}
+            {% set totalTTC = totalTTC + immo.prix_ttc %}
+            {% set totalBase = totalBase + immo.base_amortissable %}
+            {% set totalAnterieurs = totalAnterieurs + immo.amort_anterieurs %}
+            {% set totalAnnuite = totalAnnuite + immo.annuite %}
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="text-center px-2 py-1.5 text-xs text-slate-500 font-medium">{{ loop.index }}</td>
+                <td class="text-right px-2 py-1.5 text-xs tabular-nums text-slate-700">{{ immo.prix_ttc|number_format(2, ',', ' ') }}</td>
+                <td class="text-right px-2 py-1.5 text-xs tabular-nums text-slate-500">{{ immo.tva_deduite|number_format(2, ',', ' ') }}</td>
+                <td class="text-right px-2 py-1.5 text-xs tabular-nums text-slate-700">{{ immo.base_amortissable|number_format(2, ',', ' ') }}</td>
+                <td class="text-center px-2 py-1.5 text-xs text-slate-600 font-medium">{{ immo.mode }}</td>
+                <td class="text-right px-2 py-1.5 text-xs tabular-nums text-slate-600">{{ immo.taux|number_format(2, ',', ' ') }} %</td>
+                <td class="text-right px-2 py-1.5 text-xs tabular-nums text-slate-700">{{ immo.amort_anterieurs|number_format(2, ',', ' ') }}</td>
+                <td class="text-right px-2 py-1.5 text-xs tabular-nums text-slate-700 font-medium">{{ immo.annuite|number_format(2, ',', ' ') }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="8" class="px-3 py-4 text-center text-xs text-slate-400">Aucune immobilisation enregistrée</td>
+            </tr>
+            {% endfor %}
+
+            {# ── Ligne de totaux ── #}
+            {% if immobilisations|length > 0 %}
+            <tr class="border-t-2 border-slate-300 bg-slate-50 font-semibold">
+                <td class="px-2 py-2 text-xs text-slate-700 text-right" colspan="1">Totaux</td>
+                <td class="text-right px-2 py-2 text-xs tabular-nums text-slate-800">{{ totalTTC|number_format(2, ',', ' ') }}</td>
+                <td class="px-2 py-2"></td>
+                <td class="text-right px-2 py-2 text-xs tabular-nums text-slate-800">{{ totalBase|number_format(2, ',', ' ') }}</td>
+                <td class="px-2 py-2" colspan="2"></td>
+                <td class="text-right px-2 py-2 text-xs tabular-nums text-slate-800">{{ totalAnterieurs|number_format(2, ',', ' ') }}</td>
+                <td class="text-right px-2 py-2 text-xs tabular-nums text-slate-800">{{ totalAnnuite|number_format(2, ',', ' ') }}</td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+    </div>
+
+    {# ── Lignes récapitulatives ── #}
+    {% if immobilisations|length > 0 %}
+    <div class="border-t border-slate-200">
+    <table class="w-full border-collapse min-w-[900px]">
+        <tbody>
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-2 text-xs text-slate-600">Fraction d'amortissement revenant à l'associé d'une société civile de moyens</td>
+                <td class="text-right px-2 py-1.5 w-[140px]">
+                    <input type="text" inputmode="numeric" name="fields[fraction_scm]"
+                           value="{{ data.fraction_scm|default('') }}"
+                           class="w-full text-right tabular-nums text-xs px-2 py-1 border border-slate-200 rounded bg-white focus:bg-indigo-50 focus:outline-none"
+                           autocomplete="off">
+                </td>
+            </tr>
+            <tr class="border-t border-slate-100 bg-indigo-50/40">
+                <td class="px-3 py-2 text-xs text-slate-700 font-semibold">Total général des amortissements de l'année (A)</td>
+                <td class="text-right px-2 py-2 text-xs tabular-nums text-slate-800 font-bold w-[140px]" id="totalA">
+                    {{ totalAnnuite|number_format(2, ',', ' ') }}
+                </td>
+            </tr>
+            <tr class="border-t border-slate-100 hover:bg-slate-50/50">
+                <td class="px-3 py-2 text-xs text-slate-600">Véhicules inscrits au registre des immobilisations (B)</td>
+                <td class="text-right px-2 py-1.5 w-[140px]">
+                    <input type="text" inputmode="numeric" name="fields[vehicules_b]"
+                           value="{{ data.vehicules_b|default('') }}"
+                           class="w-full text-right tabular-nums text-xs px-2 py-1 border border-slate-200 rounded bg-white focus:bg-indigo-50 focus:outline-none"
+                           autocomplete="off">
+                </td>
+            </tr>
+            <tr class="border-t border-slate-200 bg-indigo-50/40">
+                <td class="px-3 py-2 text-xs text-slate-700 font-semibold">Dotation nette de l'année (A − B)</td>
+                <td class="text-right px-2 py-2 text-xs tabular-nums text-slate-800 font-bold w-[140px]" id="dotationNette">
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    </div>
+    {% endif %}
+</div>
+
+{% if immobilisations|length > 0 %}
+<div class="flex justify-end mt-4">
+    <button type="submit" class="inline-flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-lg hover:bg-indigo-700 transition font-medium text-sm shadow-sm">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+        Enregistrer
+    </button>
+</div>
+{% endif %}
+
+</form>
+
+<script>
+(function() {
+    const totalA = {{ totalAnnuite|default(0) }};
+    const fractionInput = document.querySelector('[name="fields[fraction_scm]"]');
+    const vehiculesInput = document.querySelector('[name="fields[vehicules_b]"]');
+    const dotationNette = document.getElementById('dotationNette');
+
+    function fmt(v) {
+        return v.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+    }
+
+    function update() {
+        const b = parseFloat((vehiculesInput?.value || '0').replace(',', '.').replace(/\s/g, '')) || 0;
+        if (dotationNette) dotationNette.textContent = fmt(totalA - b);
+    }
+
+    if (vehiculesInput) vehiculesInput.addEventListener('input', update);
+    update();
+})();
+</script>
+
 {% endblock %}
