@@ -65,8 +65,8 @@ class ImmobilisationController
         $entrepriseId = $this->auth->getEntrepriseId();
 
         $stmt = $this->pdo->prepare(
-            "INSERT INTO immobilisations (entreprise_id, designation, nature, date_acquisition, date_mise_en_service, valeur_acquisition, duree_amortissement, type_amortissement, coeff_degressif, compte)
-             VALUES (:eid, :designation, :nature, :date_acq, :date_mes, :valeur, :duree, :type, :coeff, :compte)"
+            "INSERT INTO immobilisations (entreprise_id, designation, nature, date_acquisition, date_mise_en_service, montant_ttc, valeur_acquisition, duree_amortissement, type_amortissement, coeff_degressif, compte)
+             VALUES (:eid, :designation, :nature, :date_acq, :date_mes, :montant_ttc, :valeur, :duree, :type, :coeff, :compte)"
         );
         $stmt->execute([
             'eid' => $entrepriseId,
@@ -74,6 +74,7 @@ class ImmobilisationController
             'nature' => trim($_POST['nature'] ?? '') ?: null,
             'date_acq' => $_POST['date_acquisition'] ?? '',
             'date_mes' => $_POST['date_mise_en_service'] ?: null,
+            'montant_ttc' => ($_POST['montant_ttc'] ?? '') !== '' ? (float) str_replace(',', '.', $_POST['montant_ttc']) : null,
             'valeur' => (float) str_replace(',', '.', $_POST['valeur_acquisition'] ?? '0'),
             'duree' => (int) ($_POST['duree_amortissement'] ?? 5),
             'type' => $_POST['type_amortissement'] ?? 'lineaire',
@@ -115,7 +116,7 @@ class ImmobilisationController
 
         $stmt = $this->pdo->prepare(
             "UPDATE immobilisations SET designation = :designation, nature = :nature, date_acquisition = :date_acq,
-                date_mise_en_service = :date_mes, valeur_acquisition = :valeur,
+                date_mise_en_service = :date_mes, montant_ttc = :montant_ttc, valeur_acquisition = :valeur,
                 duree_amortissement = :duree, type_amortissement = :type, coeff_degressif = :coeff,
                 compte = :compte, cession_date = :cess_date, cession_montant = :cess_montant, updated_at = NOW()
              WHERE id = :id AND entreprise_id = :eid"
@@ -126,6 +127,7 @@ class ImmobilisationController
             'nature' => trim($_POST['nature'] ?? '') ?: null,
             'date_acq' => $_POST['date_acquisition'] ?? '',
             'date_mes' => $_POST['date_mise_en_service'] ?: null,
+            'montant_ttc' => ($_POST['montant_ttc'] ?? '') !== '' ? (float) str_replace(',', '.', $_POST['montant_ttc']) : null,
             'valeur' => (float) str_replace(',', '.', $_POST['valeur_acquisition'] ?? '0'),
             'duree' => (int) ($_POST['duree_amortissement'] ?? 5),
             'type' => $_POST['type_amortissement'] ?? 'lineaire',

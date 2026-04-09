@@ -46,7 +46,12 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-3 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Montant TTC</label>
+                <input type="text" name="montant_ttc" value="{{ immo ? immo.montant_ttc : (prefill.montant_ttc ?? '') }}"
+                       class="w-full" placeholder="0.00">
+            </div>
             <div>
                 <label class="block text-sm font-medium text-slate-700 mb-1">Valeur d'acquisition HT</label>
                 <input type="text" name="valeur_acquisition" value="{{ immo ? immo.valeur_acquisition : (prefill.valeur_acquisition ?? '') }}" required

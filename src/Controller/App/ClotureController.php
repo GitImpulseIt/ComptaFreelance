@@ -1341,12 +1341,15 @@ class ClotureController
 
             $cumulAnterieurs = round($cumul - $annuiteAnnee, 2);
 
+            $montantTtc = $immo['montant_ttc'] !== null ? (float) $immo['montant_ttc'] : $valeur;
+            $tvaDeduite = round($montantTtc - $valeur, 2);
+
             $result[] = [
                 'nature' => $immo['nature'] ?? $immo['designation'],
                 'designation' => $immo['designation'],
                 'date_acquisition' => $immo['date_acquisition'],
-                'prix_ttc' => $valeur,
-                'tva_deduite' => 0,
+                'prix_ttc' => $montantTtc,
+                'tva_deduite' => $tvaDeduite,
                 'base_amortissable' => $valeur,
                 'mode' => $mode,
                 'taux' => $tauxEffectif,
