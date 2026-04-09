@@ -19,6 +19,21 @@
                    class="w-full" placeholder="Ex : MacBook Pro 16 pouces">
         </div>
 
+        <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Nature de l'immobilisation</label>
+            <input type="text" name="nature" list="nature-list" value="{{ immo ? immo.nature : '' }}"
+                   class="w-full" placeholder="Sélectionner ou saisir une nature">
+            <datalist id="nature-list">
+                <option value="Constructions">
+                <option value="Installations et agencements">
+                <option value="Matériel et outillage industriel">
+                <option value="Matériel de transport">
+                <option value="Mobilier">
+                <option value="Matériel informatique">
+                <option value="Matériel de bureau">
+            </datalist>
+        </div>
+
         <div class="grid grid-cols-2 gap-4">
             <div>
                 <label class="block text-sm font-medium text-slate-700 mb-1">Date d'acquisition</label>

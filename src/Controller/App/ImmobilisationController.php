@@ -65,12 +65,13 @@ class ImmobilisationController
         $entrepriseId = $this->auth->getEntrepriseId();
 
         $stmt = $this->pdo->prepare(
-            "INSERT INTO immobilisations (entreprise_id, designation, date_acquisition, date_mise_en_service, valeur_acquisition, duree_amortissement, type_amortissement, coeff_degressif, compte)
-             VALUES (:eid, :designation, :date_acq, :date_mes, :valeur, :duree, :type, :coeff, :compte)"
+            "INSERT INTO immobilisations (entreprise_id, designation, nature, date_acquisition, date_mise_en_service, valeur_acquisition, duree_amortissement, type_amortissement, coeff_degressif, compte)
+             VALUES (:eid, :designation, :nature, :date_acq, :date_mes, :valeur, :duree, :type, :coeff, :compte)"
         );
         $stmt->execute([
             'eid' => $entrepriseId,
             'designation' => trim($_POST['designation'] ?? ''),
+            'nature' => trim($_POST['nature'] ?? '') ?: null,
             'date_acq' => $_POST['date_acquisition'] ?? '',
             'date_mes' => $_POST['date_mise_en_service'] ?: null,
             'valeur' => (float) str_replace(',', '.', $_POST['valeur_acquisition'] ?? '0'),
@@ -113,7 +114,7 @@ class ImmobilisationController
         $entrepriseId = $this->auth->getEntrepriseId();
 
         $stmt = $this->pdo->prepare(
-            "UPDATE immobilisations SET designation = :designation, date_acquisition = :date_acq,
+            "UPDATE immobilisations SET designation = :designation, nature = :nature, date_acquisition = :date_acq,
                 date_mise_en_service = :date_mes, valeur_acquisition = :valeur,
                 duree_amortissement = :duree, type_amortissement = :type, coeff_degressif = :coeff,
                 compte = :compte, cession_date = :cess_date, cession_montant = :cess_montant, updated_at = NOW()
@@ -122,6 +123,7 @@ class ImmobilisationController
         $stmt->execute([
             'id' => $id, 'eid' => $entrepriseId,
             'designation' => trim($_POST['designation'] ?? ''),
+            'nature' => trim($_POST['nature'] ?? '') ?: null,
             'date_acq' => $_POST['date_acquisition'] ?? '',
             'date_mes' => $_POST['date_mise_en_service'] ?: null,
             'valeur' => (float) str_replace(',', '.', $_POST['valeur_acquisition'] ?? '0'),
