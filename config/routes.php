@@ -67,6 +67,9 @@ return [
     'GET /app/cloture/bilan/detail/csv' => ['App\\ClotureController', 'exportCsvBilan'],
     'GET /app/cloture/compte-resultat/detail/csv' => ['App\\ClotureController', 'exportCsvCompteResultat'],
     'GET /app/cloture/2035' => ['App\\ClotureController', 'tab2035'],
+    'GET /app/cloture/2035-a' => ['App\\ClotureController', 'tab2035A'],
+    'GET /app/cloture/2035-b' => ['App\\ClotureController', 'tab2035B'],
+    'GET /app/cloture/2035-e' => ['App\\ClotureController', 'tab2035E'],
     'POST /app/cloture/save' => ['App\\ClotureController', 'save'],
 
     // App - Immobilisations

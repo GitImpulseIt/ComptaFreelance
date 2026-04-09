@@ -28,6 +28,9 @@ class ClotureController
 
     private const TABS_IR = [
         ['slug' => '2035',            'label' => '2035'],
+        ['slug' => '2035-a',          'label' => '2035-A'],
+        ['slug' => '2035-b',          'label' => '2035-B'],
+        ['slug' => '2035-e',          'label' => '2035-E'],
     ];
 
     // Mapping slug onglet → colonne JSONB en base
@@ -35,6 +38,9 @@ class ClotureController
         'bilan'           => 'data_bilan',
         'compte-resultat' => 'data_compte_resultat',
         '2035'            => 'data_2035',
+        '2035-a'          => 'data_2035_a_p1',
+        '2035-b'          => 'data_2035_b',
+        '2035-e'          => 'data_2035_e',
     ];
 
     private function getTabsForEntreprise(array $entreprise): array
@@ -133,6 +139,39 @@ class ClotureController
             exit;
         }
         $this->renderTab('2035');
+    }
+
+    public function tab2035A(): void
+    {
+        $entrepriseId = $this->auth->getEntrepriseId();
+        $entreprise = $this->entrepriseRepo->findById($entrepriseId);
+        if (empty($entreprise['option_ir'])) {
+            header('Location: /app/cloture/bilan');
+            exit;
+        }
+        $this->renderTab('2035-a');
+    }
+
+    public function tab2035B(): void
+    {
+        $entrepriseId = $this->auth->getEntrepriseId();
+        $entreprise = $this->entrepriseRepo->findById($entrepriseId);
+        if (empty($entreprise['option_ir'])) {
+            header('Location: /app/cloture/bilan');
+            exit;
+        }
+        $this->renderTab('2035-b');
+    }
+
+    public function tab2035E(): void
+    {
+        $entrepriseId = $this->auth->getEntrepriseId();
+        $entreprise = $this->entrepriseRepo->findById($entrepriseId);
+        if (empty($entreprise['option_ir'])) {
+            header('Location: /app/cloture/bilan');
+            exit;
+        }
+        $this->renderTab('2035-e');
     }
 
     public function detailCompteResultat(): void
