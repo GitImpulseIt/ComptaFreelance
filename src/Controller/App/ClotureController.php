@@ -1348,13 +1348,13 @@ class ClotureController
                 'nature' => $immo['nature'] ?? $immo['designation'],
                 'designation' => $immo['designation'],
                 'date_acquisition' => $immo['date_acquisition'],
-                'prix_ttc' => $montantTtc,
-                'tva_deduite' => $tvaDeduite,
-                'base_amortissable' => $valeur,
+                'prix_ttc' => $this->arrondisFiscal($montantTtc),
+                'tva_deduite' => $this->arrondisFiscal($tvaDeduite),
+                'base_amortissable' => $this->arrondisFiscal($valeur),
                 'mode' => $mode,
                 'taux' => $tauxEffectif,
-                'amort_anterieurs' => $cumulAnterieurs,
-                'annuite' => $annuiteAnnee,
+                'amort_anterieurs' => $this->arrondisFiscal($cumulAnterieurs),
+                'annuite' => $this->arrondisFiscal($annuiteAnnee),
             ];
         }
 

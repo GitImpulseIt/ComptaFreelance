@@ -71,13 +71,13 @@
             {% set totalAnnuite = totalAnnuite + immo.annuite %}
             <tr class="border-t border-slate-100 hover:bg-slate-50/50">
                 <td class="text-center px-2 py-1.5 text-xs text-slate-500 font-medium">{{ loop.index }}</td>
-                <td class="text-right px-2 py-1.5 text-xs tabular-nums text-slate-700">{{ immo.prix_ttc|number_format(2, ',', ' ') }}</td>
-                <td class="text-right px-2 py-1.5 text-xs tabular-nums text-slate-500">{{ immo.tva_deduite|number_format(2, ',', ' ') }}</td>
-                <td class="text-right px-2 py-1.5 text-xs tabular-nums text-slate-700">{{ immo.base_amortissable|number_format(2, ',', ' ') }}</td>
+                <td class="text-right px-2 py-1.5 text-xs tabular-nums text-slate-700">{{ immo.prix_ttc|number_format(0, ',', ' ') }}</td>
+                <td class="text-right px-2 py-1.5 text-xs tabular-nums text-slate-500">{{ immo.tva_deduite|number_format(0, ',', ' ') }}</td>
+                <td class="text-right px-2 py-1.5 text-xs tabular-nums text-slate-700">{{ immo.base_amortissable|number_format(0, ',', ' ') }}</td>
                 <td class="text-center px-2 py-1.5 text-xs text-slate-600 font-medium">{{ immo.mode }}</td>
-                <td class="text-right px-2 py-1.5 text-xs tabular-nums text-slate-600">{{ immo.taux|number_format(2, ',', ' ') }} %</td>
-                <td class="text-right px-2 py-1.5 text-xs tabular-nums text-slate-700">{{ immo.amort_anterieurs|number_format(2, ',', ' ') }}</td>
-                <td class="text-right px-2 py-1.5 text-xs tabular-nums text-slate-700 font-medium">{{ immo.annuite|number_format(2, ',', ' ') }}</td>
+                <td class="text-right px-2 py-1.5 text-xs tabular-nums text-slate-600">{{ immo.taux|number_format(0, ',', ' ') }} %</td>
+                <td class="text-right px-2 py-1.5 text-xs tabular-nums text-slate-700">{{ immo.amort_anterieurs|number_format(0, ',', ' ') }}</td>
+                <td class="text-right px-2 py-1.5 text-xs tabular-nums text-slate-700 font-medium">{{ immo.annuite|number_format(0, ',', ' ') }}</td>
             </tr>
             {% else %}
             <tr>
@@ -89,12 +89,12 @@
             {% if immobilisations|length > 0 %}
             <tr class="border-t-2 border-slate-300 bg-slate-50 font-semibold">
                 <td class="px-2 py-2 text-xs text-slate-700 text-right" colspan="1">Totaux</td>
-                <td class="text-right px-2 py-2 text-xs tabular-nums text-slate-800">{{ totalTTC|number_format(2, ',', ' ') }}</td>
+                <td class="text-right px-2 py-2 text-xs tabular-nums text-slate-800">{{ totalTTC|number_format(0, ',', ' ') }}</td>
                 <td class="px-2 py-2"></td>
-                <td class="text-right px-2 py-2 text-xs tabular-nums text-slate-800">{{ totalBase|number_format(2, ',', ' ') }}</td>
+                <td class="text-right px-2 py-2 text-xs tabular-nums text-slate-800">{{ totalBase|number_format(0, ',', ' ') }}</td>
                 <td class="px-2 py-2" colspan="2"></td>
-                <td class="text-right px-2 py-2 text-xs tabular-nums text-slate-800">{{ totalAnterieurs|number_format(2, ',', ' ') }}</td>
-                <td class="text-right px-2 py-2 text-xs tabular-nums text-slate-800">{{ totalAnnuite|number_format(2, ',', ' ') }}</td>
+                <td class="text-right px-2 py-2 text-xs tabular-nums text-slate-800">{{ totalAnterieurs|number_format(0, ',', ' ') }}</td>
+                <td class="text-right px-2 py-2 text-xs tabular-nums text-slate-800">{{ totalAnnuite|number_format(0, ',', ' ') }}</td>
             </tr>
             {% endif %}
         </tbody>
@@ -118,7 +118,7 @@
             <tr class="border-t border-slate-100 bg-indigo-50/40">
                 <td class="px-3 py-2 text-xs text-slate-700 font-semibold">Total général des amortissements de l'année (A)</td>
                 <td class="text-right px-2 py-2 text-xs tabular-nums text-slate-800 font-bold w-[140px]" id="totalA">
-                    {{ totalAnnuite|number_format(2, ',', ' ') }}
+                    {{ totalAnnuite|number_format(0, ',', ' ') }}
                 </td>
             </tr>
             <tr class="border-t border-slate-100 hover:bg-slate-50/50">
@@ -160,7 +160,7 @@
     const dotationNette = document.getElementById('dotationNette');
 
     function fmt(v) {
-        return v.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+        return Math.round(v).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
     }
 
     function update() {
