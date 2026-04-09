@@ -21,9 +21,12 @@ class ClotureController
         return (int)round($val, 0, PHP_ROUND_HALF_UP);
     }
 
-    private const TABS = [
+    private const TABS_IS = [
         ['slug' => 'bilan',           'label' => 'Bilan'],
         ['slug' => 'compte-resultat', 'label' => 'Compte de résultat'],
+    ];
+
+    private const TABS_IR = [
         ['slug' => '2035',            'label' => '2035'],
     ];
 
@@ -33,6 +36,12 @@ class ClotureController
         'compte-resultat' => 'data_compte_resultat',
         '2035'            => 'data_2035',
     ];
+
+    private function getTabsForEntreprise(array $entreprise): array
+    {
+        $isIR = !empty($entreprise['option_ir']);
+        return $isIR ? self::TABS_IR : self::TABS_IS;
+    }
 
     public function __construct(
         private Environment $twig,
@@ -44,14 +53,23 @@ class ClotureController
 
     public function index(): void
     {
+        $entrepriseId = $this->auth->getEntrepriseId();
+        $entreprise = $this->entrepriseRepo->findById($entrepriseId);
         $annee = isset($_GET['annee']) ? (int) $_GET['annee'] : (int) date('Y') - 1;
-        header('Location: /app/cloture/bilan?annee=' . $annee);
+        $isIR = !empty($entreprise['option_ir']);
+        $defaultTab = $isIR ? '2035' : 'bilan';
+        header('Location: /app/cloture/' . $defaultTab . '?annee=' . $annee);
         exit;
     }
 
     public function tabBilan(): void
     {
         $entrepriseId = $this->auth->getEntrepriseId();
+        $entreprise = $this->entrepriseRepo->findById($entrepriseId);
+        if (!empty($entreprise['option_ir'])) {
+            header('Location: /app/cloture/2035');
+            exit;
+        }
         $annee = isset($_GET['annee']) ? (int) $_GET['annee'] : (int) date('Y') - 1;
 
         $raw = $this->computeBilanRaw($entrepriseId, $annee);
@@ -91,6 +109,11 @@ class ClotureController
     public function tabCompteResultat(): void
     {
         $entrepriseId = $this->auth->getEntrepriseId();
+        $entreprise = $this->entrepriseRepo->findById($entrepriseId);
+        if (!empty($entreprise['option_ir'])) {
+            header('Location: /app/cloture/2035');
+            exit;
+        }
         $annee = isset($_GET['annee']) ? (int) $_GET['annee'] : (int) date('Y') - 1;
 
         $computed = $this->computeCompteResultatRaw($entrepriseId, $annee);
@@ -101,18 +124,26 @@ class ClotureController
             'computed_n1' => $computedN1,
         ]);
     }
-    public function tab2035(): void            { $this->renderTab('2035'); }
+    public function tab2035(): void
+    {
+        $entrepriseId = $this->auth->getEntrepriseId();
+        $entreprise = $this->entrepriseRepo->findById($entrepriseId);
+        if (empty($entreprise['option_ir'])) {
+            header('Location: /app/cloture/bilan');
+            exit;
+        }
+        $this->renderTab('2035');
+    }
 
     public function detailCompteResultat(): void
     {
         $entrepriseId = $this->auth->getEntrepriseId();
         $entreprise = $this->entrepriseRepo->findById($entrepriseId);
-        $annee = isset($_GET['annee']) ? (int) $_GET['annee'] : (int) date('Y') - 1;
-
-        if (($entreprise['regime_benefices'] ?? '') !== 'BNC') {
-            header('Location: /app');
+        if (!empty($entreprise['option_ir'])) {
+            header('Location: /app/cloture/2035');
             exit;
         }
+        $annee = isset($_GET['annee']) ? (int) $_GET['annee'] : (int) date('Y') - 1;
 
         // Mapping case → label + filtres SQL sur lignes_comptables
         $cases = [
@@ -311,7 +342,7 @@ class ClotureController
         echo $this->twig->render('app/cloture/compte-resultat-detail.html.twig', [
             'active_page' => 'cloture',
             'active_tab' => 'compte-resultat',
-            'tabs' => self::TABS,
+            'tabs' => $this->getTabsForEntreprise($entreprise),
             'annee' => $annee,
             'annees' => [(int) date('Y') - 1],
             'sections' => $sections,
@@ -322,12 +353,11 @@ class ClotureController
     {
         $entrepriseId = $this->auth->getEntrepriseId();
         $entreprise = $this->entrepriseRepo->findById($entrepriseId);
-        $annee = isset($_GET['annee']) ? (int) $_GET['annee'] : (int) date('Y') - 1;
-
-        if (($entreprise['regime_benefices'] ?? '') !== 'BNC') {
-            header('Location: /app');
+        if (!empty($entreprise['option_ir'])) {
+            header('Location: /app/cloture/2035');
             exit;
         }
+        $annee = isset($_GET['annee']) ? (int) $_GET['annee'] : (int) date('Y') - 1;
 
         $debut = $annee . '-01-01';
         $fin = $annee . '-12-31';
@@ -662,7 +692,7 @@ class ClotureController
         echo $this->twig->render('app/cloture/bilan-detail.html.twig', [
             'active_page' => 'cloture',
             'active_tab' => 'bilan',
-            'tabs' => self::TABS,
+            'tabs' => $this->getTabsForEntreprise($entreprise),
             'annee' => $annee,
             'annees' => [(int) date('Y') - 1],
             'sections' => $sections,
@@ -1007,10 +1037,7 @@ class ClotureController
         $entreprise = $this->entrepriseRepo->findById($entrepriseId);
         $annee = isset($_GET['annee']) ? (int) $_GET['annee'] : (int) date('Y') - 1;
 
-        if (($entreprise['regime_benefices'] ?? '') !== 'BNC') {
-            header('Location: /app');
-            exit;
-        }
+        $tabs = $this->getTabsForEntreprise($entreprise);
 
         $stmt = $this->pdo->prepare(
             "SELECT DISTINCT EXTRACT(YEAR FROM t.date)::int AS annee
@@ -1043,7 +1070,7 @@ class ClotureController
         echo $this->twig->render('app/cloture/' . $slug . '.html.twig', array_merge([
             'active_page' => 'cloture',
             'active_tab' => $slug,
-            'tabs' => self::TABS,
+            'tabs' => $this->getTabsForEntreprise($entreprise),
             'annee' => $annee,
             'annees' => $annees,
             'entreprise_data' => $entreprise,
