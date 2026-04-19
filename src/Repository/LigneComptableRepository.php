@@ -27,6 +27,21 @@ class LigneComptableRepository
         return $stmt->fetchAll(PDO::FETCH_COLUMN);
     }
 
+    /** @return list<string> */
+    public function findDistinctComptesByEntreprise(int $entrepriseId): array
+    {
+        $stmt = $this->pdo->prepare(
+            "SELECT DISTINCT l.compte
+             FROM lignes_comptables l
+             JOIN transactions_bancaires t ON t.id = l.transaction_bancaire_id
+             JOIN comptes_bancaires cb ON cb.id = t.compte_bancaire_id
+             WHERE cb.entreprise_id = :eid
+             ORDER BY l.compte"
+        );
+        $stmt->execute(['eid' => $entrepriseId]);
+        return $stmt->fetchAll(PDO::FETCH_COLUMN);
+    }
+
     public function replaceForTransaction(int $transactionId, array $lignes): void
     {
         $this->pdo->beginTransaction();

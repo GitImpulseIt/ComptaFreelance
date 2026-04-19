@@ -1,0 +1,171 @@
+{% extends 'layout/app.html.twig' %}
+
+{% block title %}Plan comptable - Paramètres - ComptaV2{% endblock %}
+{% block page_title %}Paramètres{% endblock %}
+
+{% set active_page = 'parametres' %}
+
+{% block content %}
+{% include 'app/parametres/_tabs.html.twig' %}
+
+{% if success %}
+<div class="mb-4 px-4 py-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-sm">
+    {% if success == 'updated' %}Préférences enregistrées.
+    {% elseif success == 'perso_created' %}Compte personnalisé créé.
+    {% elseif success == 'perso_updated' %}Compte personnalisé mis à jour.
+    {% elseif success == 'perso_deleted' %}Compte personnalisé supprimé.
+    {% elseif success == 'auto_include' %}Option d'inclusion automatique mise à jour.
+    {% endif %}
+</div>
+{% endif %}
+
+{% if session.error is defined %}
+<div class="mb-4 px-4 py-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">{{ session.error }}</div>
+{% endif %}
+
+{# Option globale #}
+<div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+    <h3 class="text-sm font-semibold text-slate-700 mb-3">Inclusion automatique</h3>
+    <form method="POST" action="/app/parametres/plan-comptable/auto-include" class="flex items-center gap-3">
+        <label class="flex items-start gap-3 cursor-pointer">
+            <input type="checkbox" name="enabled" value="1"
+                   {{ entreprise.plan_auto_include_used ? 'checked' : '' }}
+                   onchange="this.form.submit()"
+                   class="mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+            <span>
+                <span class="text-sm font-medium text-slate-700">Inclure automatiquement les comptes déjà utilisés</span>
+                <span class="block text-xs text-slate-500 mt-0.5">Les comptes que vous avez déjà saisis dans des qualifications apparaîtront dans l'aide à la saisie, même s'ils sont absents de votre plan actif.</span>
+            </span>
+        </label>
+    </form>
+</div>
+
+{# Filtres + actions #}
+<div class="flex items-center flex-wrap gap-2 mb-4">
+    <form method="GET" action="/app/parametres/plan-comptable" class="flex items-center flex-wrap gap-2 flex-1">
+        <input type="text" name="q" value="{{ filtres.q }}" placeholder="Numéro ou libellé…"
+               class="flex-1 min-w-48 max-w-sm border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+        <select name="sens" class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+            <option value="">Tous sens</option>
+            <option value="D" {{ filtres.sens == 'D' ? 'selected' : '' }}>Débit</option>
+            <option value="C" {{ filtres.sens == 'C' ? 'selected' : '' }}>Crédit</option>
+        </select>
+        <select name="origine" class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+            <option value="">Toutes origines</option>
+            <option value="base" {{ filtres.origine == 'base' ? 'selected' : '' }}>Plan actif</option>
+            <option value="perso" {{ filtres.origine == 'perso' ? 'selected' : '' }}>Personnalisé</option>
+            <option value="pref" {{ filtres.origine == 'pref' ? 'selected' : '' }}>Hors plan (forcé)</option>
+            <option value="used" {{ filtres.origine == 'used' ? 'selected' : '' }}>Utilisé automatiquement</option>
+        </select>
+        <select name="visible" class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+            <option value="">Actifs et inactifs</option>
+            <option value="on" {{ filtres.visible == 'on' ? 'selected' : '' }}>Actifs uniquement</option>
+            <option value="off" {{ filtres.visible == 'off' ? 'selected' : '' }}>Inactifs uniquement</option>
+        </select>
+        <button type="submit" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium transition">Filtrer</button>
+        {% if filtres.q or filtres.sens or filtres.origine or filtres.visible %}
+        <a href="/app/parametres/plan-comptable" class="text-sm text-slate-500 hover:text-slate-700">Effacer</a>
+        {% endif %}
+    </form>
+    <a href="/app/parametres/plan-comptable/perso/create" class="inline-flex items-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-lg hover:bg-indigo-700 transition font-medium text-sm shadow-sm whitespace-nowrap">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Nouveau compte perso
+    </a>
+</div>
+
+<p class="text-xs text-slate-500 mb-2">{{ rows|length }} compte{{ rows|length > 1 ? 's' : '' }} affiché{{ rows|length > 1 ? 's' : '' }} sur {{ total }} au total.</p>
+
+<div class="bg-white rounded-xl shadow-sm overflow-hidden">
+    {% if rows|length > 0 %}
+    <table class="w-full">
+        <thead>
+            <tr class="bg-slate-50">
+                <th class="text-center px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase w-20">Actif</th>
+                <th class="text-left px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase w-28">Numéro</th>
+                <th class="text-left px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase">Libellé</th>
+                <th class="text-left px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase w-20">Sens</th>
+                <th class="text-left px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase w-36">Origine</th>
+                <th class="text-right px-4 py-2.5 text-xs font-semibold text-slate-500 uppercase w-56">Actions</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+            {% for r in rows %}
+            {% set effective = r.pref_enabled is null ? r.enabled_default : r.pref_enabled %}
+            <tr class="hover:bg-slate-50/50 transition {{ not effective ? 'opacity-60' : '' }}">
+                <td class="px-4 py-2 text-center">
+                    <input type="checkbox" class="pref-toggle rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                           data-numero="{{ r.numero }}" {{ effective ? 'checked' : '' }}>
+                </td>
+                <td class="px-4 py-2 text-sm font-mono text-slate-700">{{ r.numero }}</td>
+                <td class="px-4 py-2 text-sm text-slate-700">
+                    {{ r.libelle_effectif }}
+                    {% if r.pref_libelle_source %}
+                    <span class="ml-2 inline-flex items-center text-xs px-1.5 py-0.5 rounded bg-slate-100 text-slate-500">
+                        libellé : {{ r.pref_libelle_source == 'simplifie' ? 'simplifié' : (r.pref_libelle_source == 'general' ? 'officiel' : 'personnalisé') }}
+                    </span>
+                    {% endif %}
+                </td>
+                <td class="px-4 py-2 text-sm">
+                    {% if r.sens == 'D' %}
+                    <span class="inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full bg-red-50 text-red-700">Débit</span>
+                    {% elseif r.sens == 'C' %}
+                    <span class="inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">Crédit</span>
+                    {% else %}
+                    <span class="text-xs text-slate-400">—</span>
+                    {% endif %}
+                </td>
+                <td class="px-4 py-2 text-sm text-slate-500">
+                    {% if r.origine == 'base' %}Plan actif
+                    {% elseif r.origine == 'perso' %}Personnalisé
+                    {% elseif r.origine == 'pref' %}Hors plan (forcé)
+                    {% elseif r.origine == 'used' %}Utilisé
+                    {% endif %}
+                    {% if r.is_used and r.origine != 'used' %}<span class="ml-1 text-xs text-slate-400">· utilisé</span>{% endif %}
+                </td>
+                <td class="px-4 py-2 text-sm text-right">
+                    <a href="/app/parametres/plan-comptable/{{ r.numero }}/edit" class="inline-flex items-center gap-1 text-sm text-indigo-600 hover:text-indigo-800 transition">Libellé</a>
+                    {% if r.origine == 'perso' %}
+                    <a href="/app/parametres/plan-comptable/perso/{{ r.numero }}/edit" class="ml-3 inline-flex items-center gap-1 text-sm text-slate-600 hover:text-slate-800 transition">Modifier</a>
+                    <form method="POST" action="/app/parametres/plan-comptable/perso/{{ r.numero }}/delete" class="inline ml-3" onsubmit="return confirm('Supprimer le compte {{ r.numero }} ?')">
+                        <button type="submit" class="text-sm text-red-600 hover:text-red-800 transition">Supprimer</button>
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="px-8 py-16 text-center">
+        <p class="text-sm text-slate-400">Aucun compte ne correspond aux filtres.</p>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+document.querySelectorAll('.pref-toggle').forEach(function(cb) {
+    cb.addEventListener('change', function() {
+        var fd = new FormData();
+        fd.append('numero', cb.dataset.numero);
+        fd.append('enabled', cb.checked ? '1' : '0');
+        cb.disabled = true;
+        fetch('/app/parametres/plan-comptable/toggle', { method: 'POST', body: fd })
+            .then(function(r) {
+                cb.disabled = false;
+                if (!r.ok) {
+                    cb.checked = !cb.checked;
+                    alert('Échec de la mise à jour.');
+                } else {
+                    var tr = cb.closest('tr');
+                    if (cb.checked) tr.classList.remove('opacity-60');
+                    else tr.classList.add('opacity-60');
+                }
+            })
+            .catch(function() {
+                cb.disabled = false;
+                cb.checked = !cb.checked;
+            });
+    });
+});
+</script>
+{% endblock %}

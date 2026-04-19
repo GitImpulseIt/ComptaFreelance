@@ -10,9 +10,12 @@ use App\Repository\EntrepriseRepository;
 use App\Repository\ImportBancaireRepository;
 use App\Repository\LienDocumentRepository;
 use App\Repository\LigneComptableRepository;
+use App\Repository\PlanComptablePersoRepository;
+use App\Repository\PlanComptablePrefRepository;
 use App\Repository\PlanComptableRepository;
 use App\Repository\PlanComptableSimplifieRepository;
 use App\Repository\TransactionBancaireRepository;
+use App\Service\PlanComptableEffectifService;
 use App\Service\Banque\ImportService;
 use App\Service\Banque\ParserFactory;
 use PDO;
@@ -27,6 +30,7 @@ class BanqueController
     private PlanComptableRepository $planRepo;
     private PlanComptableSimplifieRepository $planSimpRepo;
     private EntrepriseRepository $entrepriseRepo;
+    private PlanComptableEffectifService $planEffectif;
 
     public function __construct(
         private Environment $twig,
@@ -40,6 +44,14 @@ class BanqueController
         $this->planRepo = new PlanComptableRepository($pdo);
         $this->planSimpRepo = new PlanComptableSimplifieRepository($pdo);
         $this->entrepriseRepo = new EntrepriseRepository($pdo);
+        $this->planEffectif = new PlanComptableEffectifService(
+            $this->planRepo,
+            $this->planSimpRepo,
+            new PlanComptablePersoRepository($pdo),
+            new PlanComptablePrefRepository($pdo),
+            $this->entrepriseRepo,
+            $this->ligneRepo,
+        );
     }
 
     public function transactions(): void
@@ -265,16 +277,17 @@ class BanqueController
 
         $entreprise = $this->entrepriseRepo->findById($entrepriseId);
         $planMode = $entreprise['plan_comptable'] ?? 'simplifie';
-        $planComptable = $planMode === 'general'
-            ? $this->planRepo->findSelectable()
-            : $this->planSimpRepo->findAll();
+
+        // Liste effective pour l'autocomplete (plan actif + perso + prefs + auto-utilisés)
+        $planComptable = $this->planEffectif->findSelectable($entrepriseId);
 
         // Résolution des libellés pour les comptes déjà qualifiés :
-        // 1) plan actif, 2) plan général (toutes lignes), 3) fallback parent
-        // (remonte la hiérarchie en enlevant des chiffres à la fin jusqu'à trouver).
-        $mapActive = $planMode === 'general'
-            ? $this->planRepo->findAllAsMap()
-            : $this->planSimpRepo->findAllAsMap();
+        // on interroge la liste effective (qui porte déjà les libellés perso),
+        // sinon plan général, sinon fallback parent.
+        $planMap = [];
+        foreach ($planComptable as $e) {
+            $planMap[$e['numero']] = $e['libelle'];
+        }
         $mapGeneral = $this->planRepo->findAllAsMap();
         $compteLabels = [];
         foreach ($lignes as $line) {
@@ -282,7 +295,7 @@ class BanqueController
             if ($numero === '' || isset($compteLabels[$numero])) {
                 continue;
             }
-            $compteLabels[$numero] = $this->resolveLibelle($numero, $mapActive, $mapGeneral);
+            $compteLabels[$numero] = $this->resolveLibelle($numero, $planMap, $mapGeneral);
         }
 
         echo $this->twig->render('app/banque/show.html.twig', [

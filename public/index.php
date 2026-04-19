@@ -112,6 +112,7 @@ foreach ($routes as $pattern => $handler) {
             'App\\ImmobilisationController' => new \App\Controller\App\ImmobilisationController($twig, $pdo, $authMiddleware),
             'App\\ClotureController' => new \App\Controller\App\ClotureController($twig, $pdo, $authMiddleware),
             'App\\ParametreController' => new \App\Controller\App\ParametreController($twig, $pdo, $authMiddleware),
+            'App\\ParametrePlanComptableController' => new \App\Controller\App\ParametrePlanComptableController($twig, $pdo, $authMiddleware),
         };
 
         $controller->$action(...array_map('intval', $matches));

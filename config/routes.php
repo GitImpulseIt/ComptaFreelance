@@ -96,4 +96,16 @@ return [
     'POST /app/parametres/comptes-bancaires/{id}' => ['App\\ParametreController', 'updateCompte'],
     'POST /app/parametres/comptes-bancaires/{id}/delete' => ['App\\ParametreController', 'deleteCompte'],
 
+    // App - Paramètres > Plan comptable
+    'GET /app/parametres/plan-comptable' => ['App\\ParametrePlanComptableController', 'index'],
+    'POST /app/parametres/plan-comptable/toggle' => ['App\\ParametrePlanComptableController', 'toggleEnabled'],
+    'POST /app/parametres/plan-comptable/auto-include' => ['App\\ParametrePlanComptableController', 'toggleAutoInclude'],
+    'GET /app/parametres/plan-comptable/perso/create' => ['App\\ParametrePlanComptableController', 'createPerso'],
+    'POST /app/parametres/plan-comptable/perso' => ['App\\ParametrePlanComptableController', 'storePerso'],
+    'GET /app/parametres/plan-comptable/perso/{numero}/edit' => ['App\\ParametrePlanComptableController', 'editPerso'],
+    'POST /app/parametres/plan-comptable/perso/{numero}' => ['App\\ParametrePlanComptableController', 'updatePerso'],
+    'POST /app/parametres/plan-comptable/perso/{numero}/delete' => ['App\\ParametrePlanComptableController', 'deletePerso'],
+    'GET /app/parametres/plan-comptable/{numero}/edit' => ['App\\ParametrePlanComptableController', 'editPref'],
+    'POST /app/parametres/plan-comptable/{numero}' => ['App\\ParametrePlanComptableController', 'updatePref'],
+
 ];
