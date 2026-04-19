@@ -30,4 +30,21 @@ class PlanComptableRepository
         );
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    /**
+     * Mappe numero → libellé pour tous les comptes (y compris optionnels et
+     * rubriques), utilisé pour résoudre le libellé à afficher à côté du numéro
+     * dans les lignes comptables déjà qualifiées.
+     *
+     * @return array<string, string>
+     */
+    public function findAllAsMap(): array
+    {
+        $stmt = $this->pdo->query("SELECT numero, libelle FROM plan_comptable");
+        $map = [];
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $map[$row['numero']] = $row['libelle'];
+        }
+        return $map;
+    }
 }

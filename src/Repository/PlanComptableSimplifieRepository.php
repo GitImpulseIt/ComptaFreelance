@@ -22,4 +22,17 @@ class PlanComptableSimplifieRepository
         );
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    /**
+     * @return array<string, string>
+     */
+    public function findAllAsMap(): array
+    {
+        $stmt = $this->pdo->query("SELECT numero, libelle FROM plan_comptable_simplifie");
+        $map = [];
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $map[$row['numero']] = $row['libelle'];
+        }
+        return $map;
+    }
 }

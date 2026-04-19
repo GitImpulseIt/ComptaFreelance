@@ -89,7 +89,7 @@
         <table class="w-full" id="compta-table">
             <thead>
                 <tr class="bg-slate-50 border-b border-slate-200">
-                    <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider w-28">Compte</th>
+                    <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider w-64">Compte</th>
                     <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider w-32">Montant HT</th>
                     <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider w-24">Type</th>
                     <th class="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider w-28">TVA</th>
@@ -101,7 +101,13 @@
             <tbody id="compta-tbody" class="divide-y divide-slate-100">
                 {% for line in lignes %}
                 <tr class="compta-row group hover:bg-slate-50/80 transition" {% if line.is_main is defined and line.is_main %}data-main="1"{% endif %}>
-                    <td class="px-4 py-3 text-sm text-slate-700">{{ line.compte }}<input type="hidden" name="compte[]" value="{{ line.compte }}"></td>
+                    <td class="px-4 py-3 text-sm text-slate-700">
+                        <div class="font-mono">{{ line.compte }}</div>
+                        {% if compte_labels[line.compte] is defined and compte_labels[line.compte] %}
+                        <div class="text-xs text-slate-500 truncate" title="{{ compte_labels[line.compte] }}">{{ compte_labels[line.compte] }}</div>
+                        {% endif %}
+                        <input type="hidden" name="compte[]" value="{{ line.compte }}">
+                    </td>
                     <td class="px-4 py-3 text-sm text-slate-700">{{ line.montant_ht|replace({'.': ','}) }}<input type="hidden" name="montant_ht[]" value="{{ line.montant_ht }}"></td>
                     <td class="px-4 py-3 text-sm text-slate-700">{{ line.type == 'DBT' ? 'Débit' : 'Crédit' }}<input type="hidden" name="type[]" value="{{ line.type }}"></td>
                     <td class="px-4 py-3 text-sm text-slate-700">{% if line.tva and line.tva != '0' and line.tva != 0 %}{{ line.tva|replace({'.': ','}) }}{% endif %}<input type="hidden" name="tva[]" value="{{ line.tva }}"></td>

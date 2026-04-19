@@ -269,6 +269,22 @@ class BanqueController
             ? $this->planRepo->findSelectable()
             : $this->planSimpRepo->findAll();
 
+        // Résolution des libellés pour les comptes déjà qualifiés :
+        // 1) plan actif, 2) plan général (toutes lignes), 3) fallback parent
+        // (remonte la hiérarchie en enlevant des chiffres à la fin jusqu'à trouver).
+        $mapActive = $planMode === 'general'
+            ? $this->planRepo->findAllAsMap()
+            : $this->planSimpRepo->findAllAsMap();
+        $mapGeneral = $this->planRepo->findAllAsMap();
+        $compteLabels = [];
+        foreach ($lignes as $line) {
+            $numero = (string) $line['compte'];
+            if ($numero === '' || isset($compteLabels[$numero])) {
+                continue;
+            }
+            $compteLabels[$numero] = $this->resolveLibelle($numero, $mapActive, $mapGeneral);
+        }
+
         echo $this->twig->render('app/banque/show.html.twig', [
             'active_page' => 'banque',
             'transaction' => $transaction,
@@ -276,6 +292,7 @@ class BanqueController
             'liens' => $liens,
             'plan_comptable' => $planComptable,
             'plan_mode' => $planMode,
+            'compte_labels' => $compteLabels,
             'success' => isset($_GET['success']),
         ]);
     }
@@ -488,4 +505,27 @@ class BanqueController
     }
 
     public function rapprocher(int $id): void {}
+
+    /**
+     * Résout le libellé d'un numéro de compte via la chaîne de repli :
+     * plan actif → plan général → parents successifs dans le plan général.
+     * Retourne une chaîne vide si aucune correspondance.
+     */
+    private function resolveLibelle(string $numero, array $mapActive, array $mapGeneral): string
+    {
+        if (isset($mapActive[$numero])) {
+            return $mapActive[$numero];
+        }
+        if (isset($mapGeneral[$numero])) {
+            return $mapGeneral[$numero];
+        }
+        $parent = $numero;
+        while (strlen($parent) > 2) {
+            $parent = substr($parent, 0, -1);
+            if (isset($mapGeneral[$parent])) {
+                return $mapGeneral[$parent];
+            }
+        }
+        return '';
+    }
 }

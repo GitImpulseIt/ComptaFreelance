@@ -107,8 +107,16 @@
                 var typeText = type === 'DBT' ? 'Débit' : 'Crédit';
                 var newTr = document.createElement('tr');
                 newTr.className = 'compta-row group hover:bg-slate-50/80 transition';
+                var libelle = '';
+                for (var j = 0; j < PLAN.length; j++) {
+                    if (PLAN[j].numero === compte) { libelle = PLAN[j].libelle; break; }
+                }
                 newTr.innerHTML =
-                    '<td class="px-4 py-3 text-sm text-slate-700">' + compte + '<input type="hidden" name="compte[]" value="' + compte + '"></td>' +
+                    '<td class="px-4 py-3 text-sm text-slate-700">' +
+                        '<div class="font-mono">' + escapeHtml(compte) + '</div>' +
+                        (libelle ? '<div class="text-xs text-slate-500 truncate" title="' + escapeHtml(libelle) + '">' + escapeHtml(libelle) + '</div>' : '') +
+                        '<input type="hidden" name="compte[]" value="' + escapeHtml(compte) + '">' +
+                    '</td>' +
                     '<td class="px-4 py-3 text-sm text-slate-700">' + montantHT + '<input type="hidden" name="montant_ht[]" value="' + montantHT + '"></td>' +
                     '<td class="px-4 py-3 text-sm text-slate-700">' + typeText + '<input type="hidden" name="type[]" value="' + type + '"></td>' +
                     '<td class="px-4 py-3 text-sm text-slate-700">' + tva + '<input type="hidden" name="tva[]" value="' + tva + '"></td>' +
