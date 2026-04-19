@@ -419,6 +419,7 @@
         var label = document.getElementById('propose-ia-label');
         var iconSvg = document.getElementById('propose-ia-icon');
         var explanation = document.getElementById('propose-ia-explanation');
+        var explanationText = document.getElementById('propose-ia-explanation-text');
         var originalLabel = label.textContent;
         var originalIcon = iconSvg.outerHTML;
 
@@ -451,8 +452,10 @@
                     });
                     updateSum();
                     if (res.data.explication) {
-                        explanation.textContent = '💡 ' + res.data.explication;
+                        explanationText.textContent = res.data.explication;
                         explanation.classList.remove('hidden');
+                    } else {
+                        explanation.classList.add('hidden');
                     }
                 })
                 .catch(function(e) {
