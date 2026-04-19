@@ -173,7 +173,7 @@
         // Supprimer une ligne validée
         if (target.classList.contains('compta-remove') || target.closest('.compta-remove')) {
             var tr = (target.closest('.compta-remove') || target).closest('tr');
-            if (tr && !tr.hasAttribute('data-main')) {
+            if (tr) {
                 tr.remove();
                 updateSum();
             }
