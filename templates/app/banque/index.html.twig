@@ -10,6 +10,9 @@
 {% if import_success is defined and import_success is not null %}
 <div class="mb-4 px-4 py-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-sm">
     {{ import_success }} opération{{ import_success > 1 ? 's' : '' }} importée{{ import_success > 1 ? 's' : '' }} avec succès.
+    {% if import_skipped is defined and import_skipped > 0 %}
+        <span class="text-emerald-600/80">({{ import_skipped }} doublon{{ import_skipped > 1 ? 's' : '' }} ignoré{{ import_skipped > 1 ? 's' : '' }})</span>
+    {% endif %}
 </div>
 {% endif %}
 

@@ -112,6 +112,26 @@ docker compose exec -T postgres psql -U comptav2 -d comptav2 < database/schema.s
 docker compose exec -T postgres psql -U comptav2 -d comptav2 < database/migrations/XXXX_nom.sql
 ```
 
+### Sauvegarde BDD
+
+Script `database/backup.sh` (compatible Git Bash Windows) :
+
+```bash
+./database/backup.sh
+```
+
+- Dump compressé gzip dans `database/backup/comptav2_YYYY-MM-DD_HH-MM-SS.sql.gz`
+- Rotation automatique : garde les 3 plus récents
+- Config en dur dans le script (host, user, password, db)
+
+Restauration d'un dump :
+```bash
+gunzip -c database/backup/comptav2_xxx.sql.gz \
+  | docker run -i --rm -e PGPASSWORD=changeme \
+      --entrypoint psql alpine/psql \
+      -h host.docker.internal -U comptav2 -d comptav2
+```
+
 ## Variables d'environnement
 
 Définies dans `.env` (copié depuis `.env.example`) :

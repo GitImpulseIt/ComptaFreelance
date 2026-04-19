@@ -106,7 +106,7 @@
                     <td class="px-4 py-3 text-sm text-slate-700">{{ line.type == 'DBT' ? 'Débit' : 'Crédit' }}<input type="hidden" name="type[]" value="{{ line.type }}"></td>
                     <td class="px-4 py-3 text-sm text-slate-700">{% if line.tva and line.tva != '0' and line.tva != 0 %}{{ line.tva|replace({'.': ','}) }}{% endif %}<input type="hidden" name="tva[]" value="{{ line.tva }}"></td>
                     <td class="px-4 py-3 text-sm text-slate-700">{% set ht = line.montant_ht|round(2) %}{% set t = line.tva|round(2) %}{% if t != 0 %}{{ (ht + t)|number_format(2, ',', ' ') }}{% endif %}</td>
-                    <td class="px-4 py-3 text-sm text-slate-700">{% if t != 0 and ht > 0 %}{{ ((t / ht) * 100)|number_format(2, ',', ' ') }}%{% endif %}</td>
+                    <td class="px-4 py-3 text-sm text-slate-700">{% if t != 0 and ht > 0 %}{{ ((t / ht) * 100)|legal_vat_rate|number_format(2, ',', ' ') }}%{% endif %}</td>
                     <td class="px-4 py-3 text-center">
                         {% if not (line.is_main is defined and line.is_main) %}
                         <span class="compta-remove text-slate-300 hover:text-red-500 cursor-pointer transition opacity-0 group-hover:opacity-100" title="Supprimer">
@@ -145,10 +145,6 @@
 {% endblock %}
 
 {% block scripts %}
-<datalist id="comptes-list">
-    {% for c in comptes_utilises %}
-    <option value="{{ c }}">
-    {% endfor %}
-</datalist>
+<script>window.PLAN_COMPTABLE = {{ plan_comptable|json_encode|raw }};</script>
 <script src="/js/transaction.js"></script>
 {% endblock %}

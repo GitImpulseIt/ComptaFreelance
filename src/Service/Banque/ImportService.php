@@ -15,9 +15,11 @@ class ImportService
         private TransactionBancaireRepository $transactionRepository,
     ) {}
 
-    public function importerFichier(int $compteId, string $filePath, string $format): int
+    /**
+     * @return array{inserted: int, skipped: int}
+     */
+    public function importerFichier(int $compteId, string $filePath, string $format): array
     {
-        // Créer l'enregistrement d'import
         $importId = $this->importRepository->create([
             'compte_bancaire_id' => $compteId,
             'source' => 'fichier',
@@ -26,16 +28,14 @@ class ImportService
         ]);
 
         try {
-            // Parser le fichier
             $parser = $this->parserFactory->create($format);
             $rows = $parser->parse($filePath);
 
             if (empty($rows)) {
                 $this->importRepository->updateStatut($importId, 'termine', 0);
-                return 0;
+                return ['inserted' => 0, 'skipped' => 0];
             }
 
-            // Préparer les transactions pour l'insertion batch
             $transactions = [];
             foreach ($rows as $row) {
                 $transactions[] = [
@@ -45,13 +45,14 @@ class ImportService
                     'libelle' => $row['libelle'],
                     'montant' => $row['montant'],
                     'type' => $row['type'],
+                    'reference_externe' => $row['reference_externe'] ?? null,
                 ];
             }
 
-            $count = $this->transactionRepository->createBatch($transactions);
-            $this->importRepository->updateStatut($importId, 'termine', $count);
+            $result = $this->transactionRepository->createBatch($transactions);
+            $this->importRepository->updateStatut($importId, 'termine', $result['inserted']);
 
-            return $count;
+            return $result;
         } catch (\Throwable $e) {
             $this->importRepository->updateStatut($importId, 'erreur', 0);
             throw $e;

@@ -3,6 +3,23 @@
     var addBtn = document.getElementById('add-line');
     var warning = document.getElementById('sum-warning');
 
+    // Plan comptable injecté par le template (window.PLAN_COMPTABLE).
+    var PLAN = (typeof window !== 'undefined' && Array.isArray(window.PLAN_COMPTABLE)) ? window.PLAN_COMPTABLE : [];
+
+    // Ramène un taux TVA calculé au plus proche des taux légaux français
+    // (corrige la dérive des centimes due aux arrondis sur facture).
+    var LEGAL_VAT_RATES = [20, 13, 10, 8.5, 5.5, 2.1, 1.75, 1.05, 0.9];
+    function snapToLegalRate(rate) {
+        if (!rate || !isFinite(rate)) return rate;
+        var nearest = LEGAL_VAT_RATES[0];
+        var minDiff = Math.abs(rate - nearest);
+        for (var i = 1; i < LEGAL_VAT_RATES.length; i++) {
+            var d = Math.abs(rate - LEGAL_VAT_RATES[i]);
+            if (d < minDiff) { minDiff = d; nearest = LEGAL_VAT_RATES[i]; }
+        }
+        return nearest;
+    }
+
     // Calcul dynamique de l'équilibre débits/crédits
     function updateSum() {
         var totalDebit = 0;
@@ -40,7 +57,10 @@
         var tr = document.createElement('tr');
         tr.className = 'compta-input-row bg-slate-50/50';
         tr.innerHTML =
-            '<td class="px-4 py-2"><input type="text" list="comptes-list" class="compta-input-compte w-24" placeholder="512000" autocomplete="off" /></td>' +
+            '<td class="px-4 py-2">' +
+                '<input type="text" class="compta-input-compte w-24" placeholder="512000" autocomplete="off" />' +
+                '<ul class="compte-dropdown hidden fixed z-50 w-80 bg-white border border-slate-200 rounded-lg shadow-lg max-h-60 overflow-y-auto py-1 text-sm"></ul>' +
+            '</td>' +
             '<td class="px-4 py-2"><input type="text" class="compta-input-montant-ht w-28" placeholder="0,00" /></td>' +
             '<td class="px-4 py-2"><select class="compta-input-type w-24">' +
                 '<option value="DBT">Débit</option>' +
@@ -155,7 +175,7 @@
             montantTVA.value = fmt(ht * taux / 100);
             montantTTC.value = fmt(ht * (1 + taux / 100));
         } else if (montantRef === 'ht' && tvaRef === 'montant') {
-            if (ht > 0) tauxTVA.value = fmt((tva / ht) * 100);
+            if (ht > 0) tauxTVA.value = fmt(snapToLegalRate((tva / ht) * 100));
             montantTTC.value = fmt(ht + tva);
         } else if (montantRef === 'ttc' && tvaRef === 'taux') {
             var calcHT = ttc / (1 + taux / 100);
@@ -164,13 +184,13 @@
         } else if (montantRef === 'ttc' && tvaRef === 'montant') {
             montantHT.value = fmt(ttc - tva);
             var calcHT2 = parseFloat(montantHT.value.replace(',', '.'));
-            if (calcHT2 > 0) tauxTVA.value = fmt((tva / calcHT2) * 100);
+            if (calcHT2 > 0) tauxTVA.value = fmt(snapToLegalRate((tva / calcHT2) * 100));
         } else if (montantRef === 'ht' && !tvaRef) {
             if (taux > 0) {
                 montantTVA.value = fmt(ht * taux / 100);
                 montantTTC.value = fmt(ht * (1 + taux / 100));
             } else if (tva > 0) {
-                if (ht > 0) tauxTVA.value = fmt((tva / ht) * 100);
+                if (ht > 0) tauxTVA.value = fmt(snapToLegalRate((tva / ht) * 100));
                 montantTTC.value = fmt(ht + tva);
             }
         } else if (montantRef === 'ttc' && !tvaRef) {
@@ -181,7 +201,7 @@
             } else if (tva > 0) {
                 montantHT.value = fmt(ttc - tva);
                 var calcHT4 = parseFloat(montantHT.value.replace(',', '.'));
-                if (calcHT4 > 0) tauxTVA.value = fmt((tva / calcHT4) * 100);
+                if (calcHT4 > 0) tauxTVA.value = fmt(snapToLegalRate((tva / calcHT4) * 100));
             }
         } else if (!montantRef && tvaRef === 'taux') {
             if (ht > 0) {
@@ -194,18 +214,121 @@
             }
         } else if (!montantRef && tvaRef === 'montant') {
             if (ht > 0) {
-                tauxTVA.value = fmt((tva / ht) * 100);
+                tauxTVA.value = fmt(snapToLegalRate((tva / ht) * 100));
                 montantTTC.value = fmt(ht + tva);
             } else if (ttc > 0) {
                 montantHT.value = fmt(ttc - tva);
                 var calcHT6 = parseFloat(montantHT.value.replace(',', '.'));
-                if (calcHT6 > 0) tauxTVA.value = fmt((tva / calcHT6) * 100);
+                if (calcHT6 > 0) tauxTVA.value = fmt(snapToLegalRate((tva / calcHT6) * 100));
             }
         }
     });
 
-    // Enter dans une ligne d'édition = valider
+    // --- Autocomplete du champ "Compte" sur les lignes d'édition ---
+    var DROPDOWN_LIMIT = 30;
+    function filterPlan(q) {
+        q = (q || '').trim().toLowerCase();
+        if (!q) return PLAN.slice(0, DROPDOWN_LIMIT);
+        var results = [];
+        for (var i = 0; i < PLAN.length && results.length < DROPDOWN_LIMIT; i++) {
+            var a = PLAN[i];
+            if (a.numero.indexOf(q) === 0 || a.libelle.toLowerCase().indexOf(q) !== -1) {
+                results.push(a);
+            }
+        }
+        return results;
+    }
+    function escapeHtml(s) {
+        return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+    function renderDropdown(dropdown, items) {
+        if (!items.length) { dropdown.classList.add('hidden'); return; }
+        var html = '';
+        for (var i = 0; i < items.length; i++) {
+            html += '<li class="compte-item px-3 py-1.5 cursor-pointer hover:bg-indigo-50' +
+                    (i === 0 ? ' bg-indigo-50' : '') + '" data-numero="' + items[i].numero + '">' +
+                    '<span class="font-mono text-slate-700">' + items[i].numero + '</span> ' +
+                    '<span class="text-slate-500">— ' + escapeHtml(items[i].libelle) + '</span>' +
+                    '</li>';
+        }
+        dropdown.innerHTML = html;
+        dropdown.classList.remove('hidden');
+    }
+    function moveHighlight(dropdown, delta) {
+        var items = dropdown.querySelectorAll('.compte-item');
+        if (!items.length) return;
+        var idx = -1;
+        for (var i = 0; i < items.length; i++) {
+            if (items[i].classList.contains('bg-indigo-50')) { idx = i; break; }
+        }
+        if (idx >= 0) items[idx].classList.remove('bg-indigo-50');
+        var next = ((idx < 0 ? -1 : idx) + delta + items.length) % items.length;
+        items[next].classList.add('bg-indigo-50');
+        items[next].scrollIntoView({ block: 'nearest' });
+    }
+    function getDropdown(input) {
+        return input.parentElement.querySelector('.compte-dropdown');
+    }
+    function positionDropdown(input, dd) {
+        var rect = input.getBoundingClientRect();
+        dd.style.top = (rect.bottom + 4) + 'px';
+        dd.style.left = rect.left + 'px';
+    }
+
+    tbody.addEventListener('focusin', function(e) {
+        if (!e.target.classList.contains('compta-input-compte')) return;
+        var dd = getDropdown(e.target);
+        if (!dd) return;
+        positionDropdown(e.target, dd);
+        renderDropdown(dd, filterPlan(e.target.value));
+    });
+
+    tbody.addEventListener('focusout', function(e) {
+        if (!e.target.classList.contains('compta-input-compte')) return;
+        var dd = getDropdown(e.target);
+        if (dd) setTimeout(function() { dd.classList.add('hidden'); }, 150);
+    });
+
+    tbody.addEventListener('input', function(e) {
+        if (!e.target.classList.contains('compta-input-compte')) return;
+        var dd = getDropdown(e.target);
+        if (dd) renderDropdown(dd, filterPlan(e.target.value));
+    });
+
+    // mousedown plutôt que click : se déclenche avant le blur qui fermerait le dropdown
+    tbody.addEventListener('mousedown', function(e) {
+        var li = e.target.closest('.compte-item');
+        if (!li) return;
+        e.preventDefault();
+        var input = li.closest('td').querySelector('.compta-input-compte');
+        if (input) {
+            input.value = li.dataset.numero;
+            li.closest('.compte-dropdown').classList.add('hidden');
+            input.focus();
+        }
+    });
+
+    // Enter / Arrow / Escape dans une ligne d'édition
     tbody.addEventListener('keydown', function(e) {
+        var compteInput = e.target.classList && e.target.classList.contains('compta-input-compte') ? e.target : null;
+        var dd = compteInput ? getDropdown(compteInput) : null;
+        var dropdownOpen = dd && !dd.classList.contains('hidden');
+
+        if (dropdownOpen) {
+            if (e.key === 'ArrowDown') { e.preventDefault(); moveHighlight(dd, 1); return; }
+            if (e.key === 'ArrowUp')   { e.preventDefault(); moveHighlight(dd, -1); return; }
+            if (e.key === 'Enter') {
+                var active = dd.querySelector('.compte-item.bg-indigo-50');
+                if (active) {
+                    e.preventDefault();
+                    compteInput.value = active.dataset.numero;
+                    dd.classList.add('hidden');
+                    return;
+                }
+            }
+            if (e.key === 'Escape') { e.preventDefault(); dd.classList.add('hidden'); return; }
+        }
+
         if (e.key === 'Enter') {
             var tr = e.target.closest('.compta-input-row');
             if (tr) {

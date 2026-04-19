@@ -1,0 +1,63 @@
+{% extends 'layout/app.html.twig' %}
+
+{% block title %}Nouveau compte - Admin{% endblock %}
+{% block page_title %}Nouveau compte{% endblock %}
+
+{% set active_page = 'plan-comptable' %}
+
+{% block content %}
+
+<div class="flex items-center gap-3 mb-6">
+    <a href="/plan-comptable" class="text-slate-400 hover:text-slate-600 transition">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+    </a>
+    <h3 class="text-lg font-semibold text-slate-800">Retour au plan comptable</h3>
+</div>
+
+{% if session.error is defined %}
+<div class="mb-4 px-4 py-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">{{ session.error }}</div>
+{% endif %}
+
+<form method="POST" action="/plan-comptable" class="bg-white rounded-xl shadow-sm p-6 max-w-xl">
+    <div class="space-y-4">
+        <div>
+            <label for="numero" class="block text-sm font-medium text-slate-700 mb-1">Numéro</label>
+            <input type="text" id="numero" name="numero" required pattern="\d{2,10}" inputmode="numeric"
+                   placeholder="ex. 512000"
+                   class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none font-mono">
+            <p class="mt-1 text-xs text-slate-500">2 à 10 chiffres. Doit être unique.</p>
+        </div>
+        <div>
+            <label for="libelle" class="block text-sm font-medium text-slate-700 mb-1">Libellé</label>
+            <input type="text" id="libelle" name="libelle" required maxlength="255"
+                   class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+        </div>
+        <div>
+            <label for="classe" class="block text-sm font-medium text-slate-700 mb-1">Classe</label>
+            <select id="classe" name="classe" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+                <option value="1" {{ classe_preselect == 1 ? 'selected' : '' }}>Classe 1 — Capitaux</option>
+                <option value="2" {{ classe_preselect == 2 ? 'selected' : '' }}>Classe 2 — Immobilisations</option>
+                <option value="3" {{ classe_preselect == 3 ? 'selected' : '' }}>Classe 3 — Stocks</option>
+                <option value="4" {{ classe_preselect == 4 ? 'selected' : '' }}>Classe 4 — Tiers</option>
+                <option value="5" {{ classe_preselect == 5 ? 'selected' : '' }}>Classe 5 — Financiers</option>
+                <option value="6" {{ classe_preselect == 6 ? 'selected' : '' }}>Classe 6 — Charges</option>
+                <option value="7" {{ classe_preselect == 7 ? 'selected' : '' }}>Classe 7 — Produits</option>
+                <option value="8" {{ classe_preselect == 8 ? 'selected' : '' }}>Classe 8 — Spéciaux</option>
+                <option value="9" {{ classe_preselect == 9 ? 'selected' : '' }}>Classe 9 — Analytiques</option>
+            </select>
+        </div>
+        <label class="flex items-center gap-2">
+            <input type="checkbox" name="optionnel" value="1" class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+            <span class="text-sm text-slate-700">Compte optionnel (masqué dans la sélection de qualification)</span>
+        </label>
+    </div>
+
+    <div class="flex items-center gap-3 mt-6 pt-4 border-t border-slate-200">
+        <button type="submit" class="bg-indigo-600 text-white px-5 py-2 rounded-lg hover:bg-indigo-700 transition text-sm font-medium shadow-sm">
+            Créer
+        </button>
+        <a href="/plan-comptable" class="text-sm text-slate-500 hover:text-slate-700">Annuler</a>
+    </div>
+</form>
+
+{% endblock %}

@@ -9,6 +9,7 @@ use App\Repository\CompteBancaireRepository;
 use App\Repository\ImportBancaireRepository;
 use App\Repository\LienDocumentRepository;
 use App\Repository\LigneComptableRepository;
+use App\Repository\PlanComptableRepository;
 use App\Repository\TransactionBancaireRepository;
 use App\Service\Banque\ImportService;
 use App\Service\Banque\ParserFactory;
@@ -21,6 +22,7 @@ class BanqueController
     private CompteBancaireRepository $compteRepo;
     private LigneComptableRepository $ligneRepo;
     private LienDocumentRepository $lienRepo;
+    private PlanComptableRepository $planRepo;
 
     public function __construct(
         private Environment $twig,
@@ -31,6 +33,7 @@ class BanqueController
         $this->compteRepo = new CompteBancaireRepository($pdo);
         $this->ligneRepo = new LigneComptableRepository($pdo);
         $this->lienRepo = new LienDocumentRepository($pdo);
+        $this->planRepo = new PlanComptableRepository($pdo);
     }
 
     public function transactions(): void
@@ -57,6 +60,7 @@ class BanqueController
             'comptes' => $comptes,
             'filtres' => $filtres,
             'import_success' => isset($_GET['import_success']) ? (int) $_GET['import_success'] : null,
+            'import_skipped' => isset($_GET['import_skipped']) ? (int) $_GET['import_skipped'] : null,
         ]);
     }
 
@@ -202,9 +206,9 @@ class BanqueController
                 $this->transactionRepo,
             );
 
-            $count = $importService->importerFichier($compteId, $tmpPath, $format);
+            $result = $importService->importerFichier($compteId, $tmpPath, $format);
 
-            header('Location: /app/banque?import_success=' . $count);
+            header('Location: /app/banque?import_success=' . $result['inserted'] . '&import_skipped=' . $result['skipped']);
             exit;
         } catch (\Throwable $e) {
             echo $this->twig->render('app/banque/import.html.twig', [
@@ -252,14 +256,14 @@ class BanqueController
         }
 
         $liens = $this->lienRepo->findByTransaction($id);
-        $comptesUtilises = $this->ligneRepo->findDistinctComptes();
+        $planComptable = $this->planRepo->findSelectable();
 
         echo $this->twig->render('app/banque/show.html.twig', [
             'active_page' => 'banque',
             'transaction' => $transaction,
             'lignes' => $lignes,
             'liens' => $liens,
-            'comptes_utilises' => $comptesUtilises,
+            'plan_comptable' => $planComptable,
             'success' => isset($_GET['success']),
         ]);
     }

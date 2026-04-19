@@ -21,6 +21,27 @@ $twig = new \Twig\Environment($loader, [
 ]);
 $twig->addGlobal('session', $_SESSION);
 
+// Snap un taux de TVA calculé sur le plus proche des taux légaux français.
+// Les dérives de centimes issues des arrondis sur facture peuvent produire des
+// taux comme 20,37% — on veut afficher 20%.
+$twig->addFilter(new \Twig\TwigFilter('legal_vat_rate', function ($rate) {
+    if (!is_numeric($rate) || (float) $rate == 0.0) {
+        return $rate;
+    }
+    $target = (float) $rate;
+    $legal = [20, 13, 10, 8.5, 5.5, 2.1, 1.75, 1.05, 0.9];
+    $nearest = $legal[0];
+    $minDiff = abs($target - $nearest);
+    foreach ($legal as $candidate) {
+        $diff = abs($target - $candidate);
+        if ($diff < $minDiff) {
+            $minDiff = $diff;
+            $nearest = $candidate;
+        }
+    }
+    return $nearest;
+}));
+
 // BDD
 $dsn = sprintf('%s:host=%s;port=%s;dbname=%s', $dbConfig['driver'], $dbConfig['host'], $dbConfig['port'], $dbConfig['database']);
 $pdo = new PDO($dsn, $dbConfig['username'], $dbConfig['password'], $dbConfig['options']);

@@ -123,28 +123,84 @@ class TransactionBancaireRepository
         return $result ?: null;
     }
 
-    public function createBatch(array $transactions): int
+    /**
+     * Insertion idempotente : une opération déjà présente en base est ignorée.
+     *
+     * Clé de déduplication :
+     *  - `reference_externe` si fournie par le parser (ex: Transaction ID Shine)
+     *  - sinon le tuple (compte, date, montant, libelle)
+     *
+     * Les lignes comptables et documents rattachés à l'opération existante
+     * restent intacts (aucune suppression, aucun UPDATE de la ligne existante).
+     *
+     * @return array{inserted: int, skipped: int}
+     */
+    public function createBatch(array $transactions): array
     {
-        $count = 0;
-        $stmt = $this->pdo->prepare(
+        $withRef = $this->pdo->prepare(
             "INSERT INTO transactions_bancaires (compte_bancaire_id, import_bancaire_id, date, libelle, montant, type, reference_externe)
-             VALUES (:compte_bancaire_id, :import_bancaire_id, :date, :libelle, :montant, :type, :reference_externe)"
+             SELECT ?, ?, ?, ?, ?, ?, ?
+             WHERE NOT EXISTS (
+                 SELECT 1 FROM transactions_bancaires
+                 WHERE compte_bancaire_id = ? AND reference_externe = ?
+             )"
         );
 
+        $withoutRef = $this->pdo->prepare(
+            "INSERT INTO transactions_bancaires (compte_bancaire_id, import_bancaire_id, date, libelle, montant, type, reference_externe)
+             SELECT ?, ?, ?, ?, ?, ?, NULL
+             WHERE NOT EXISTS (
+                 SELECT 1 FROM transactions_bancaires
+                 WHERE compte_bancaire_id = ?
+                   AND date = ?
+                   AND montant = ?
+                   AND libelle = ?
+             )"
+        );
+
+        $inserted = 0;
+        $skipped = 0;
+
         foreach ($transactions as $t) {
-            $stmt->execute([
-                'compte_bancaire_id' => $t['compte_bancaire_id'],
-                'import_bancaire_id' => $t['import_bancaire_id'] ?? null,
-                'date' => $t['date'],
-                'libelle' => $t['libelle'],
-                'montant' => $t['montant'],
-                'type' => $t['type'],
-                'reference_externe' => $t['reference_externe'] ?? null,
-            ]);
-            $count++;
+            $ref = isset($t['reference_externe']) && $t['reference_externe'] !== '' ? $t['reference_externe'] : null;
+
+            if ($ref !== null) {
+                $withRef->execute([
+                    $t['compte_bancaire_id'],
+                    $t['import_bancaire_id'] ?? null,
+                    $t['date'],
+                    $t['libelle'],
+                    $t['montant'],
+                    $t['type'],
+                    $ref,
+                    $t['compte_bancaire_id'],
+                    $ref,
+                ]);
+                $stmt = $withRef;
+            } else {
+                $withoutRef->execute([
+                    $t['compte_bancaire_id'],
+                    $t['import_bancaire_id'] ?? null,
+                    $t['date'],
+                    $t['libelle'],
+                    $t['montant'],
+                    $t['type'],
+                    $t['compte_bancaire_id'],
+                    $t['date'],
+                    $t['montant'],
+                    $t['libelle'],
+                ]);
+                $stmt = $withoutRef;
+            }
+
+            if ($stmt->rowCount() === 1) {
+                $inserted++;
+            } else {
+                $skipped++;
+            }
         }
 
-        return $count;
+        return ['inserted' => $inserted, 'skipped' => $skipped];
     }
 
     public function rapprocher(int $id, ?int $factureId, ?int $depenseId): void
