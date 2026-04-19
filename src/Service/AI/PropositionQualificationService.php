@@ -80,6 +80,8 @@ Réponds UNIQUEMENT avec un JSON valide (pas de texte avant/après) au format :
   ],
   "explication": "Brève justification en français."
 }
+
+/no_think
 TEXT;
     }
 

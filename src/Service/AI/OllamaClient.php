@@ -33,6 +33,7 @@ class OllamaClient
             'messages' => $messages,
             'format' => 'json',
             'stream' => true,
+            'think' => false, // désactive le "thinking" de qwen3 (Ollama ≥ 0.3)
             'options' => ['temperature' => 0.2],
         ];
 
