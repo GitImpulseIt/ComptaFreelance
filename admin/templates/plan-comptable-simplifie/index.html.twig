@@ -1,0 +1,101 @@
+{% extends 'layout/app.html.twig' %}
+
+{% block title %}Plan comptable simplifié - Admin{% endblock %}
+{% block page_title %}Plan comptable simplifié{% endblock %}
+
+{% set active_page = 'plan-comptable-simplifie' %}
+
+{% block content %}
+
+{% if success == 'created' %}
+<div class="mb-4 px-4 py-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-sm">Compte créé.</div>
+{% elseif success == 'updated' %}
+<div class="mb-4 px-4 py-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-sm">Compte mis à jour.</div>
+{% elseif success == 'deleted' %}
+<div class="mb-4 px-4 py-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-sm">Compte supprimé.</div>
+{% endif %}
+
+{% if session.error is defined %}
+<div class="mb-4 px-4 py-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">{{ session.error }}</div>
+{% endif %}
+
+<form method="GET" action="/plan-comptable-simplifie" class="flex items-center gap-2 flex-wrap mb-6">
+    <select name="categorie" class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+        <option value="">Toutes catégories</option>
+        {% for c in categories %}
+        <option value="{{ c.categorie }}" {{ c.categorie == categorie_active ? 'selected' : '' }}>{{ c.categorie }} ({{ c.total }})</option>
+        {% endfor %}
+    </select>
+    <select name="sens" class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+        <option value="">Tous sens</option>
+        <option value="D" {{ sens_active == 'D' ? 'selected' : '' }}>Débit</option>
+        <option value="C" {{ sens_active == 'C' ? 'selected' : '' }}>Crédit</option>
+    </select>
+    <input type="text" name="q" value="{{ q }}" placeholder="Numéro, libellé ou mot-clé…"
+           class="flex-1 max-w-md border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+    <button type="submit" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium transition">Filtrer</button>
+    {% if categorie_active != '' or sens_active != '' or q != '' %}
+    <a href="/plan-comptable-simplifie" class="text-sm text-slate-500 hover:text-slate-700">Effacer</a>
+    {% endif %}
+    <a href="/plan-comptable-simplifie/create" class="ml-auto inline-flex items-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-lg hover:bg-indigo-700 transition font-medium text-sm shadow-sm">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Nouveau compte
+    </a>
+</form>
+
+<div class="bg-white rounded-xl shadow-sm overflow-hidden">
+    {% if comptes|length > 0 %}
+    <table class="w-full">
+        <thead>
+            <tr class="bg-slate-50">
+                <th class="text-left px-6 py-2.5 text-xs font-semibold text-slate-500 uppercase w-28">Numéro</th>
+                <th class="text-left px-6 py-2.5 text-xs font-semibold text-slate-500 uppercase">Libellé</th>
+                <th class="text-left px-6 py-2.5 text-xs font-semibold text-slate-500 uppercase w-44">Catégorie</th>
+                <th class="text-left px-6 py-2.5 text-xs font-semibold text-slate-500 uppercase w-20">Sens</th>
+                <th class="text-left px-6 py-2.5 text-xs font-semibold text-slate-500 uppercase w-24">PCG</th>
+                <th class="text-right px-6 py-2.5 text-xs font-semibold text-slate-500 uppercase w-48">Actions</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+            {% for c in comptes %}
+            <tr class="hover:bg-slate-50/80 transition">
+                <td class="px-6 py-2 text-sm font-mono text-slate-700">{{ c.numero }}</td>
+                <td class="px-6 py-2 text-sm text-slate-700">
+                    {{ c.libelle }}
+                    {% if c.mots_cles %}
+                    <div class="text-xs text-slate-400 mt-0.5">{{ c.mots_cles }}</div>
+                    {% endif %}
+                </td>
+                <td class="px-6 py-2 text-sm text-slate-500">{{ c.categorie }}</td>
+                <td class="px-6 py-2 text-sm">
+                    {% if c.sens == 'D' %}
+                    <span class="inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full bg-red-50 text-red-700">Débit</span>
+                    {% else %}
+                    <span class="inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">Crédit</span>
+                    {% endif %}
+                </td>
+                <td class="px-6 py-2 text-sm text-slate-400 font-mono">{{ c.pcg_parent ?? '—' }}</td>
+                <td class="px-6 py-2 text-sm text-right">
+                    <a href="/plan-comptable-simplifie/{{ c.numero }}/edit" class="inline-flex items-center gap-1 text-sm text-indigo-600 hover:text-indigo-800 transition mr-3">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                        Modifier
+                    </a>
+                    <form method="POST" action="/plan-comptable-simplifie/{{ c.numero }}/delete" class="inline" onsubmit="return confirm('Supprimer le compte {{ c.numero }} — {{ c.libelle|e('js') }} ?')">
+                        <button type="submit" class="inline-flex items-center gap-1 text-sm text-red-600 hover:text-red-800 transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            Supprimer
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="px-8 py-16 text-center">
+        <p class="text-sm text-slate-400">Aucun compte{{ q != '' or categorie_active != '' or sens_active != '' ? ' ne correspond aux filtres' : '' }}.</p>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

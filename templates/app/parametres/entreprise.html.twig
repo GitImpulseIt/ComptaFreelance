@@ -138,6 +138,30 @@
         </div>
     </div>
 
+    {# Plan comptable #}
+    <div class="bg-white rounded-xl shadow-sm p-6">
+        <h3 class="text-sm font-semibold text-slate-700 mb-4">Plan comptable</h3>
+        <p class="text-xs text-slate-500 mb-3">
+            Choisissez le plan utilisé lors de la qualification des opérations bancaires.
+            Le plan simplifié est recommandé pour la plupart des freelances : liste courte, libellés explicites, filtrage selon le sens débit/crédit.
+        </p>
+        <div class="flex gap-2">
+            <button type="button"
+                    onclick="document.getElementById('plan_comptable_hidden').value='simplifie'; updatePlanButtons();"
+                    id="btn-plan-simplifie"
+                    class="px-4 py-2 text-sm font-medium rounded-lg border transition {{ e.plan_comptable == 'simplifie' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50' }}">
+                Simplifié (recommandé)
+            </button>
+            <button type="button"
+                    onclick="document.getElementById('plan_comptable_hidden').value='general'; updatePlanButtons();"
+                    id="btn-plan-general"
+                    class="px-4 py-2 text-sm font-medium rounded-lg border transition {{ e.plan_comptable == 'general' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50' }}">
+                Général (PCG complet)
+            </button>
+        </div>
+        <input type="hidden" id="plan_comptable_hidden" name="plan_comptable" value="{{ e.plan_comptable ?? 'simplifie' }}">
+    </div>
+
     {# Coordonnées #}
     <div class="bg-white rounded-xl shadow-sm p-6">
         <h3 class="text-sm font-semibold text-slate-700 mb-4">Coordonnées</h3>
@@ -241,6 +265,14 @@ function setImposition(isIr) {
         hidden.value = '0';
     }
     updateRegimeBeneficesVisibility();
+}
+
+function updatePlanButtons() {
+    var value = document.getElementById('plan_comptable_hidden').value;
+    var btnSimp = document.getElementById('btn-plan-simplifie');
+    var btnGen = document.getElementById('btn-plan-general');
+    btnSimp.className = 'px-4 py-2 text-sm font-medium rounded-lg border transition ' + (value === 'simplifie' ? activeClass : inactiveClass);
+    btnGen.className = 'px-4 py-2 text-sm font-medium rounded-lg border transition ' + (value === 'general' ? activeClass : inactiveClass);
 }
 
 function setRegimeBenefices(regime) {

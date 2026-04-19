@@ -99,6 +99,7 @@ class ParametreController
             'option_ir' => $optionIr,
             'option_ir_fin_exercice' => $optionIrFinExercice,
             'regime_benefices' => $optionIr ? ($_POST['regime_benefices'] ?? 'BNC') : 'BNC',
+            'plan_comptable' => $_POST['plan_comptable'] ?? $entreprise['plan_comptable'] ?? 'simplifie',
         ]);
 
         // Mettre à jour le nom en session

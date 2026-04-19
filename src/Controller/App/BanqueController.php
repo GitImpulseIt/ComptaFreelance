@@ -6,10 +6,12 @@ namespace App\Controller\App;
 
 use App\Middleware\AuthMiddleware;
 use App\Repository\CompteBancaireRepository;
+use App\Repository\EntrepriseRepository;
 use App\Repository\ImportBancaireRepository;
 use App\Repository\LienDocumentRepository;
 use App\Repository\LigneComptableRepository;
 use App\Repository\PlanComptableRepository;
+use App\Repository\PlanComptableSimplifieRepository;
 use App\Repository\TransactionBancaireRepository;
 use App\Service\Banque\ImportService;
 use App\Service\Banque\ParserFactory;
@@ -23,6 +25,8 @@ class BanqueController
     private LigneComptableRepository $ligneRepo;
     private LienDocumentRepository $lienRepo;
     private PlanComptableRepository $planRepo;
+    private PlanComptableSimplifieRepository $planSimpRepo;
+    private EntrepriseRepository $entrepriseRepo;
 
     public function __construct(
         private Environment $twig,
@@ -34,6 +38,8 @@ class BanqueController
         $this->ligneRepo = new LigneComptableRepository($pdo);
         $this->lienRepo = new LienDocumentRepository($pdo);
         $this->planRepo = new PlanComptableRepository($pdo);
+        $this->planSimpRepo = new PlanComptableSimplifieRepository($pdo);
+        $this->entrepriseRepo = new EntrepriseRepository($pdo);
     }
 
     public function transactions(): void
@@ -256,7 +262,12 @@ class BanqueController
         }
 
         $liens = $this->lienRepo->findByTransaction($id);
-        $planComptable = $this->planRepo->findSelectable();
+
+        $entreprise = $this->entrepriseRepo->findById($entrepriseId);
+        $planMode = $entreprise['plan_comptable'] ?? 'simplifie';
+        $planComptable = $planMode === 'general'
+            ? $this->planRepo->findSelectable()
+            : $this->planSimpRepo->findAll();
 
         echo $this->twig->render('app/banque/show.html.twig', [
             'active_page' => 'banque',
@@ -264,6 +275,7 @@ class BanqueController
             'lignes' => $lignes,
             'liens' => $liens,
             'plan_comptable' => $planComptable,
+            'plan_mode' => $planMode,
             'success' => isset($_GET['success']),
         ]);
     }

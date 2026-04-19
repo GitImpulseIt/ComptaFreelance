@@ -54,7 +54,8 @@ class EntrepriseRepository
                 code_postal = :code_postal, ville = :ville, telephone = :telephone,
                 email = :email, regime_tva = :regime_tva, statut_juridique = :statut_juridique,
                 option_ir = :option_ir, option_ir_fin_exercice = :option_ir_fin_exercice,
-                regime_benefices = :regime_benefices, updated_at = NOW()
+                regime_benefices = :regime_benefices, plan_comptable = :plan_comptable,
+                updated_at = NOW()
              WHERE id = :id"
         );
         $stmt->execute([
@@ -71,6 +72,9 @@ class EntrepriseRepository
             'option_ir' => $data['option_ir'] ?? false,
             'option_ir_fin_exercice' => $data['option_ir_fin_exercice'] ?? null,
             'regime_benefices' => $data['regime_benefices'] ?? 'BNC',
+            'plan_comptable' => in_array($data['plan_comptable'] ?? null, ['general', 'simplifie'], true)
+                ? $data['plan_comptable']
+                : 'simplifie',
         ]);
     }
 

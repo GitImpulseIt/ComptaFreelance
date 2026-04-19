@@ -71,6 +71,7 @@ foreach ($routes as $pattern => $handler) {
             'IrController' => new \Admin\Controller\IrController($twig, $pdo),
             'TvaCalendrierController' => new \Admin\Controller\TvaCalendrierController($twig, $pdo),
             'PlanComptableController' => new \Admin\Controller\PlanComptableController($twig, $pdo),
+            'PlanComptableSimplifieController' => new \Admin\Controller\PlanComptableSimplifieController($twig, $pdo),
         };
 
         $controller->$action(...array_map('intval', $matches));

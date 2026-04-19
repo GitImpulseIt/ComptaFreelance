@@ -3,8 +3,9 @@
     var addBtn = document.getElementById('add-line');
     var warning = document.getElementById('sum-warning');
 
-    // Plan comptable injecté par le template (window.PLAN_COMPTABLE).
+    // Plan comptable injecté par le template.
     var PLAN = (typeof window !== 'undefined' && Array.isArray(window.PLAN_COMPTABLE)) ? window.PLAN_COMPTABLE : [];
+    var PLAN_MODE = (typeof window !== 'undefined' && window.PLAN_MODE) || 'general';
 
     // Ramène un taux TVA calculé au plus proche des taux légaux français
     // (corrige la dérive des centimes due aux arrondis sur facture).
@@ -226,15 +227,26 @@
 
     // --- Autocomplete du champ "Compte" sur les lignes d'édition ---
     var DROPDOWN_LIMIT = 30;
-    function filterPlan(q) {
+
+    // En mode simplifié, le plan contient un champ "sens" (D/C). On filtre
+    // les suggestions selon le type de la ligne courante (DBT→D, CRD→C).
+    function getSensFromInput(input) {
+        if (PLAN_MODE !== 'simplifie') return null;
+        var tr = input.closest('tr');
+        if (!tr) return null;
+        var typeSelect = tr.querySelector('.compta-input-type');
+        if (!typeSelect) return null;
+        return typeSelect.value === 'DBT' ? 'D' : 'C';
+    }
+
+    function filterPlan(q, sens) {
         q = (q || '').trim().toLowerCase();
-        if (!q) return PLAN.slice(0, DROPDOWN_LIMIT);
         var results = [];
         for (var i = 0; i < PLAN.length && results.length < DROPDOWN_LIMIT; i++) {
             var a = PLAN[i];
-            if (a.numero.indexOf(q) === 0 || a.libelle.toLowerCase().indexOf(q) !== -1) {
-                results.push(a);
-            }
+            if (sens && a.sens && a.sens !== sens) continue;
+            if (q && a.numero.indexOf(q) !== 0 && a.libelle.toLowerCase().indexOf(q) === -1) continue;
+            results.push(a);
         }
         return results;
     }
@@ -280,7 +292,7 @@
         var dd = getDropdown(e.target);
         if (!dd) return;
         positionDropdown(e.target, dd);
-        renderDropdown(dd, filterPlan(e.target.value));
+        renderDropdown(dd, filterPlan(e.target.value, getSensFromInput(e.target)));
     });
 
     tbody.addEventListener('focusout', function(e) {
@@ -292,7 +304,19 @@
     tbody.addEventListener('input', function(e) {
         if (!e.target.classList.contains('compta-input-compte')) return;
         var dd = getDropdown(e.target);
-        if (dd) renderDropdown(dd, filterPlan(e.target.value));
+        if (dd) renderDropdown(dd, filterPlan(e.target.value, getSensFromInput(e.target)));
+    });
+
+    // Si l'utilisateur change le sens (Débit/Crédit) pendant que le dropdown est ouvert,
+    // re-filtrer pour refléter le nouveau sens.
+    tbody.addEventListener('change', function(e) {
+        if (!e.target.classList.contains('compta-input-type')) return;
+        var tr = e.target.closest('tr');
+        if (!tr) return;
+        var input = tr.querySelector('.compta-input-compte');
+        var dd = tr.querySelector('.compte-dropdown');
+        if (!input || !dd || dd.classList.contains('hidden')) return;
+        renderDropdown(dd, filterPlan(input.value, getSensFromInput(input)));
     });
 
     // mousedown plutôt que click : se déclenche avant le blur qui fermerait le dropdown

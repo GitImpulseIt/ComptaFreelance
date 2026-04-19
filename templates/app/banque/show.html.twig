@@ -145,6 +145,9 @@
 {% endblock %}
 
 {% block scripts %}
-<script>window.PLAN_COMPTABLE = {{ plan_comptable|json_encode|raw }};</script>
+<script>
+window.PLAN_COMPTABLE = {{ plan_comptable|json_encode|raw }};
+window.PLAN_MODE = {{ plan_mode|json_encode|raw }};
+</script>
 <script src="/js/transaction.js"></script>
 {% endblock %}

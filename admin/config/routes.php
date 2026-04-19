@@ -51,13 +51,21 @@ return [
     'POST /ir/{id}/delete' => ['IrController', 'delete'],
     'POST /ir/{id}/duplicate' => ['IrController', 'duplicate'],
 
-    // Plan comptable
+    // Plan comptable général
     'GET /plan-comptable' => ['PlanComptableController', 'index'],
     'GET /plan-comptable/create' => ['PlanComptableController', 'create'],
     'POST /plan-comptable' => ['PlanComptableController', 'store'],
     'GET /plan-comptable/{numero}/edit' => ['PlanComptableController', 'edit'],
     'POST /plan-comptable/{numero}' => ['PlanComptableController', 'update'],
     'POST /plan-comptable/{numero}/delete' => ['PlanComptableController', 'delete'],
+
+    // Plan comptable simplifié
+    'GET /plan-comptable-simplifie' => ['PlanComptableSimplifieController', 'index'],
+    'GET /plan-comptable-simplifie/create' => ['PlanComptableSimplifieController', 'create'],
+    'POST /plan-comptable-simplifie' => ['PlanComptableSimplifieController', 'store'],
+    'GET /plan-comptable-simplifie/{numero}/edit' => ['PlanComptableSimplifieController', 'edit'],
+    'POST /plan-comptable-simplifie/{numero}' => ['PlanComptableSimplifieController', 'update'],
+    'POST /plan-comptable-simplifie/{numero}/delete' => ['PlanComptableSimplifieController', 'delete'],
 
     // Mot de passe admin
     'GET /password' => ['PasswordController', 'showChange'],
