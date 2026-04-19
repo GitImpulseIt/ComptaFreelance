@@ -117,6 +117,7 @@ class PlanComptableEffectifService
 
         $rows = [];
         foreach ($numeros as $num => $origine) {
+            $num = (string) $num;
             $pref = $ctx['prefs'][$num] ?? null;
             $simpLibelle = $ctx['simpMap'][$num] ?? null;
             $genLibelle = $ctx['genMap'][$num] ?? null;
