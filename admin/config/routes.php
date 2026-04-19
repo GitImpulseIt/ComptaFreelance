@@ -67,6 +67,10 @@ return [
     'POST /plan-comptable-simplifie/{numero}' => ['PlanComptableSimplifieController', 'update'],
     'POST /plan-comptable-simplifie/{numero}/delete' => ['PlanComptableSimplifieController', 'delete'],
 
+    // Assistant IA
+    'GET /ai-settings' => ['AiSettingsController', 'index'],
+    'POST /ai-settings' => ['AiSettingsController', 'update'],
+
     // Mot de passe admin
     'GET /password' => ['PasswordController', 'showChange'],
     'POST /password' => ['PasswordController', 'change'],

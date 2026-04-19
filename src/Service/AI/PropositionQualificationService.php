@@ -20,6 +20,7 @@ class PropositionQualificationService
         private LigneComptableRepository $ligneRepo,
         private LienDocumentRepository $lienRepo,
         private int $historyLimit = 25,
+        private ?string $systemPromptOverride = null,
     ) {}
 
     /**
@@ -59,6 +60,9 @@ class PropositionQualificationService
 
     private function systemPrompt(): string
     {
+        if ($this->systemPromptOverride !== null && trim($this->systemPromptOverride) !== '') {
+            return $this->systemPromptOverride;
+        }
         return <<<TEXT
 Tu es un assistant comptable expert pour freelances français (régime réel).
 Tu proposes les lignes comptables pour qualifier une opération bancaire.
@@ -80,8 +84,6 @@ Réponds UNIQUEMENT avec un JSON valide (pas de texte avant/après) au format :
   ],
   "explication": "Brève justification en français."
 }
-
-/no_think
 TEXT;
     }
 

@@ -1,0 +1,68 @@
+{% extends 'layout/app.html.twig' %}
+
+{% block title %}Assistant IA - Admin{% endblock %}
+{% block page_title %}Assistant IA{% endblock %}
+
+{% set active_page = 'ai-settings' %}
+
+{% block content %}
+
+{% if success == 'updated' %}
+<div class="mb-4 px-4 py-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-sm">Réglages mis à jour.</div>
+{% endif %}
+
+{% if session.error is defined %}
+<div class="mb-4 px-4 py-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">{{ session.error }}</div>
+{% endif %}
+
+<p class="text-sm text-slate-500 max-w-3xl mb-6">
+    Configure le comportement de l'assistant IA utilisé pour proposer automatiquement la qualification des opérations bancaires.
+    L'URL du serveur Ollama et les tokens d'accès restent dans les variables d'environnement (<code>OLLAMA_URL</code>, <code>OLLAMA_CF_*</code>).
+</p>
+
+<form method="POST" action="/ai-settings" class="bg-white rounded-xl shadow-sm p-6 max-w-3xl space-y-6">
+
+    <div>
+        <label for="ai_model" class="block text-sm font-medium text-slate-700 mb-1">Modèle Ollama</label>
+        <input type="text" id="ai_model" name="ai_model" required
+               value="{{ settings.ai_model }}"
+               placeholder="qwen3.6"
+               class="w-80 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none font-mono">
+        <p class="mt-1 text-xs text-slate-500">Identifiant du modèle tel qu'exposé par <code>/api/tags</code> (ex. <code>qwen3.6</code>, <code>qwen2.5:14b</code>, <code>llama3.1:70b</code>).</p>
+    </div>
+
+    <div>
+        <label class="flex items-start gap-3 cursor-pointer">
+            <input type="checkbox" name="ai_think_enabled" value="1"
+                   {{ settings.ai_think_enabled == 't' ? 'checked' : '' }}
+                   class="mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+            <span>
+                <span class="block text-sm font-medium text-slate-700">Mode réflexion</span>
+                <span class="block text-xs text-slate-500 mt-0.5">Active le monologue interne <code>&lt;think&gt;…&lt;/think&gt;</code> des modèles qwen3. Améliore parfois la qualité mais multiplie le temps de réponse par ~10.</span>
+            </span>
+        </label>
+    </div>
+
+    <div>
+        <label for="ai_history_limit" class="block text-sm font-medium text-slate-700 mb-1">Historique d'opérations qualifiées</label>
+        <input type="number" id="ai_history_limit" name="ai_history_limit" required min="0" max="100"
+               value="{{ settings.ai_history_limit }}"
+               class="w-24 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+        <p class="mt-1 text-xs text-slate-500">Nombre d'opérations déjà qualifiées envoyées en contexte (few-shot). Plus haut = meilleurs exemples mais prompt plus lourd.</p>
+    </div>
+
+    <div>
+        <label for="ai_system_prompt" class="block text-sm font-medium text-slate-700 mb-1">Prompt système</label>
+        <textarea id="ai_system_prompt" name="ai_system_prompt" rows="16"
+                  class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none leading-relaxed">{{ settings.ai_system_prompt }}</textarea>
+        <p class="mt-1 text-xs text-slate-500">Instructions données au modèle. Doit exiger une réponse JSON strict <code>{lignes:[…], explication:""}</code> pour que le parsing côté serveur fonctionne. Laisser vide pour utiliser le prompt par défaut codé dans le service.</p>
+    </div>
+
+    <div class="flex items-center gap-3 pt-4 border-t border-slate-200">
+        <button type="submit" class="bg-indigo-600 text-white px-5 py-2 rounded-lg hover:bg-indigo-700 transition text-sm font-medium shadow-sm">
+            Enregistrer
+        </button>
+    </div>
+</form>
+
+{% endblock %}

@@ -545,20 +545,30 @@ class BanqueController
 
         $aiConfig = require dirname(__DIR__, 3) . '/config/ai.php';
         $ollama = $aiConfig['ollama'];
+
+        // Réglages admin (BDD) avec fallback sur la config env.
+        $settings = $this->loadAiSettings();
+        $model = $settings['ai_model'] ?: $ollama['model'];
+        $think = ($settings['ai_think_enabled'] ?? 'f') === 't';
+        $historyLimit = (int) ($settings['ai_history_limit'] ?? $aiConfig['history_limit']) ?: $aiConfig['history_limit'];
+        $systemPrompt = $settings['ai_system_prompt'] ?? null;
+
         $client = new OllamaClient(
             $ollama['url'],
-            $ollama['model'],
+            $model,
             $ollama['api_key'],
             $ollama['cf_client_id'],
             $ollama['cf_client_secret'],
             $ollama['timeout'],
+            $think,
         );
         $service = new PropositionQualificationService(
             $client,
             $this->transactionRepo,
             $this->ligneRepo,
             $this->lienRepo,
-            $aiConfig['history_limit'],
+            $historyLimit,
+            $systemPrompt,
         );
 
         $plan = $this->planEffectif->findSelectable($entrepriseId);
@@ -570,6 +580,17 @@ class BanqueController
             http_response_code(502);
             echo json_encode(['success' => false, 'error' => $e->getMessage()]);
         }
+    }
+
+    /** @return array<string, string> */
+    private function loadAiSettings(): array
+    {
+        $stmt = $this->pdo->query("SELECT key, value FROM admin_settings WHERE key LIKE 'ai_%'");
+        $out = [];
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $out[$row['key']] = (string) $row['value'];
+        }
+        return $out;
     }
 
     /**

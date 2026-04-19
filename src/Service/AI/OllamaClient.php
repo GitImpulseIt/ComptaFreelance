@@ -16,6 +16,7 @@ class OllamaClient
         private string $cfClientId = '',
         private string $cfClientSecret = '',
         private int $timeout = 120,
+        private bool $think = false,
     ) {}
 
     /**
@@ -33,7 +34,7 @@ class OllamaClient
             'messages' => $messages,
             'format' => 'json',
             'stream' => true,
-            'think' => false, // désactive le "thinking" de qwen3 (Ollama ≥ 0.3)
+            'think' => $this->think, // mode réflexion qwen3 — configurable (plus lent si activé)
             'options' => ['temperature' => 0.2],
         ];
 
