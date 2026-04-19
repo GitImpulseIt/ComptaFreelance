@@ -96,6 +96,9 @@ return [
     'POST /app/parametres/comptes-bancaires/{id}' => ['App\\ParametreController', 'updateCompte'],
     'POST /app/parametres/comptes-bancaires/{id}/delete' => ['App\\ParametreController', 'deleteCompte'],
 
+    // IA — proposition de qualification
+    'POST /app/banque/{id}/proposer-ia' => ['App\\BanqueController', 'proposerIa'],
+
     // App - Paramètres > Plan comptable
     'GET /app/parametres/plan-comptable' => ['App\\ParametrePlanComptableController', 'index'],
     'POST /app/parametres/plan-comptable/toggle' => ['App\\ParametrePlanComptableController', 'toggleEnabled'],

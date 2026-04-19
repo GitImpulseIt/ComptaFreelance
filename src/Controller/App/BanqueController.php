@@ -16,6 +16,8 @@ use App\Repository\PlanComptableRepository;
 use App\Repository\PlanComptableSimplifieRepository;
 use App\Repository\TransactionBancaireRepository;
 use App\Service\PlanComptableEffectifService;
+use App\Service\AI\OllamaClient;
+use App\Service\AI\PropositionQualificationService;
 use App\Service\Banque\ImportService;
 use App\Service\Banque\ParserFactory;
 use PDO;
@@ -518,6 +520,57 @@ class BanqueController
     }
 
     public function rapprocher(int $id): void {}
+
+    /**
+     * Endpoint POST pour demander une proposition IA de qualification.
+     * Retourne un JSON { success, lignes, explication } ou { success:false, error }.
+     */
+    public function proposerIa(int $id): void
+    {
+        header('Content-Type: application/json; charset=utf-8');
+
+        $entrepriseId = $this->auth->getEntrepriseId();
+        $transaction = $this->transactionRepo->findById($id);
+        if (!$transaction) {
+            http_response_code(404);
+            echo json_encode(['success' => false, 'error' => 'Opération introuvable.']);
+            return;
+        }
+        $compte = $this->compteRepo->findById((int) $transaction['compte_bancaire_id']);
+        if (!$compte || (int) $compte['entreprise_id'] !== $entrepriseId) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'error' => 'Opération non autorisée.']);
+            return;
+        }
+
+        $aiConfig = require dirname(__DIR__, 3) . '/config/ai.php';
+        $ollama = $aiConfig['ollama'];
+        $client = new OllamaClient(
+            $ollama['url'],
+            $ollama['model'],
+            $ollama['api_key'],
+            $ollama['cf_client_id'],
+            $ollama['cf_client_secret'],
+            $ollama['timeout'],
+        );
+        $service = new PropositionQualificationService(
+            $client,
+            $this->transactionRepo,
+            $this->ligneRepo,
+            $this->lienRepo,
+            $aiConfig['history_limit'],
+        );
+
+        $plan = $this->planEffectif->findSelectable($entrepriseId);
+
+        try {
+            $proposition = $service->proposer($transaction, $entrepriseId, $plan);
+            echo json_encode(['success' => true] + $proposition, JSON_UNESCAPED_UNICODE);
+        } catch (\Throwable $e) {
+            http_response_code(502);
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        }
+    }
 
     /**
      * Résout le libellé d'un numéro de compte via la chaîne de repli :

@@ -18,6 +18,11 @@ services:
       - POSTGRES_DB=${POSTGRES_DB:-comptav2}
       - POSTGRES_USER=${POSTGRES_USER:-comptav2}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-changeme}
+      - OLLAMA_URL=${OLLAMA_URL:-https://ollama.kazflow.com}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-qwen3.6}
+      - OLLAMA_API_KEY=${OLLAMA_API_KEY:-}
+      - OLLAMA_CF_CLIENT_ID=${OLLAMA_CF_CLIENT_ID:-}
+      - OLLAMA_CF_CLIENT_SECRET=${OLLAMA_CF_CLIENT_SECRET:-}
     networks:
       - comptav2-network
 

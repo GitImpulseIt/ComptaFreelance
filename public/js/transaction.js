@@ -53,6 +53,41 @@
 
     updateSum();
 
+    // Construit une ligne "sauvegardée" (read-only) à partir de valeurs
+    function buildSavedRow(compte, montantHT, type, tva) {
+        var typeText = type === 'DBT' ? 'Débit' : 'Crédit';
+        var ht = parseFloat(String(montantHT).replace(',', '.')) || 0;
+        var tvaNum = parseFloat(String(tva).replace(',', '.')) || 0;
+        var ttc = ht + tvaNum;
+        var taux = ht > 0 && tvaNum > 0 ? (tvaNum / ht * 100) : 0;
+        if (taux) taux = snapToLegalRate(taux);
+        var tauxStr = taux > 0 ? taux.toFixed(2).replace('.', ',') + '%' : '';
+        var ttcStr = ttc !== 0 ? ttc.toFixed(2).replace('.', ',') : '';
+        var htStr = String(montantHT).replace('.', ',');
+        var tvaStr = String(tva).replace('.', ',');
+
+        var libelle = '';
+        for (var j = 0; j < PLAN.length; j++) {
+            if (PLAN[j].numero === compte) { libelle = PLAN[j].libelle; break; }
+        }
+
+        var tr = document.createElement('tr');
+        tr.className = 'compta-row group hover:bg-slate-50/80 transition';
+        tr.innerHTML =
+            '<td class="px-4 py-3 text-sm text-slate-700">' +
+                '<div class="font-mono">' + escapeHtml(compte) + '</div>' +
+                (libelle ? '<div class="text-xs text-slate-500 truncate" title="' + escapeHtml(libelle) + '">' + escapeHtml(libelle) + '</div>' : '') +
+                '<input type="hidden" name="compte[]" value="' + escapeHtml(compte) + '">' +
+            '</td>' +
+            '<td class="px-4 py-3 text-sm text-slate-700">' + htStr + '<input type="hidden" name="montant_ht[]" value="' + htStr + '"></td>' +
+            '<td class="px-4 py-3 text-sm text-slate-700">' + typeText + '<input type="hidden" name="type[]" value="' + type + '"></td>' +
+            '<td class="px-4 py-3 text-sm text-slate-700">' + tvaStr + '<input type="hidden" name="tva[]" value="' + tvaStr + '"></td>' +
+            '<td class="px-4 py-3 text-sm text-slate-700">' + ttcStr + '</td>' +
+            '<td class="px-4 py-3 text-sm text-slate-700">' + tauxStr + '</td>' +
+            '<td class="px-4 py-3 text-center"><span class="compta-remove text-slate-300 hover:text-red-500 cursor-pointer transition opacity-0 group-hover:opacity-100" title="Supprimer"><svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></span></td>';
+        return tr;
+    }
+
     // Créer une ligne d'édition
     function createInputRow() {
         var tr = document.createElement('tr');
@@ -376,6 +411,61 @@
             }
         }
     });
+
+    // --- Proposition IA de qualification ---
+    (function() {
+        var btn = document.getElementById('propose-ia');
+        if (!btn) return;
+        var label = document.getElementById('propose-ia-label');
+        var iconSvg = document.getElementById('propose-ia-icon');
+        var explanation = document.getElementById('propose-ia-explanation');
+        var originalLabel = label.textContent;
+        var originalIcon = iconSvg.outerHTML;
+
+        btn.addEventListener('click', function() {
+            var txId = btn.dataset.transactionId;
+            btn.disabled = true;
+            label.textContent = 'Interrogation de l\'IA…';
+            // Spinner
+            iconSvg.outerHTML = '<svg id="propose-ia-icon" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+            iconSvg = document.getElementById('propose-ia-icon');
+            explanation.classList.add('hidden');
+
+            fetch('/app/banque/' + txId + '/proposer-ia', { method: 'POST' })
+                .then(function(r) { return r.json().then(function(j) { return { ok: r.ok, data: j }; }); })
+                .then(function(res) {
+                    if (!res.ok || !res.data.success) {
+                        alert('IA : ' + (res.data.error || 'échec'));
+                        return;
+                    }
+                    var lignes = res.data.lignes || [];
+                    if (lignes.length === 0) {
+                        alert('L\'IA n\'a pas proposé de lignes. Explication : ' + (res.data.explication || '—'));
+                        return;
+                    }
+                    // Vider les lignes existantes (main incluse)
+                    document.querySelectorAll('#compta-tbody tr').forEach(function(tr) { tr.remove(); });
+                    // Ajouter les lignes proposées
+                    lignes.forEach(function(l) {
+                        tbody.appendChild(buildSavedRow(l.compte, l.montant_ht, l.type, l.tva));
+                    });
+                    updateSum();
+                    if (res.data.explication) {
+                        explanation.textContent = '💡 ' + res.data.explication;
+                        explanation.classList.remove('hidden');
+                    }
+                })
+                .catch(function(e) {
+                    alert('Erreur réseau : ' + e.message);
+                })
+                .finally(function() {
+                    btn.disabled = false;
+                    label.textContent = originalLabel;
+                    iconSvg.outerHTML = originalIcon;
+                    iconSvg = document.getElementById('propose-ia-icon');
+                });
+        });
+    })();
 
     // --- Gestion des liens documents ---
     (function() {
