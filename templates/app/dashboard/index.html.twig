@@ -151,9 +151,19 @@
             </tr>
 
             {% if ir_actif and ir %}
+            <tr>
+                <td class="px-6 py-3 text-sm text-slate-700">Disponible au prélèvement (année {{ annee }})</td>
+                <td class="px-6 py-3 text-sm font-medium {{ ir.disponible >= 0 ? 'text-slate-700' : 'text-red-700' }} text-right tabular-nums">{{ ir.disponible|number_format(2, ',', ' ') }} &euro;</td>
+            </tr>
+            {% if stats.cumul_anterieur != 0 %}
+            <tr>
+                <td class="px-6 py-3 text-sm text-slate-700">Cumul prélevable des années antérieures</td>
+                <td class="px-6 py-3 text-sm font-medium {{ stats.cumul_anterieur >= 0 ? 'text-slate-700' : 'text-red-700' }} text-right tabular-nums">{{ stats.cumul_anterieur|number_format(2, ',', ' ') }} &euro;</td>
+            </tr>
+            {% endif %}
             <tr class="bg-slate-100 border-t-2 border-slate-300">
-                <td class="px-6 py-4 text-sm font-bold text-slate-800">Disponible au prélèvement</td>
-                <td class="px-6 py-4 text-sm font-bold {{ ir.disponible >= 0 ? 'text-emerald-700' : 'text-red-700' }} text-right tabular-nums">{{ ir.disponible|number_format(2, ',', ' ') }} &euro;</td>
+                <td class="px-6 py-4 text-sm font-bold text-slate-800">Disponible total au prélèvement</td>
+                <td class="px-6 py-4 text-sm font-bold {{ stats.disponible_total >= 0 ? 'text-emerald-700' : 'text-red-700' }} text-right tabular-nums">{{ stats.disponible_total|number_format(2, ',', ' ') }} &euro;</td>
             </tr>
             {% endif %}
         </tbody>

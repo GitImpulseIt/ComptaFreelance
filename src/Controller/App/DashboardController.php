@@ -42,45 +42,14 @@ class DashboardController
             $annees = [(int) date('Y')];
         }
 
-        // Lignes comptables de l'année
-        $stmt = $this->pdo->prepare(
-            "SELECT l.compte, l.type, l.montant_ht, l.tva
-             FROM lignes_comptables l
-             JOIN transactions_bancaires t ON t.id = l.transaction_bancaire_id
-             JOIN comptes_bancaires cb ON cb.id = t.compte_bancaire_id
-             WHERE cb.entreprise_id = :eid
-               AND EXTRACT(YEAR FROM t.date) = :annee"
-        );
-        $stmt->execute(['eid' => $entrepriseId, 'annee' => $annee]);
-        $lignes = $stmt->fetchAll();
-
-        $caHt = 0;
-        $tvaEntrant = 0;
-        $tvaSortant = 0;
-        $charges = 0;
-        $impots = 0;
-        $prelevements = 0;
-
-        foreach ($lignes as $l) {
-            $compte = $l['compte'];
-            $ht = (float) $l['montant_ht'];
-            $tva = (float) $l['tva'];
-            $type = $l['type'];
-
-            if (str_starts_with($compte, '70')) {
-                $caHt += $ht;
-                $tvaEntrant += $tva;
-            } elseif (preg_match('/^6[0-5]/', $compte)) {
-                $charges += $ht + $tva;
-                $tvaSortant += $tva;
-            } elseif (preg_match('/^6[6-7]/', $compte)) {
-                $impots += $ht + $tva;
-            } elseif (str_starts_with($compte, '4550') || str_starts_with($compte, '4551') || $compte === '455000') {
-                if ($type === 'DBT') {
-                    $prelevements += $ht;
-                }
-            }
-        }
+        // Stats de l'année courante
+        $yearStats = $this->computeYearStats($entrepriseId, $annee);
+        $caHt = $yearStats['ca_ht'];
+        $tvaEntrant = $yearStats['tva_entrant'];
+        $tvaSortant = $yearStats['tva_sortant'];
+        $charges = $yearStats['charges'];
+        $impots = $yearStats['impots'];
+        $prelevements = $yearStats['prelevements'];
 
         // Soldes bancaires
         $stmt = $this->pdo->prepare(
@@ -113,20 +82,7 @@ class DashboardController
         $nbMois = ($annee < $currentYear) ? 12 : (($annee === $currentYear) ? $currentMonth : 1);
 
         // Déterminer si l'option IR est active pour cette année
-        $irActif = false;
-        if ($entreprise) {
-            $statut = $entreprise['statut_juridique'] ?? '';
-            $optionIr = (bool) ($entreprise['option_ir'] ?? false);
-            $finExercice = $entreprise['option_ir_fin_exercice'] ?? null;
-
-            if ($statut === 'EI') {
-                $irActif = true;
-            } elseif (in_array($statut, ['EURL', 'SARL'])) {
-                $irActif = $optionIr;
-            } elseif (in_array($statut, ['SAS', 'SASU'])) {
-                $irActif = $optionIr && ($finExercice === null || $annee <= (int) $finExercice);
-            }
-        }
+        $irActif = $entreprise ? $this->isIrActif($entreprise, $annee) : false;
 
         // Calcul IR si actif
         $ir = null;
@@ -138,6 +94,26 @@ class DashboardController
             $ir['revenu_mensuel_apres_ir'] = $nbMois > 0 ? ($benefice - $ir['total']) / $nbMois : 0;
             $ir['disponible'] = $benefice - $ir['total'] - $prelevements;
         }
+
+        // Cumul "disponible au prélèvement" des années précédentes :
+        // pour chaque année antérieure, on calcule (bénéfice - IR - prélèvements)
+        // et on somme. Permet de connaître ce qui reste prélevable au global.
+        $cumulAnterieur = 0;
+        foreach ($annees as $a) {
+            $a = (int) $a;
+            if ($a >= $annee) continue;
+            $stats = $this->computeYearStats($entrepriseId, $a);
+            $beneficeA = $stats['ca_ht'] - $stats['charges'] - $stats['impots'];
+            if (!$this->isIrActif($entreprise, $a)) {
+                continue;
+            }
+            $irTotalA = 0;
+            if ($beneficeA > 0) {
+                $irTotalA = $this->calculerIR($beneficeA, $a, $this->getQuotientFamilial($entrepriseId, $a))['total'];
+            }
+            $cumulAnterieur += $beneficeA - $irTotalA - $stats['prelevements'];
+        }
+        $disponibleTotal = ($ir['disponible'] ?? 0) + $cumulAnterieur;
 
         echo $this->twig->render('app/dashboard/index.html.twig', [
             'active_page' => 'dashboard',
@@ -159,6 +135,8 @@ class DashboardController
                 'benefice' => $benefice,
                 'prelevements' => $prelevements,
                 'benefice_mensuel' => $nbMois > 0 ? $benefice / $nbMois : 0,
+                'cumul_anterieur' => $cumulAnterieur,
+                'disponible_total' => $disponibleTotal,
             ],
         ]);
     }
@@ -181,6 +159,71 @@ class DashboardController
 
         header('Location: /app?annee=' . $annee);
         exit;
+    }
+
+    /**
+     * Calcule les agrégats CA/charges/impôts/TVA/prélèvements pour une année donnée.
+     *
+     * @return array{ca_ht:float, tva_entrant:float, tva_sortant:float, charges:float, impots:float, prelevements:float}
+     */
+    private function computeYearStats(int $entrepriseId, int $annee): array
+    {
+        $stmt = $this->pdo->prepare(
+            "SELECT l.compte, l.type, l.montant_ht, l.tva
+             FROM lignes_comptables l
+             JOIN transactions_bancaires t ON t.id = l.transaction_bancaire_id
+             JOIN comptes_bancaires cb ON cb.id = t.compte_bancaire_id
+             WHERE cb.entreprise_id = :eid
+               AND EXTRACT(YEAR FROM t.date) = :annee"
+        );
+        $stmt->execute(['eid' => $entrepriseId, 'annee' => $annee]);
+
+        $caHt = 0; $tvaEntrant = 0; $tvaSortant = 0;
+        $charges = 0; $impots = 0; $prelevements = 0;
+
+        foreach ($stmt->fetchAll() as $l) {
+            $compte = $l['compte'];
+            $ht = (float) $l['montant_ht'];
+            $tva = (float) $l['tva'];
+            $type = $l['type'];
+
+            if (str_starts_with($compte, '70')) {
+                $caHt += $ht;
+                $tvaEntrant += $tva;
+            } elseif (preg_match('/^6[0-5]/', $compte)) {
+                $charges += $ht + $tva;
+                $tvaSortant += $tva;
+            } elseif (preg_match('/^6[6-7]/', $compte)) {
+                $impots += $ht + $tva;
+            } elseif (str_starts_with($compte, '4550') || str_starts_with($compte, '4551') || $compte === '455000') {
+                if ($type === 'DBT') {
+                    $prelevements += $ht;
+                }
+            }
+        }
+
+        return [
+            'ca_ht' => $caHt,
+            'tva_entrant' => $tvaEntrant,
+            'tva_sortant' => $tvaSortant,
+            'charges' => $charges,
+            'impots' => $impots,
+            'prelevements' => $prelevements,
+        ];
+    }
+
+    private function isIrActif(array $entreprise, int $annee): bool
+    {
+        $statut = $entreprise['statut_juridique'] ?? '';
+        $optionIr = (bool) ($entreprise['option_ir'] ?? false);
+        $finExercice = $entreprise['option_ir_fin_exercice'] ?? null;
+
+        if ($statut === 'EI') return true;
+        if (in_array($statut, ['EURL', 'SARL'])) return $optionIr;
+        if (in_array($statut, ['SAS', 'SASU'])) {
+            return $optionIr && ($finExercice === null || $annee <= (int) $finExercice);
+        }
+        return false;
     }
 
     private function getQuotientFamilial(int $entrepriseId, int $annee): float
